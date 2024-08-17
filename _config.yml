@@ -8,7 +8,7 @@ subtitle: ''
 description: ''
 keywords:
 author: peter
-language: en
+language: zh-CN
 timezone: ''
 
 # URL
@@ -99,7 +99,7 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+theme: next
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
@@ -107,3 +107,29 @@ deploy:
   type: git
   repo: git@github.com:PCJ600/pcj600.github.io.git
   branch: main
+
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
+
+live2d:
+  enable: true
+  scriptFrom: local
+  pluginRootPath: live2dw/
+  pluginJsPath: lib/
+  pluginModelPath: assets/
+  tagMode: false
+  log: false
+  model:
+    use: live2d-widget-model-shizuku
+  display:
+    position: right
+  mobile:
+    show: true
+    scale: 0.5
+  react:
+    opacityDefault: 0.7
+    opacityOnHover: 0.2
+

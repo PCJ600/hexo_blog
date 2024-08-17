@@ -1,4 +1,5 @@
 ---
+layout: next
 title: Linux下生成core dump文件
 date: 2020-02-28 21:07:41
 tags: Linux
