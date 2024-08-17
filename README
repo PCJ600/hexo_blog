@@ -1,0 +1,5 @@
+# How to run
+hexo cl && hexo g && hexo server
+
+# How to deploy
+hexo deploy
