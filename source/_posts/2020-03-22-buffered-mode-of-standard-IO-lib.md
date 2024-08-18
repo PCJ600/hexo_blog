@@ -2,7 +2,10 @@
 layout: next
 title: 标准IO库的缓冲模式
 date: 2020-03-22 22:09:56
-tags: Linux
+categories:
+- Linux
+tags:
+- Linux
 ---
 
 ## 问题描述
