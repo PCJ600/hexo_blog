@@ -1,7 +1,7 @@
 ---
 layout: next
 title: 隐式函数声明[-Wimplicit-function-declaration]
-date: 2024-08-18 14:33:10
+date: 2020-04-11 14:33:10
 categories: C
 tags: C
 ---
