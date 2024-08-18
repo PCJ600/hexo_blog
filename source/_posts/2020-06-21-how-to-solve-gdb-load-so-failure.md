@@ -14,8 +14,6 @@ gdb调试core文件或进程时，出现加载so库符号失败，错误信息�
 warning: Could not load shared library symbols for ../libadd.so
 Do you need "set solib-search-path" or "set sysroot"?
 ```
-<!-- more -->
-
 执行**info sharedlibrary**，查看Syms Read字段为No,  表示对应so库符号加载失败。
 
 ```shell
@@ -28,6 +26,8 @@ From                To                  Syms Read   Shared Object Library
 #0  0x00007fba2c57266b in ?? ()
 #1  0x00007ffc6f703ff0 in ?? ()
 ```
+<!-- more -->
+
 
 ## 解决方法
 
