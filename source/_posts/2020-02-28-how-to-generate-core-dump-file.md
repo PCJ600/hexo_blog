@@ -7,6 +7,7 @@ tags: Linux
 
 ## 问题描述
 Linux上运行C程序发生段错误后，没有core文件生成，调试不便。
+<!-- more -->
 
 ## 生成core文件步骤
 1. 敲ulimit -a，查看系统core文件大小限制，如第一行core file size值为0，表示没打开core文件设置

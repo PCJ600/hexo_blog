@@ -3,11 +3,11 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
+title: PC's blog
+subtitle: Life is short, play more
 description: ''
 keywords:
-author: peter
+author: PC
 language: zh-CN
 timezone: ''
 
@@ -133,3 +133,14 @@ live2d:
     opacityDefault: 0.7
     opacityOnHover: 0.2
 
+symbols_count_time:
+  symbols: true
+  time: true
+  total_symbols: true
+  total_time: true
+
+codeblock:
+  copy_button:
+    enable: true
+    show_result: true
+    style: default

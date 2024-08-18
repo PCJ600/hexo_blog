@@ -13,6 +13,8 @@ tags: Linux
 
 想搞清楚这些问题产生的原因，需要了解标准I/O库的缓冲模式。
 
+<!-- more -->
+
 ## 标准I/O与unbuffered I/O
 
 linux对I/O文件操作分为不带缓存I/O(unbuffered I/O)和带缓存I/O(即标准I/O)
