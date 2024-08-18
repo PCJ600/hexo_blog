@@ -3,7 +3,6 @@ layout: next
 title: Hiredis查询失败时出现key丢失问题定位
 date: 2021-11-30 20:25:25
 categories:
-- Redis
 - troubleshooting
 tags:
 - Redis
