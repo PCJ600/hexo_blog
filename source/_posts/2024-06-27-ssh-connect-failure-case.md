@@ -1,7 +1,7 @@
 ---
 layout: next
-title: 2024-06-27-ssh-connect-failure-case
-date: 2024-08-19 21:51:22
+title: Linux双网卡默认路由metric不正确，导致SSH连接失败问题定位
+date: 2024-06-27 21:51:22
 categoires:
 - troubleshooting
 tags:
