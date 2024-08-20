@@ -103,6 +103,7 @@ exclude:
 ignore:
 
 # Extensions
+plugins: hexo-generator-sitemap
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: next
