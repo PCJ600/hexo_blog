@@ -4,7 +4,6 @@ title: Redis抓包分析案例
 date: 2021-11-06 20:14:29
 categories:
 - troubleshooting
-- Redis
 tags: 
 - troubleshooting
 - Redis
