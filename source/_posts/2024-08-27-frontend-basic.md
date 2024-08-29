@@ -248,4 +248,228 @@ city:  bj
 skill_list:  1
 ```
 
+# CSS
+用来"美化"标签
+
+## CSS应用方式
+1. 在head标签中添加style标签
+```html
+<head>
+	<style>
+		.c1{
+			color:red;
+		}
+	</style>
+</head>
+<body>
+	<h1 class="c1">标题</h1>
+</body>
+```
+
+2. 写到CSS文件里
+以Flask App为例，在static目录下创建test.css
+```css
+.c1{
+	color:red;
+}
+.c2{
+	color:blue;
+}
+```
+templates目录下创建test.html
+```html
+<head>
+    <link rel="stylesheet" href="/static/test.css" />
+</head>
+<body>
+    <h1 class="c1">红标题</h1>
+    <h1 class="c2">蓝标题</h1>
+</body>
+```
+web.py下新增路由
+```py
+@app.route('/test', methods=['GET'])
+def test():
+    return render_template('test.html')
+```
+
+## CSS选择器
+分类: ID选择器、类选择器、标签选择器、属性选择器、后代选择器
+
+### 类选择器 (最常用)
+```css
+.cl{
+	color: red;
+}
+```
+
+### ID选择器
+用的少, 因为id不能重复，只能修改一个标签的样式
+```css
+#c2{
+	color: green;
+}
+```
+### 标签选择器
+为所有li标签定义样式
+```css
+li{
+	color: blue;
+}
+```
+### 属性选择器
+在input标签中选择type='text'的标签
+```css
+input[type='text']{
+	border: 2px solid pink;
+}
+```
+在class为v1的标签中选择属性a=1的标签
+```css
+.v1[a="1"]{
+	color: gold;
+}
+```
+### 后代选择器
+```css
+.xx li{
+	color: gold;
+}
+```
+
+CSS选择器例子
+```html
+<html>
+<head>
+    <style>
+        .c1{
+            color: red;
+        }
+        #c2{
+            color: green;
+        }
+        li{
+            color: blue;
+        }
+		input[type="text"]{
+			border: 2px solid pink;
+		}
+		.v1[a="1"]{
+			color: red;
+		}
+		.xx li{
+			color: gold;
+		}
+    </style>
+</head>
+<body>
+	<!-- 类选择器-->
+    <h1 class="c1">标题1</h1>
+	<!-- ID选择器-->
+    <h1 id="c2">标题2</h1>
+	<!-- 标签选择器-->
+    <ul>
+        <li>移动</li>
+        <li>联通</li>
+    </ul>
+	<!-- 属性选择器-->
+	<input type="text">
+	<div class="v1" a="0">V0</div>
+	<div class="v1" a="1">V1</div>
+	<!-- 后代选择器 -->
+	<div class="xx">
+		<li>上海</li>
+		<li>北京</li>
+	</div>
+</body>
+</html>
+```
+页面效果
+![](image2.png)
+
+## 样式
+### 高度和宽度
+```html
+<style>
+	.c1{
+		height: 300px;
+		width: 50%
+	}
+</style>
+<body>
+	<div class="c1">北京</div>
+	<span class="c1">上海</span>
+</body>
+```
+* 宽度支持百分比
+* 对于行内标签, 设置高度和宽度默认无效
+* 对于块级标签默认有效, 但右侧空白区域不能被其他标签利用
+
+### display:inline-block
+display:inline-block使标签同时具备块级和行内的特点
+```html
+<head>
+    <style>
+        .c1{
+            display: inline-block;
+            height: 100px;
+            width: 300px;
+            border: 1px solid red;
+        }
+    </style>
+</head>
+<body>
+    <div class="c1">上海</div>
+    <span class="c1">北京</div>
+</body>
+```
+### display:block, display:inline
+```html
+<div style="display: inline;">上海</div>
+<span style="display: block;">北京</span>
+```
+* display:block 可以把标签转为块级标签
+* display:inline 可以把标签转为内联标签
+
+Google浏览器 按F12 -> Elements -> 查看两个标签的宽和高，确认修改生效
+
+### 字体
+查HTML颜色代码网站： [HTML Color Codes](https://htmlcolorcodes.com/)
+```html
+<head>
+<style>
+	.c1 {
+		color: #00FE7F; /* 颜色 */
+		font-size: 44px; /* 字体大小 */
+		font-weight: 500; /* 加粗 */
+		font-family: Microsoft Yahei; /* 字体 */
+	}
+</style>
+</head>
+<div class="c1">上海</div>
+```
+* color指定颜色
+* font-size指定字体大小
+* font-weight指定加粗
+* font-family指定字体
+
+### 文字对齐方式
+```html
+<head>
+	<style>
+		.cl {
+			height: 60px;
+			width: 300px;
+			border: 1px solid red;
+			text-align: center; /* 水平居中 */
+			line-height: 59px; /* 垂直居中 */
+		}
+	</style>
+</head>
+<div class="c1">北京</div>
+```
+* text-align: center 表示水平方向居中
+* 垂直方向居中用line-height1
+
+
 TO BE CONTINUED ...
