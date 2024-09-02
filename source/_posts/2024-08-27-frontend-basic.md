@@ -1,6 +1,6 @@
 ---
 layout: next
-title: 2024-08-27-frontend-basic
+title: 前端基础
 date: 2024-08-27 22:33:26
 categories: draft
 tags: 
@@ -471,5 +471,456 @@ Google浏览器 按F12 -> Elements -> 查看两个标签的宽和高，确认修
 * text-align: center 表示水平方向居中
 * 垂直方向居中用line-height1
 
+### float
+例1: 两个span标签, 分别显示在左边和右边, 应用样式 float: right
+```html
+<body>
+	<div>
+		<span>左</span>
+		<span style="float: right">右</span>
+	</div>
+</body>
+```
+效果:
+![](image_css1.png)
 
-TO BE CONTINUED ...
+例2: 对于块级标签(如div), 应用float样式, 可以让多个块级标签显示在同一行
+```html
+<head>
+	<style>
+		.c1{
+			float: left;
+			height: 300px;
+			width: 150px;
+			border: 1px solid red;
+		}
+	</style>
+</head>
+<body>
+    <!-- 三个div标签会显示在同一行 -->
+	<div class="c1"></div>
+	<div class="c1"></div>
+	<div class="c1"></div>
+</body>
+```
+
+### 内边距(padding)
+例：给div标签设置左边距, 右边距为10px, 上边距和下边距为20px
+```html
+<head>
+	<style>
+		.c1{
+			height: 200px;
+			width: 120px;
+			padding-left: 10px;
+			padding-right: 10px;
+			padding-top: 20px;
+			padding-bottom: 20px;
+			/* padding: 20px 10px 20px 10px; 上 右 下 左 */
+		}
+	</style>
+</head>
+<body>
+	<div class="c1">
+		<div style="background-color: yellow">文本1</div>
+		<div style="background-color: blue">文本2</div>
+	</div>
+</body>
+```
+
+### 外边距(margin-top)
+例: 定义两个div标签, 让第二个div的上边框距离第一个div 20px
+```html
+<head>
+	<style>
+		.c1{
+			height: 100px;
+			border: 1px solid blue;
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div style="height: 200px; border: 1px solid red;"></div>
+	<div class="c1"></div>
+</body>
+```
+
+### hover
+hover选择器用于选择鼠标指针浮动在上面的元素
+```css
+.c1{
+	color: red;
+}
+.c1:hover{
+	color: green;
+}
+```
+
+### position
+* fixed
+* relative
+* absolute
+
+fixed
+固定在窗口的某个位置
+```css
+.back{
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border: 1px solid red;
+    right: 50px;
+    bottom: 50px;
+}
+```
+
+relative和absolute
+```html
+    <style>
+        body {
+            margin: 0;
+        }
+        .c1 {
+            height: 300px;
+            width: 500px;
+            border: 1px solid red;
+            position: relative;
+            right: 0;
+            bottom: 0;
+        }
+        .c2 {
+            height: 59px;
+            width: 59px;
+            background-color: #00FF7F;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+        }
+    </style>
+```
+效果：
+![](css_image2.png)
+
+### 边框(border)
+
+```css
+border: 3px solid red; /* 3px边框 实线 红色 */
+/* border-left: 3px solid transparent; */ /* 先加个透明色边框 */
+```
+
+### 背景色(backgroud-color)
+```css
+background-color: red;
+```
+
+## 案例：小米商城
+```html
+<html>
+<head>
+	<meta charset="UTF-8">
+	<style>
+	    body {
+			margin: 0;
+		}
+		img {
+			width: 100%;
+			height: 100%;
+		}
+		.header {
+			 background: #333;
+			 height: 38px;
+		}
+		.header .menu {
+			float: left;
+			color: white;
+		}
+		.header .account {
+			float: right;
+			color: white;
+	    }
+		.header .container {
+			width: 1226px;
+			margin: 0 auto;
+		}
+
+		.header a {
+		    background: #333;
+			color: #b0b0b0;
+			line-height: 38px;
+			display: inline-block;
+			font-size: 12px;
+			margin-right: 13px;
+			text-decoration: none;
+		}
+
+		.header a:hover {
+			color: white;
+		}
+
+		.subheader {
+			margin-top: 20px;
+			height: 100px;
+		}
+		.subheader .subcontainer {
+			width: 1200px;
+			height: 100px;
+			margin: 0 auto;
+		}
+		.subheader .logo {
+			width: 234px;
+			height: 100px;
+			float: left;
+		}
+		.subheader .logo a {
+			display: inline-block;
+			margin-top: 22px;
+		}
+		.subheader .logo img {
+			height: 56px;
+			width: 56px;
+		}
+		.subheader .menu-list {
+			height: 100px;
+			float: left;
+		}
+		.subheader .menu-list a {
+			display: inline-block;
+			padding: 0 10px;
+			color: #333;
+			font-size: 16px;
+			text-decoration: none;
+			line-height: 100px;
+		}
+		.subheader .menu-list a:hover {
+			color: #ff6700;
+		}
+		.subheader .search {
+			width: 234px;
+			height: 100px;
+			float: right;
+			background-color: grey;
+		}
+		.slider {
+			margin-top: 10px;
+			height: 600px;
+		}
+		.slider .container {
+			margin: 0 auto;
+			height: 600px;
+			width: 1200px;
+		}
+		.slider img {
+			height: 100%;
+			width: 100%;
+		}
+		.news {
+			margin-top: 14px;
+			height: 170px;
+		}
+		.news .container {
+			margin: 0 auto;
+			width: 1200px;
+		}
+		.news .channel {
+			float: left;
+			width: 228px;
+			height: 164px;
+			background-color: grey;
+			padding: 3px;
+		}
+		.news .channel .item {
+			height: 82px;
+			width: 76px;
+			float: left;
+			text-align: center;
+		}
+		.news .channel .item img {
+			display: block;
+			height: 24px;
+			width: 24px;
+			margin: 0 auto 4px;
+		}
+		.news .channel .item a {
+			display: inline-block;
+			font-size: 12px;
+			padding-top: 18px;
+			text-decoration: none;
+			color: white;
+			opacity: 0.7;
+		}
+
+		.news .list-item {
+			float: right;
+			width: 310px;
+			height: 170px;
+			margin-left: 12px;
+		}
+
+		.app {
+			position: relative;
+
+		}
+		.app .download {
+			position: absolute;
+			height: 100px;
+			width: 100px;
+			display: none;
+		}
+		.app:hover .download {
+			display: block;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="header">
+		<div class="container">
+			<div class="menu">
+				<a href="https://www.mi.com">小米官网</a>
+				<a href="https://www.mi.com">小米商城</a>
+				<a href="https://www.mi.com">小米澎湃OS</a>
+				<a href="https://www.mi.com">小米汽车</a>
+				<a href="https://www.mi.com">云服务</a>
+				<a href="https://www.mi.com">IoT</a>
+				<a href="https://www.mi.com">有品</a>
+				<a href="https://www.mi.com">小爱开放平台</a>
+				<a href="https://www.mi.com">资质证照</a>
+				<a href="https://www.mi.com">协议规则</a>
+				<a href="https://www.mi.com" class="app">下载App
+					<div class="download">
+						<img src="/static/qrcode.png" alt=""/>
+					</div>
+				</a>
+				<a href="https://www.mi.com">Select Location</a>
+			</div>
+			<div class="account">
+				<a href="https://www.mi.com">登录</a>
+				<a href="https://www.mi.com">注册</a>
+				<a href="https://www.mi.com">消息通知</a>
+			</div>
+			<div style="clear: both"></div>
+		</div>
+	</div>
+
+	<div class="subheader">
+		<div class="subcontainer">
+			<div class="logo">
+				<a href="https://www.mi.com/">
+					<img src="/static/mi_logo.png" style="height:56px;width:56px;" />
+				</a>
+			</div>
+			<div class="menu-list">
+				<a href="https://www.mi.com/">小米手机</a>
+				<a href="https://www.mi.com/">Redmi手机</a>
+				<a href="https://www.mi.com/">电视</a>
+				<a href="https://www.mi.com/">笔记本</a>
+				<a href="https://www.mi.com/">平板</a>
+				<a href="https://www.mi.com/">家电</a>
+				<a href="https://www.mi.com/">路由器</a>
+				<a href="https://www.mi.com/">服务中心</a>
+				<a href="https://www.mi.com/">社区</a>
+			</div>
+			<div class="search"></div>
+			<div style="clear: both"></div>
+		</div>
+	</div>
+
+	<div class="slider">
+		<div class="container">
+			<div class="sd-img">
+				<img src="/static/mi_slide.png"/>
+				<div style="clear: both"></div>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="news">
+		<div class="container">
+			<div class="channel">
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news1.png" alt="">
+						<span>保障服务</span>
+					</a>
+				</div>
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news2.png" alt="">
+						<span>企业团购</span>
+					</a>
+				</div>
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news3.png" alt="">
+						<span>F码通道</span>
+					</a>
+				</div>
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news4.png" alt="">
+						<span>米粉卡</span>
+					</a>
+				</div>
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news5.png" alt="">
+						<span>以旧换新</span>
+					</a>
+				</div>
+				<div class="item">
+					<a href="https://www.mi.com/">
+						<img src="/static/news6.png" alt="">
+						<span>话费充值</span>
+					</a>
+				</div>
+			</div>
+
+			<div class="list-item">
+				<img src="/static/mi_news1.png" />
+			</div>
+			<div class="list-item">
+				<img src="/static/mi_news2.jpg" />
+			</div>
+			<div class="list-item">
+				<img src="/static/mi_news3.png" />
+			</div>
+			<div style="clear: both"></div>
+		</div>
+	</div>
+</body>
+</html>
+```
+
+总结:
+* body标签默认有个边距，导致四边有间隙，去掉间隙
+```css
+body {
+	margin: 0
+}
+```
+* 区域居中, 需要先设置一个宽度, 再margin-left:auto;margin-right:auto
+```css
+.c1 {
+	width: 1000px;
+	margin: 0 auto;
+}
+```
+* 如果存在float, 需要添加
+```html
+<div style="clear: both"></div>
+```
+* a标签是行内标签，行内标签高度，内外边距设置，默认是无效的，需要display:inline-block;
+```css
+a {
+	display: inline-block;
+}	
+```
+* a标签去掉下划线
+```css
+a {
+	text-decoration: none;
+}
+```
+
