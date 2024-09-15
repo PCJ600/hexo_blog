@@ -924,3 +924,400 @@ a {
 }
 ```
 
+# JavaScript
+* JS是一门编程语言，浏览器就是JS语言的解释器
+
+## JS写哪
+```html
+<head>
+	<script type="text/javascript">
+	</script>
+</head>
+<body>
+	<script type="text/javascript">
+	</script>
+</body>
+```
+
+导入其他JS文件
+```html
+<script src="static/test.js"></script>
+<script>
+	func()
+</script>
+```
+
+## 案例
+利用JS，实现滚动显示"欢迎各位领导"
+```html
+<body>
+	<span id="txt">欢迎各位领导</span>
+
+	<script type="text/javascript">
+
+        function show() {
+		    var tag = document.getElementById("txt");
+		    var str = tag.innerText
+
+            var firstChar = str[0];
+            var otherStr = str.substring(1, str.length);
+            var newsStr = otherStr + firstChar
+            console.log(newsStr)
+            tag.innerText = newsStr
+        }
+
+        // JS中定时器
+        setInterval(show, 1000);
+
+	</script>
+</body>
+```
+
+## 数组
+```
+// 定义数组
+var v1 = [11,22,33];
+var v2 = Array([11,22,33]);
+
+v1.push('java');	// 尾部追加
+v1.unshift('hello');	// 头部追加
+
+// 循环
+for (var idx in v1) {
+
+}
+for (var i=0; i < v1.length; i++) {
+
+}
+```
+
+案例：动态创建标签
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .menus{
+            width: 200px;
+            border: 1px solid red;
+        }
+        .menus .header {
+            background-color: gold;
+            padding: 20px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="city">
+    </ul>
+    <script type="text/javascript">
+        var cities = ["BeiJing", "ShangHai", "ShenZhen"];
+        for (var idx in cities) {
+            var text = cities[idx];
+            var tag = document.createElement("li");
+            tag.innerText = text;
+            var parentTag = document.getElementById("city");
+            parentTag.appendChild(tag);
+        }
+    </script>
+</body>
+</html>
+```
+
+## 字典
+```javascript
+info = {
+	"name": 'Tony',
+	"age": 18
+}
+
+// get,set
+info.age
+info.name = 'Jack'
+info['age']
+info['name']
+delete info['age']
+
+for (var key in info) {
+	value = info[key];
+}
+```
+
+案例：动态表
+```javascript
+<body>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody id="body">
+
+        </tbody>
+    </table>
+    <ul id="city">
+    </ul>
+
+    <script type="text/javascript">
+        var info = {id:1,name:"Peter",age:19};
+        var tr = document.createElement("tr");
+        for (var key in info) {
+            var text = info[key];
+            var td = document.createElement("td");
+            td.innerText = text;
+            tr.appendChild(td);
+        }
+        var tb = document.getElementById("body");
+        tb.appendChild(tr);
+    </script>
+</body>
+```
+
+## 条件语句
+```js
+if () {
+
+} else {
+
+}
+```
+
+## 函数
+```js
+function func() {
+
+}
+func()
+```
+
+## DOM
+DOM是一个模块，基于这个模块对HTML标签操作
+```js
+// 根据ID获取标签
+var tag = document.getElementById("xx");
+// 修改标签文本
+tag.innerText = "yyy"
+```
+```html
+<script type="text/javascript">
+	// 添加一个
+	var tag = document.getElementById("city");
+	var newTag = document.createElement("li");
+	tag.appendChild(newTag);
+</script>
+```
+
+## 事件的绑定
+```html
+<body>
+    <input type="button" value="click to add", onclick="addCity()">
+    <ul id="city">
+
+    </ul>
+    <script type="text/javascript">
+        function addCity() {
+            var newTag = document.createElement("li");
+            newTag.innerText = "liantong";
+            var parentTag = document.getElementById("city");
+            parentTag.appendChild(newTag);
+        }
+    </script>
+</body>
+```
+
+# JQuery
+JQuery是一个JS的第三方库
+
+## 下载并使用JQuery
+官网下载jquery-3.7.1.min.js, 放到static目录
+```
+https://jquery.com/download/
+```
+
+HTML页面中引入JQuery
+```html
+<body>
+    <h1 id="txt">Hello World</h1>
+    <script src="static/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript">
+        $("#txt").text("Hello Java");
+    </script>
+</body>
+```
+
+## 寻找标签(几种选择器)
+* ID选择器
+```html
+<h1 id="txt">Hello World</h1>
+<h1 id="txt">Hello World</h1>
+```
+```js
+$("#txt")
+```
+* 样式选择器
+```html
+<h1 class="c1">Hello Java</h1>
+<h1 class="c2">Hello C++</h1>
+```
+```js
+$(".c1")
+```
+* 标签选择器
+```html
+<h1 class="c1">Hello Java</h1>
+<div class="c1">Hello Java</div>
+```
+```js
+$("h1")
+```
+* 层级选择器
+```html
+<div class="c1">
+	<div class="c2">
+		<span></span>
+		<a></a>
+	</div>
+</div>
+<h1 class="c2">Zhong Guo Lian Tong</h1>
+```
+```js
+$(".c1 .c2 .a")
+```
+
+## 间接寻找
+* 找兄弟
+```html
+<div>
+	<div>BeiJing</div>
+	<div id="c1">ShangHal</div>
+	<div>ShenZhen</div>
+</div>
+```
+```js
+$("#c1").prev()
+$("#c1").next()
+$("#c1").siblings() // 找到所有的兄弟
+```
+* 找父子
+```js
+$("#c1").parent() // 父亲
+$("#c1").children() // 所有孩子
+```
+
+## 操作样式
+* addClass
+* removeClass
+* hasClass
+
+## 值的操作
+```html
+<div id="c1">Content</div>
+$("#c1").text()
+$("#c1").text("休息")
+<input type="text", id="c2" />
+```
+```js
+$("#c2").val()
+$("#c2").val("HAHAHA")
+```
+
+案例
+```html
+<body>
+    <ui id="view">
+
+    </ui>
+    <input type="text" id="txtUser" placeholder="Username">
+    <input type="text" id="txtEmail" placeholder="Email">
+    <input type="button" value="Submit" onclick="getInfo()" />
+
+    <script src="static/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript">
+        function getInfo() {
+            var user = $("#txtUser").val();
+            var email = $("#txtEmail").val();
+
+            var li = $("<li>").text(user + ' ' + email);
+            $("#view").append(li);
+        }
+    </script>
+</body>
+```
+
+## 事件
+```html
+<body>
+    <ui id="view">
+        <li>Baidu</li>
+        <li>Google</li>
+    </ui>
+
+    <script src="static/jquery-3.7.1.min.js"></script>
+
+    <script type="text/javascript">
+        $("li").click(function () {
+            $(this).remove();
+        })
+    </script>
+</body>
+```
+
+当页面框架加载完成后, 立刻执行
+```html
+<script>
+	$(function () {
+		$("li").click(function() {
+			$(this).remove();
+		});
+	})
+</script>
+```
+
+## 案例：表格操作
+点击删除按钮，删除一整行
+```html
+<body>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Operation</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Jay Zhou</td>
+                <td>
+                    <input class="delete", type="button", value="删除" />
+                </td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Wang Lao 5</td>
+                <td>
+                    <input class="delete", type="button", value="删除" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="static/jquery-3.7.1.min.js"></script>
+    <script>
+        $(function () {
+            $(".delete").click(function () {
+                $(this).parent().parent().remove();
+            })
+        })
+    </script>
+</body>
+```
+
+
