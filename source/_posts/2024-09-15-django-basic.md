@@ -258,7 +258,7 @@ create database gx_day15 DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
 编辑demo1/settings.py
 ```py
 DATABASES = {
-	'default' = {
+	'default': {
 		'ENGINE': 'django.db.backends.mysql',
 		'NAME': 'gx_day15',
 		'USER': 'root',
@@ -530,3 +530,343 @@ app01/templates/user_delete.html
 </body>
 </html>
 ```
+
+## Demo: 员工管理系统
+
+### 创建项目
+创建Django项目和APP
+```
+django-admin startproject webproj
+python3 manage.py startapp app01
+```
+注册APP
+demo1/settings.py
+```py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+	# ...
+    'app01.apps.App01Config', # Add your app config here !
+]
+```
+运行
+```
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+### 设计表结构
+```
+# 部门表
+id title
+1  研发
+2  销售
+
+# 员工表
+id name password age account create_time depart_id
+1  Tony 123      18
+2
+```
+
+思考题: 如果部门删除，员工表怎么处理？
+* 如果部门删除，员工也要裁掉 (级联删除)
+* 员工不裁掉，可以置空
+
+实际开发中为什么大公司要禁用外键约束？https://developer.aliyun.com/article/1171702
+
+models.py
+```py
+class Department(models.Model):
+    """ 部门表 """
+    title = models.CharField(max_length=32)
+class UserInfo(models.Model):
+    """ 员工表 """
+    name = models.CharField(max_length=16)
+    password = models.CharField(max_length=64)
+    age = models.CharField()
+    account = models.DecimalField(max_digits=10,decimal_places=2, default=0)
+    create_time = models.DateTimeField()
+
+    # 部门ID, 外键, 级联删除, 允许部门为空
+    depart = models.ForeignKey(to="Department", to_field="id",null=True, blank=True, on_delete=models.CASCADE)
+
+	gender_choices = (
+        (1, "男"),
+        (2, "女"),
+    )
+    gender = models.SmallIntegerField(verbose_name="gender", choices=gender_choices)
+```
+
+### MySQL生成数据库
+```
+mysql> create database gx_day16 DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+```
+settings.py
+```
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.mysql',
+		'NAME': 'gx_day16',
+		'USER': 'root',
+		'PASSWORD': 'XXX',
+		'HOST': 'localhost',
+		'PORT': 3306,
+	}
+}
+```
+根目录执行
+```
+python3 manage.py makemigrations
+python3 manage.py migrate
+```
+
+### 创建静态文件和模板文件
+app目录下创建static, templates, 引入bootstrap, js
+```
+static/
+├── js
+│   └── jquery-3.7.1.min.js
+└── plugins
+    └── bootstrap-3.4.1
+```
+
+### 新增页面 —— 部门列表
+webproj/urls.py
+```py
+from app01 import views
+urlpatterns = [
+    path('depart/list/', views.depart_list),
+]
+```
+app01/views.py
+```py
+def depart_list(request):
+	return render(request, 'depart_list.html')
+```
+
+app01/templates/depart_list.html
+```html
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1/css/bootstrap.css' %}">
+</head>
+<body>
+    <!-- 导航 -->
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">用户管理系统</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li><a href="#">部门管理</a></li>
+            <li><a href="#">用户管理</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">登录</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">当前用户<span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">个人资料</a></li>
+                <li><a href="#">我的信息</a></li>
+                <li><a href="#">注销</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#">Separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 内容 -->
+    <div class="container-fluid">
+        <div style="margin-bottom: 18px">
+            <a class="btn btn-primary" href="#">新建部门</a>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">部门列表</div>
+        <!-- Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Operation</th>
+                </tr>
+            </thead>
+            <tbody>
+				{% for d in departs %}
+                <tr>
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.title }}</td>
+                    <td>
+                        <a class="btn btn-primary">Edit</a>
+                        <a class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+				{% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-3.4.1/js/bootstrap.js' %}"></script>
+</body>
+</html>
+```
+页面效果:
+![](image1.png)
+
+### 新增页面 —— 添加部门
+app01/templates/depart_list.html
+```html
+<div class="container-fluid">
+        <div style="margin-bottom: 18px">
+            <a class="btn btn-success" href="/depart/add/">
+                <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+                新建部门
+            </a>
+        </div>
+    </div>
+```
+webproj/urls.py
+```py
+urlpatterns = [
+    path('depart/add/', views.depart_add),
+]
+```
+
+depart_add.html
+```html
+    <!-- 带标题的面板 -->
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">添加部门</h3>
+      </div>
+      <div class="panel-body">
+            <!-- 水平排列的表单 -->
+            <form method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <label>部门标题</label>
+                <input type="text" class="form-control" name="title" placeholder="title">
+              </div>
+              <button type="submit" class="btn btn-default">Submit</button>
+            </form>
+      </div>
+    </div>
+```
+
+app01/views.py
+```py
+from django.shortcuts import render, HttpResponse, redirect
+def depart_add(request):
+    if request.method == "GET":
+        return render(request, "depart_add.html")
+    # POST
+    title = request.POST.get("title")
+    models.Department.objects.create(title="title")
+    return redirect("/depart/list/")
+```
+页面效果:
+![](image2.png)
+
+### 删除部门
+webproj/urls.py
+```py
+urlpatterns = [
+    path('depart/delete/', views.depart_delete),
+]
+```
+app01/views.py
+```py
+def depart_delete(request):
+    nid = request.GET.get("nid")
+    models.Department.objects.filter(title=nid).delete()
+    return redirect("/depart/list/")
+```
+app01/templates/depart_list.html
+```html
+            <tbody>
+                {% for d in departs %}
+                <tr>
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.title }}</td>
+                    <td>
+                        <a class="btn btn-primary">Edit</a>
+                        <a class="btn btn-danger" href="/depart/delete/?nid={{ d.id }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+```
+
+### 修改部门
+效果: 点击Edit后，把部门的title带到输入框里。
+webproj/urls.py
+```py
+urlpatterns = [
+	# http://127.0.0.1:80000/depart/1/edit/
+    path('depart/<int:nid>/edit/', views.depart_edit),
+]
+```
+app01/views.py
+```py
+def depart_edit(request, nid):
+    if request.method == "GET":
+        depart = models.Department.objects.filter(id=nid).first()
+        return render(request, "depart_edit.html", {"depart": depart})
+    # POST
+    title = request.POST.get('title')
+    models.Department.objects.filter(id=nid).update(title=title)
+    return redirect("/depart/list/")
+```
+depart_list.html
+```html
+    {% for d in departs %}
+     <tr>
+    <td>{{ d.id }}</td>
+    <td>{{ d.title }}</td>
+    <td>
+        <a class="btn btn-primary" href="/depart/{{ obj.id }}/edit/">Edit</a>
+    </td>
+    </tr>
+    {% endfor %}
+```
+depart_edit.html
+```html
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">编辑部门</h3>
+      </div>
+      <div class="panel-body">
+            <!-- 水平排列的表单 -->
+            <form method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <label>部门标题</label>
+                <input type="text" class="form-control" name="title" value="{{ depart.title }}">
+              </div>
+              <button type="submit" class="btn btn-default">Submit</button>
+            </form>
+      </div>
+    </div>
+```
+页面效果
+![](image3.png)
