@@ -870,3 +870,192 @@ depart_edit.html
 ```
 页面效果
 ![](image3.png)
+
+### 显示用户列表
+多个HTML页面都用到了相同的导航栏，可以把相同的组件抽成模板(layout.html)
+```html
+{% block content %}-{% endblock %}
+```
+在新页面引用layout.html
+```html
+{% extends 'layout.html' %}
+
+{% block content %}
+	<h1>首页</h1>
+{% endblock %}
+```
+
+### 显示用户列表
+urls.py
+```py
+urlpatterns = [
+	path('user/list/', views.user_list),
+]
+```
+
+MySQL里加几条用户数据
+```sql
+mysql> desc app01_userinfo;
++-------------+---------------+------+-----+---------+----------------+
+| Field       | Type          | Null | Key | Default | Extra          |
++-------------+---------------+------+-----+---------+----------------+
+| id          | bigint        | NO   | PRI | NULL    | auto_increment |
+| name        | varchar(16)   | NO   |     | NULL    |                |
+| password    | varchar(64)   | NO   |     | NULL    |                |
+| age         | int           | NO   |     | NULL    |                |
+| account     | decimal(10,2) | NO   |     | NULL    |                |
+| create_time | datetime(6)   | NO   |     | NULL    |                |
+| gender      | smallint      | NO   |     | NULL    |                |
+| depart_id   | bigint        | NO   | MUL | NULL    |                |
++-------------+---------------+------+-----+---------+----------------+
+mysql> insert into app01_userinfo values(1, 'peter', '123456', 18, 100, '2024-09-21 11:31:00', 0, 1);
+mysql> insert into app01_userinfo(name,password,age,account,create_time,gender,depart_id) 
+values('peter', '123456', 18, 100, '2024-09-21 11:31:00', 0, 1);
+```
+
+views.py
+```py
+def user_list(request):
+    if request.method == "GET":
+        users = models.UserInfo.objects.all()
+		for user in users:
+			print(user.id, user.name, user.account, user.create_time.strftime("%Y-%m-%d"), user.gender)
+			print(user.get_gender_display)
+			print(user.depart) # 自动关联查询
+        return render(request, "user_list.html", {"users": users})
+```
+
+templates/user_list.html
+```html
+{% load static %}
+    <table class="table table-bordered">
+	            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Password</th>
+                    <th>Age</th>
+                    <th>Account</th>
+                    <th>Createtime</th>
+                    <th>Gender</th>
+                    <th>Depart</th>
+                    <th>Operation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.name }}</td>
+                    <td>{{ u.password }}</td>
+                    <td>{{ u.age }}</td>
+                    <td>{{ u.account}}</td>
+                    <td>{{ u.create_time | date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ u.get_gender_display }}</td>
+                    <td>{{ u.depart.title }}</td>
+                    <td>
+                        <a class="btn btn-primary">Edit</a>
+                        <a class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+    </table>
+```
+
+* 模板中解析datetime `<td>{{ u.create_time | date:"Y-m-d H:i:s" }}</td>`
+* 模板中解析性别: `<td>{{ u.get_gender_display }}</td>`
+* 关联查询部门: `<td>{{ u.depart.title }}</td>`
+
+
+### 添加用户
+原始方式存在的问题:
+* 用户数据未做校验
+* 如果输入错误，也没有错误提示
+* 页面上，每一个字段都有重新写一遍
+* 关联数据，需要手动获取传参，再展示到页面
+
+为了解决以上问题，Django提供了ModelForm组件
+urls.py
+```py
+urlpatterns = [
+	path('user/add/', views.user_add),
+]
+```
+views.py
+```py
+from django import forms
+class UserModelForm(forms.ModelForm):
+    class Meta:
+        model = models.UserInfo
+        fields = ["name", "password", "age", "account", "create_time", "gender", "depart"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs = {"class": "form-control"}
+
+def user_add(request):
+    if request.method == "GET":
+        form = UserModelForm()
+        return render(request, "user_add.html", {"form": form})
+    # POST:
+    form = UserModelForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect("/user/list/")
+    else:
+        return HttpResponse(form.errors)
+```
+user_add.html
+```html
+<div class="panel-body">
+    <!-- 水平排列的表单 -->
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            {{ field }}
+        {% endfor %}
+    </form>
+</div>
+```
+
+### 编辑用户
+urls.py
+```py
+urlpatterns = [
+    path('user/<int:nid>/edit/', views.user_edit),
+]
+```
+views.py
+```py
+def user_edit(request, nid):
+    if request.method == "GET":
+        obj = models.UserInfo.objects.filter(id=nid).first()
+        form = UserModelForm(instance=obj)
+        return render(request, "user_edit.html", {"form": form})
+
+    # POST
+    user = models.UserInfo.objects.filter(id=nid).first()
+    form = UserModelForm(data=request.POST, instance=user)
+    if form.is_valid():
+        form.save()
+        return redirect("/user/list/")
+    else:
+        return HttpResponse(form.errors)
+```
+
+### 删除用户
+urls.py
+```py
+urlpatterns = [
+    path('user/<int:nid>/edit/', views.user_delete),
+]
+```
+
+views.py
+```py
+def user_delete(request, nid):
+    obj = models.UserInfo.objects.filter(id=nid).delete()
+    return redirect("/user/list/")
+```
