@@ -1059,3 +1059,361 @@ def user_delete(request, nid):
     obj = models.UserInfo.objects.filter(id=nid).delete()
     return redirect("/user/list/")
 ```
+
+### 靓号管理
+表结构
+```sql
+desc app01_prettynum;
++--------+-------------+------+-----+---------+----------------+
+| Field  | Type        | Null | Key | Default | Extra          |
++--------+-------------+------+-----+---------+----------------+
+| id     | bigint      | NO   | PRI | NULL    | auto_increment |
+| mobile | varchar(11) | NO   |     | NULL    |                |
+| price  | int         | NO   |     | NULL    |                |
+| level  | smallint    | NO   |     | NULL    |                |
+| status | smallint    | NO   |     | NULL    |                |
++--------+-------------+------+-----+---------+----------------+
+5 rows in set (0.00 sec)
+```
+
+#### 展示靓号
+models.py
+```py
+class PrettyNum(models.Model):
+    """ 靓号表 """
+    mobile = models.CharField(verbose_name="手机号", max_length=11)
+    price = models.IntegerField(verbose_name="价格", default=0)
+    level_choices = (
+        (1, "1级"),
+        (2, "2级"),
+        (3, "3级"),
+        (4, "4级"),
+    )
+    level = models.SmallIntegerField(verbose_name="级别", choices=level_choices, default=1)
+    status_choices = (
+        (1, "已占用"),
+        (2, "未占用"),
+    )
+    status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=2)
+```
+urls.py
+```py
+urlpatterns = [
+    path('pretty/list/', views.pretty_list),
+]
+```
+views.py
+```py
+from app01 import models
+def pretty_list(request):
+    prettys = models.PrettyNum.objects.all().order_by("-level")
+    return render(request, "pretty_list.html", {"prettys": prettys})
+```
+
+### 新建靓号
+urls.py
+```py
+urlpatterns = [
+    path('pretty/add/', views.pretty_add),
+]
+```
+views.py
+```py
+class PrettyModelForm(forms.ModelForm):
+    class Meta:
+        model = models.PrettyNum
+        # fields = "__all__"
+        # fields = ["mobile", "price", "level", "status"]
+        exclude = ["level"]
+
+def pretty_add(request):
+    if request.method == "GET":
+        form = PrettyModelForm()
+        return render(request, "pretty_add.html", {"form": form})
+    form = PrettyModelForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect("/pretty/list/")
+    else:
+        return HttpResponse(form.errors)
+```
+
+对用户输入的格式做校验
+
+### 编辑靓号
+* path: /pretty/数字/edit/
+* 使用ModelForm
+
+urls.py
+```py
+urlpatterns = [
+    path('pretty/<int:nid>/edit/', views.pretty_edit),
+]
+```
+
+views.py
+```py
+def pretty_edit(request, nid):
+    if request.method == "GET":
+        pretty = models.PrettyNum.objects.filter(id=nid).first()
+        form = PrettyModelForm(instance=pretty)
+        return render(request, "pretty_edit.html", {"form": form})
+    # POST
+    pretty = models.PrettyNum.objects.filter(id=nid).first()
+    form = PrettyModelForm(data=request.POST, instance=pretty)
+    if form.is_valid():
+        form.save()
+        return redirect("/pretty/list/")
+    else:
+        return HttpResponse(form.errors)
+```
+
+pretty_edit.html
+```html
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div style="margin-bottom: 18px">
+            <a class="btn btn-success" href="/pretty/add/">
+                <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+                编辑靓号
+            </a>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">编辑靓号</div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            {{ field }}
+            {% endfor %}
+            <input type="submit" value="提交" />
+        </form>
+    </div>
+{% endblock %}
+```
+
+### 查询手机号
+数值搜索
+```py
+models.PrettyNum.objects.filter(id=12)
+models.PrettyNum.objects.filter(id__gt=12)	# 大于12
+models.PrettyNum.objects.filter(id__gte=12)	# 大于等于12
+models.PrettyNum.objects.filter(id__lt=12)	# 小于12
+models.PrettyNum.objects.filter(id__lte=12)	# 小于等于12
+```
+
+字符串搜索
+```py
+models.PrettyNum.objects.filter(mobile__startswith="1999")	# 开头
+models.PrettyNum.objects.filter(mobile__endswith="999")		# 结尾
+models.PrettyNum.objects.filter(mobile__contains="999")		# 包含
+```
+
+案例：加一个搜索框，显示所有匹配的手机号
+```html
+    <div style="float: right;width: 300px;">
+        <form method="get">
+      <div class="input-group">
+        {% csrf_token %}
+        <input type="text" class="form-control" name="search" placeholder="Search for...">
+          <span class="input-group-btn">
+          <input class="btn btn-default" type="submit">Go!</input>
+          </span>
+      </div>
+        </form>
+    </div>
+```
+
+views.py
+```py
+def pretty_list(request):
+    if request.method == "GET":
+        if request.GET.get("search"):
+            search_mobile = request.GET.get("search")
+            print(search_mobile)
+            prettys = models.PrettyNum.objects.filter(mobile__contains=search_mobile)
+            return render(request, "pretty_list.html", {"prettys": prettys})
+
+        prettys = models.PrettyNum.objects.all()
+        return render(request, "pretty_list.html", {"prettys": prettys})
+```
+
+### 分页显示靓号
+效果：GET /pretty/list/?page=1 显示前10条记录
+用切片
+```
+def pretty_list(request):
+    if request.method == "GET":
+        if request.GET.get("page"):
+            page = int(request.GET.get("page"))
+            begin = (page - 1) * 10
+            end = page * 10
+            prettys = models.PrettyNum.objects.all()[begin:end]
+            return render(request, "pretty_list.html", {"prettys": prettys})
+```
+
+bootstrap上找一个分页组件
+```html
+<nav aria-label="Page navigation">
+  <ul class="pagination">
+    <li><a href="/pretty/list/?page=1">1</a></li>
+    <li><a href="/pretty/list/?page=2">2</a></li>
+    <li><a href="/pretty/list/?page=3">3</a></li>
+  </ul>
+</nav>
+```
+
+### 管理员操作
+```py
+class Admin(models.Model):
+    """ 管理员 """
+    username = models.CharField(verbose_name="username", max_length=32)
+    password = models.CharField(verbose_name="password", max_length=64)
+```
+
+urls.py
+```py
+from app01 import views
+urlpatterns = [
+    path('admin/list/', views.admin_list),
+    path('admin/add/', views.admin_add),
+]
+```
+views.py
+```py
+def admin_list(request):
+    if request.method == "GET":
+        admins = models.Admin.objects.all()
+        return render(request, "admin_list.html", {"admins": admins})
+
+class AdminModelForm(forms.ModelForm):
+    class Meta:
+        model = models.Admin
+        fields = "__all__"
+
+def admin_add(request):
+    if request.method == "GET":
+        form = AdminModelForm()
+        return render(request, "admin_add.html", {"form": form})
+```
+
+admin_list.html
+```html
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">管理员列表</div>
+        <!-- Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>AdminUser</th>
+                    <th>Password</th>
+                    <th>Operation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in admins %}
+                <tr>
+                    <td>{{ obj.id }}</td>
+                    <td>{{ obj.username }}</td>
+                    <td>{{ obj.password }}</td>
+                    <td>
+                        <a class="btn btn-primary" href="">Edit</a>
+                        <a class="btn btn-danger" href="">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+```
+
+admin_add.html
+```html
+{% extends 'layout.html' %}
+
+{% block content %}
+<!-- 带标题的面板 -->
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">添加管理员</h3>
+      </div>
+      <div class="panel-body">
+            <!-- 水平排列的表单 -->
+            <form method="post">
+              {% csrf_token %}
+
+              {% for field in form %}
+                <div class="form-group">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                </div>
+              {% endfor %}
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+      </div>
+    </div>
+{% endblock %}
+```
+
+表单中添加确认密码, 判断两次密码输入一致
+```py
+from django.core.exceptions import ValidationError
+class AdminModelForm(forms.ModelForm):
+    confirm_password = forms.CharField(label="确认密码", widget=forms.PasswordInput)
+    class Meta:
+        model = models.Admin
+        fields = ["username", "password", "confirm_password"]
+        widgets = {
+            "password": forms.PasswordInput
+        }
+    def clean_confirm_password(self):
+        pwd = self.cleaned_data.get("password")
+        confirm = self.cleaned_data.get("confirm_password")
+        if confirm != pwd:
+            raise ValidationError("Password Wrong")
+        return confirm
+```
+
+### 编辑管理员
+urls.py
+```py
+urlpatterns = [
+    path('admin/<int:nid>/edit/', views.admin_edit),
+]
+```
+views.py
+```py
+def admin_edit(request, nid):
+    if request.method == "GET":
+        admin = models.Admin.objects.filter(id=nid).first()
+        form = AdminModelForm(instance=admin)
+        return render(request, "admin_edit.html", {"form": form})
+
+    admin = models.Admin.objects.filter(id=nid).first()
+    form = AdminModelForm(data=request.POST, instance=admin)
+    if form.is_valid():
+        form.save()
+        return redirect("/admin/list/")
+    else:
+        return HttpResponse(form.errors)
+```
+
+### 删除管理员
+```py
+urlpatterns = [
+    path('admin/<int:nid>/delete/', views.admin_delete),
+]
+```
+views.py
+```py
+def admin_delete(request, nid):
+    if request.method == "GET":
+        models.Admin.objects.filter(id=nid).delete()
+        return redirect("/admin/list/")
+```
