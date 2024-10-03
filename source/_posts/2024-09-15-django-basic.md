@@ -1417,3 +1417,105 @@ def admin_delete(request, nid):
         models.Admin.objects.filter(id=nid).delete()
         return redirect("/admin/list/")
 ```
+
+### 用户认证(Session+Cookie认证)
+Django默认把Session存到MySQL数据库中的django_session表里
+
+先写一个登录页面，创建一个表单，包括username和password
+校验用户名和密码输入正确，生成session到数据库, 跳转到/admin/list/页面
+views.py
+```py
+def login(request):
+    if request.method == "GET":
+        form = LoginForm()
+        return render(request, "login.html", {"form": form})
+    # POST
+    form = LoginForm(data=request.POST)
+    if form.is_valid():
+        admin_obj = models.Admin.objects.filter(**form.cleaned_data).first()
+        if not admin_obj:
+            form.add_error("password", "password or user error")
+            return render(request, "login.html", {"form": form})
+
+        # 保存Session
+        request.session["info"] = {"id": admin_obj.id, "name": admin_obj.username}
+        return redirect("/admin/list/")
+    return HttpResponse(form.errors)
+```
+
+login.html
+```html
+<body>
+<div class="account">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Username</label>
+            {{ form.username }}
+            <span>{{ form.username.errors.0 }}</span>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            {{ form.password }}
+            <span>{{ form.password.errors.0 }}</span>
+        </div>
+
+        <input type="submit" value="login" class="btn btn-primary">
+    </form>
+</body>
+```
+
+### 数据库中查看Session
+```sql
+mysql> select * from django_session;
++----------------------------------+------------------------------------------------------------------------------------------------+----------------------------+
+| session_key                      | session_data                                                                                   | expire_date                |
++----------------------------------+------------------------------------------------------------------------------------------------+----------------------------+
+| o4ltz9wfdlh7w9p761wmyoedlwtk73t9 | eyJpbmZvIjp7ImlkIjoyLCJuYW1lIjoiSGVsbG8ifX0:1st6E1:wZE1TBMjag4FZ3dt-RA-9ObJPBs_G_j0vYsj6ixTA9Y | 2024-10-08 14:09:09.853533 |
++----------------------------------+------------------------------------------------------------------------------------------------+----------------------------+
+```
+
+### 鉴权操作(只有认证成功，才可以访问其他页面)
+朴素的实现方式：
+```py
+def admin_list(request):
+	# 如果没有session，跳转到登录页面
+    info = request.session.get("info")
+    if not info:
+        return redirect("/login/")
+
+    admins = models.Admin.objects.all()
+    return render(request, "admin_list.html", {"admins": admins})
+```
+
+问题：所有视图都需要session认证，上面的实现太麻烦！
+
+用Django中间件实现鉴权
+app01/middleware/auth.py
+```py
+from django.utils.deprecation import MiddlewareMixin
+from django.shortcuts import HttpResponse, redirect
+
+class AuthMiddleWare(MiddlewareMixin):
+    def process_request(self, request):
+        # 注意：对于无需登录就应该访问的页面，不要做鉴权，否则会循环重定向
+        if request.path_info == "/login/":
+            return
+
+        info_dict = request.session.get("info")
+        print(info_dict)
+        if info_dict:
+            return
+        return redirect("/login/")
+		
+    def process_response(self,request, response):
+        print('M1 gone')
+        return response
+```
+settings.py
+```py
+MIDDLEWARE = [
+	'app01.middleware.auth.M1',
+	'app01.middleware.auth.M2',
+]
+```
