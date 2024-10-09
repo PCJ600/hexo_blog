@@ -12,6 +12,29 @@ SQL(Structured Query Language)是结构化查询语言，用来访问和操作�
 * DML：Data Manipulation Language 为用户提供添加、删除、更新数据的能力
 * DQL：Data Query Language 允许用户查询数据，这也是最频繁的数据库日常操作。
 
+MySQL是最流行的开源SQL数据库管理系统，由Oracle公司开发、分发和支持。
+
+## MySQL8.0简介
+数据类型
+signed/unsigned integers 1,2,3,4,8 bytes log, float, double
+char, varchar, text, blob
+binary varbinary
+date, time, datetime, timestamp, year
+set, enum
+
+每张表支持64个索引, 支持20万张表和50亿行
+mysql, mysqladmin, mysqlcheck
+
+## 查询MySQL版本和当前日期
+```
+select version(), current_date;
++-----------+--------------+
+| version() | current_date |
++-----------+--------------+
+| 8.0.36    | 2024-10-08   |
++-----------+--------------+
+```
+
 <!-- more -->
 
 ## 关系模型
@@ -118,7 +141,7 @@ INSERT INTO students (id, class_id, name, gender, score) VALUES (2, 1, '小红',
 SELECT 'ok' as 'result:';
 ```
 
-### 基本查询
+### 查询所有数据
 ```sql
 select * from students;
 ```
@@ -155,8 +178,7 @@ select * from students where score between 90 and 95;
 ```
 BETWEEN AND用法参考: [https://dev.mysql.com/doc/refman/8.0/en/comparison-operators.html#operator_between](https://dev.mysql.com/doc/refman/8.0/en/comparison-operators.html#operator_between)
 
-### 投影查询
-只希望返回部分列的数据，可以用投影查询
+### 查询指定的列
 ```sql
 select id, name from students;
 ```
@@ -188,6 +210,44 @@ mysql> select id, name, score from students order by score desc;
 ```sql
 SELECT id, name, gender, score FROM students ORDER BY score DESC, gender where class_id = 1;
 ```
+
+### 计算日期
+MONTH函数返回月份
+```
+mysql> SELECT name, birth, MONTH(birth) FROM pet;
++----------+------------+--------------+
+| name     | birth      | MONTH(birth) |
++----------+------------+--------------+
+| Fluffy   | 1993-02-04 |            2 |
+| Claws    | 1994-03-17 |            3 |
+```
+
+### 处理NULL
+使用IS NULL和IS NOT NULL，不要用=
+```
+mysql> SELECT 1 IS NULL, 1 IS NOT NULL;
++-----------+---------------+
+| 1 IS NULL | 1 IS NOT NULL |
++-----------+---------------+
+|         0 |             1 |
++-----------+---------------+
+```
+和NULL做算术比较的结果仍然是NULL
+```
+mysql> SELECT 1 = NULL, 1 <> NULL, 1 < NULL, 1 > NULL;
++----------+-----------+----------+----------+
+| 1 = NULL | 1 <> NULL | 1 < NULL | 1 > NULL |
++----------+-----------+----------+----------+
+|     NULL |      NULL |     NULL |     NULL |
++----------+-----------+----------+----------+
+mysql> SELECT 0 IS NULL, 0 IS NOT NULL, '' IS NULL, '' IS NOT NULL;
++-----------+---------------+------------+----------------+
+| 0 IS NULL | 0 IS NOT NULL | '' IS NULL | '' IS NOT NULL |
++-----------+---------------+------------+----------------+
+|         0 |             1 |          0 |              1 |
++-----------+---------------+------------+----------------+
+```
+In MySQL, 0 or NULL means false and anything else means true. The default truth value from a boolean operation is 1.
 
 ### 分页查询
 select查询结果数据量很大，可以分页显示。 通过`LIMIT <N-M> OFFSET <M>`子句实现：
@@ -252,7 +312,7 @@ SQL还提供了以下聚合函数:
 select AVG(score) from students;
 ```
 
-#### 分组查询
+### 分组查询
 例如：查询每个班学生数量
 ```bash
 mysql> select class_id, count(*) num from students group by class_id;
@@ -365,6 +425,45 @@ mysql> select * from students cross join classes;
 ...
 +----+----------+----------+--------+-------+----+--------+
 ```
+
+### 模式匹配
+
+#### LIKE和NOT LIKE
+use _ to match any single character and % to match an arbitrary number of characters (including zero characters).
+
+查找b开头的names
+```sql
+mysql> SELECT * FROM pet WHERE name LIKE 'b%';
++--------+--------+---------+------+------------+------------+
+| name   | owner  | species | sex  | birth      | death      |
++--------+--------+---------+------+------------+------------+
+| Buffy  | Harold | dog     | f    | 1989-05-13 | NULL       |
+| Bowser | Diane  | dog     | m    | 1989-08-31 | 1995-07-29 |
+```
+
+查找fy结尾的names
+```sql
+mysql> SELECT * FROM pet WHERE name LIKE '%fy';
++--------+--------+---------+------+------------+-------+
+| name   | owner  | species | sex  | birth      | death |
++--------+--------+---------+------+------------+-------+
+| Fluffy | Harold | cat     | f    | 1993-02-04 | NULL  |
+| Buffy  | Harold | dog     | f    | 1989-05-13 | NULL  |
+```
+
+查找包含w的names
+```
+mysql> SELECT * FROM pet WHERE name LIKE '%w%';
++----------+-------+---------+------+------------+------------+
+| name     | owner | species | sex  | birth      | death      |
++----------+-------+---------+------+------------+------------+
+| Claws    | Gwen  | cat     | m    | 1994-03-17 | NULL       |
+| Bowser   | Diane | dog     | m    | 1989-08-31 | 1995-07-29 |
+| Whistler | Gwen  | bird    | NULL | 1997-12-09 | NULL       |
++----------+-------+---------+------+------------+------------+
+```
+
+
 
 ## 修改数据
 关系数据库的基本操作是增删改查，即CRUD：Create、Retrieve、Update、Delete。
@@ -597,3 +696,4 @@ mysqld进程
 
 ## 参考
 https://liaoxuefeng.com/books/sql/transaction/index.html
+https://dev.mysql.com/doc/refman/8.0/en/
