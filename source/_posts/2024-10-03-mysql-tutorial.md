@@ -6,36 +6,10 @@ categories: MySQL
 tags: MySQL
 ---
 
-## 什么是SQL
-SQL(Structured Query Language)是结构化查询语言，用来访问和操作数据库系统。定义了几种操作数据库的能力：
-* DDL：Data Definition Language 允许用户定义数据，也就是创建表、删除表、修改表结构这些操作。
-* DML：Data Manipulation Language 为用户提供添加、删除、更新数据的能力
-* DQL：Data Query Language 允许用户查询数据，这也是最频繁的数据库日常操作。
-
-MySQL是最流行的开源SQL数据库管理系统，由Oracle公司开发、分发和支持。
-
-## MySQL8.0简介
-数据类型
-signed/unsigned integers 1,2,3,4,8 bytes log, float, double
-char, varchar, text, blob
-binary varbinary
-date, time, datetime, timestamp, year
-set, enum
-
-每张表支持64个索引, 支持20万张表和50亿行
-mysql, mysqladmin, mysqlcheck
-
-## 查询MySQL版本和当前日期
-```
-select version(), current_date;
-+-----------+--------------+
-| version() | current_date |
-+-----------+--------------+
-| 8.0.36    | 2024-10-08   |
-+-----------+--------------+
-```
-
-<!-- more -->
+## 数据库相关概念
+* 数据库(DataBase) 存储数据仓库
+* 数据库管理系统(DateBase Management System)(DBMS) 操纵和管理数据库的大型软件
+* SQL(Structured Query Language)(SQL) 操作关系型数据库的编程语言，定义了一套操作关系数据库的统一标准 
 
 ## 关系模型
 关系模型本质上就是若干个存储数据的二维表
@@ -43,17 +17,218 @@ select version(), current_date;
 * 表的每一列称为字段（Column），同一个表的每一行记录都拥有相同的若干字段。
 * 字段定义了数据类型（整型、浮点型、字符串、日期等），以及是否允许为NULL
 
-### 主键(Primary Key)
+## 什么是SQL
+SQL(Structured Query Language)是结构化查询语言，用来访问和操作数据库系统。定义了几种操作数据库的能力：
+* DDL：Data Definition Language 允许用户定义数据，也就是创建表、删除表、修改表结构这些操作。
+* DML：Data Manipulation Language 为用户提供添加、删除、更新数据的能力
+* DQL：Data Query Language 允许用户查询数据，这也是最频繁的数据库日常操作。
+
+## DDL-数据库操作
+
+### 查询所有数据库
+```
+show databases;
+```
+### 查询当前数据库
+```
+show database();
+```
+### 创建表
+```
+create database [if not exists] 数据库名 [default charset 字符集] [COLLATE 排序规则];
+```
+### 删除数据库
+```
+drop database [if exists] 数据库名;
+```
+### 使用数据库
+```
+use 数据库名;
+```
+
+## DDL-表操作-创建&查询
+
+### 查询当前数据库所有表
+```
+show tables;
+```
+### 查询表结构
+```
+desc 表名;
+```
+### 查询指定表的建表语句
+```
+show create table 表名;
+```
+### 创建表
+```
+create table 表名 {
+	字段1 字段1类型[COMMENT 字段1注释],
+	字段2 字段2类型[COMMENT 字段2注释],
+	...
+	字段N 字段N类型[COMMENT 字段2注释],
+}[COMMENT 表注释];
+```
+例如创建一个学生表
+```sql
+create table student ( 
+	id bigint primary key not null auto_increment, 
+	name varchar(32), 
+	class_id bigint
+);
+```
+## DDL-数据类型
+https://dev.mysql.com/doc/refman/8.0/en/data-types.html
+
+MySQL数据类型分三类
+* 数值类型
+* 字符串类型
+* 日期时间类型
+
+### 数值类型
+| 分类 | 类型 | 大小 | 有符号范围 | 无符号范围 |
+| -- | -- | -- | -- | -- | -- |
+| TINYINT | 1 byte | (-128,127) | (0,255) | 小整数值 |
+| SMALLINT | 2 bytes | (-32768,32767) | (0,65535) | 大整数值 |
+| MEDIUMINT | 3 bytes | (-2^23, 2&23-1) | (0, 2^24-1) | 大整数值 |
+| INT或INTEGER | 4 bytes | (-2^31, 2^31-1) | (0, 2^32-1) | 大整数值 |
+| BIGINT | 8 bytes | (-2^63, 2^63-1) | (0, 2^64-1) | 极大整数值 |
+| FLOAT | 4 bytes |			| 		| 单精度浮点整数值 |
+| DOUBLE | 8 bytes | 		| 		| 双精度浮点整数值 |
+| DECIMAL |			| 依赖于M和D的值 | 依赖于M和D的值 | 小整数值(精确定点数) |
+
+### 字符串类型
+| 类型 | 大小 | 描述 |
+| -- | -- | -- |
+| CHAR | 0-255 bytes | 定长字符串 |
+| VARCHAR | 0-65535 bytes | 变长字符串 |
+| TINYBLOB | 0-255 bytes | 二进制数据 |
+| TINTTEXT | 0-255 bytes | 短文本字符串 |
+| BLOB | 0-65535 bytes | 二进制形式的文本数据 |
+| TEXT | 0-65535 bytes | 长文本数据 |
+| MEDIUMBLOB | 0-2^24-1 | 二进制形式的中等长度文本数据 |
+| MEDIUMTEXT | 0-2^24-1 | 中等长度的文本数据 |
+| LONGBLOB | 0-2^32-1 | 二进制形式的极大文本数据 |
+| LONGTEXT | 0-2^32-1 bytes| 极大的文本数据 |
+
+### 日期类型
+| 类型 | 大小 | 范围 | 格式 |
+| -- | -- | -- | -- |
+| DATE | 3 | 1000-01-01 至 9999-12-31 | YYYY-MM-DD |
+| TIME | 3 | -838:59:59 至 838:59:59 | HH:MM:SS |
+| YEAR | 1 | 1901 至 2155 | YYYY |
+| DATETIME | 8 | 1000-01-01 00:00:00 至 9999-12-31 23:59:59 | YYYY-MM-DD HH:MM:SS |
+| TIMESTAMP | 4 | 1970-01-01 00:00:01 至 2038-01-19 03:14:07 | YYYY-MM-DD HH:MM:SS |
+
+## DDL-表操作-修改
+
+### 添加字段
+```
+alter table 表名 add 字段名 类型(长度) [COMMENT 注释] [约束];
+```
+例: 给emp表添加字段nickname
+```
+alter table emp add nickname varchar(20);
+```
+### 修改数据类型
+```
+alter table 表名 modify 字段名 新数据类型(长度);
+```
+### 修改字段名和字段类型
+```
+alter table 表名 change 旧字段名 新字段名 类型(长度) [COMMENT 注释] [约束];
+```
+例：把emp表的nickname字段改成username, 类型varchar(24)
+```
+alter table emp change nickname username varchar(24);
+```
+### 删除字段
+```
+alter table 表名 DROP 字段名;
+```
+例：将emp表的username字段删除
+```
+alter table emp drop username;
+```
+### 修改表名
+```
+alter table 表名 rename to 新表名;
+```
+例: 将emp表名修改为employee
+```
+alter table emp rename to employee;
+```
+### 删除表
+删除表(包括表结构和内容)
+```
+DROP TABLE[IF EXISTS] 表名
+```
+删除表，并重新创建该表
+```
+truncate table 表名;
+```
+
+## DML-添加数据
+DML全称(Data Manipulation Language), 用于对数据库中表的数据记录进行增、删、改操作
+
+### 给指定字段添加数据
+```
+insert into 表名(字段1,字段2) values(值1,值2);
+```
+### 给全部字段添加数据
+```
+insert into 表名 values(值1,值2);
+```
+### 批量添加多条数据
+```
+insert into 表名 values(值1,值2),(值1,值2);
+```
+注：
+* 插入数据时，指定字段数据需要和值顺序一一对应
+* 字符串和日期类型应包含在引号中
+* 插入数据大小应该在字段的指定范围内
+
+例：插入2条员工数据
+```
+insert into employee values(1,'001','peter','M',18,'123456789987654321', '2024-10-14');
+```
+
+## DML-修改数据
+```
+update 表名 set 字段1=值1, 字段2=值2 [where 条件];
+```
+例: 将id为1数据的name修改为'lance'，性别修改为F
+```
+update employee set name='lance', gender='F' where id=1;
+```
+例: 所有员工入职日期修改为2005-01-01
+```
+update employee entrydate = '2005-01-01';
+```
+
+## DML-删除数据
+```
+delete from 表明 [where 条件]
+```
+例: 删除女性员工
+```
+delete from employee where gender='F';
+```
+例: 删除所有员工
+```
+delete from employee;
+```
+
+## DQL-
+https://www.bilibili.com/video/BV1Kr4y1i7ru/?p=15&spm_id_from=pageDriver&vd_source=d8559c2d87607be86810cd806158bb86
+
+## 主键(Primary Key)
 * 关系表中的任意两条记录不能重复，通过某个字段能唯一区分出不同的记录，这个字段被称为主键
 * 主键一般是采用完全业务无关的字段，这个字段通常为id，常见的id类型：
 	* 自增整数类型：INT（约21亿）, BIGINT(约922亿亿)
 	* 全局唯一GUID类型：也称UUID，使用一种全局唯一的字符串作为主键，类似8f55d96b-8acc-4636-8cb8-76bf8abc2f57。
 * 关系数据库允许多个字段标识唯一记录，这种主键称为联合主键（很少用）
 
-#### 创建表的时候设置主键自增
-```sql
-create table student ( id bigint primary key not null auto_increment, name varchar(32), class_id bigint);
-```
 ### 外键
 
 #### 添加外键约束
@@ -520,23 +695,6 @@ Query OK, 12 rows affected (0.00 sec)
 
 
 ## 管理MySQL
-### 列出所有数据库
-```sql
-show database;
-```
-### 创建数据库
-```sql
-create database test;
-```
-### 删除数据库
-```sql
-drop database test;
-```
-### 切换数据库
-对一个数据库进行操作前，需要先切换到该数据库。
-```sql
-use test;
-```
 ### 列出当前数据库的所有表
 ```sql
 show tables;
