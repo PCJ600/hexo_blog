@@ -15,6 +15,8 @@ xxx.ibd 路径: /var/lib/mysql/*.ibd xxx表示表名, InnoDB每张表对应一�
 ibd2sdi account.ibd
 逻辑存储结构: TableSpace(表空间), Segment(段), Extent(区), Page(页), Row(行)
 
+<!-- more -->
+
 ## 索引
 https://www.cs.usfca.edu/~galles/visualization/BTree.html
 https://blog.csdn.net/u011240877/article/details/80490663

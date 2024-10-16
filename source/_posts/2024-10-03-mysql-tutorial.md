@@ -219,14 +219,14 @@ insert into 表名 values(值1,值2),(值1,值2);
 
 例：插入2条员工数据
 ```
-insert into employee values(1,'001','peter','M',18,'123456789987654321', '2024-10-14');
+insert into employee values(1,'001','peter','M',18,'123456789987654321', '2024-10-14'),(2,'002','jack','M',18,'123456789987654321', '2024-10-14');
 ```
 
 ## DML-修改数据
 ```
 update 表名 set 字段1=值1, 字段2=值2 [where 条件];
 ```
-例: 将id为1数据的name修改为'lance'，性别修改为F
+例: 将id为1数据的name修改为lance，性别修改为F
 ```
 update employee set name='lance', gender='F' where id=1;
 ```
@@ -250,7 +250,7 @@ delete from employee;
 
 ## DQL-查询
 语法
-```
+```sql
 select
 	字段
 from 
@@ -374,11 +374,9 @@ select * from emp limit 10 offset 20;
 ## SQL-DCL-用户管理/权限控制
 <!-- TODO -->
 
-## 函数
+## 常用函数
 
 ### 字符串函数
-
-常用
 | 函数 | 功能 |
 | -- | -- |
 | CONCAT(s1,s2,...sn) | 拼接 |
@@ -489,7 +487,7 @@ select name, (case when city in ('北京','上海') then '一线城市' else '�
 | 主键约束 | 非空且唯一 | PRIMARY KEY |
 | 外键约束 | 用于两张表建立连接，保证数据一致性和完整性 | FOREIGN KEY |
 
-例：创建表
+例：按下表中的约束要求创建表
 | 字段名 | 字段含义 | 字段类型 | 约束条件 | 约束关键字 |
 | -- | -- | -- | -- | -- |
 | id | ID | int | 主键，自动增长 | primary key, auto increment |
@@ -497,7 +495,8 @@ select name, (case when city in ('北京','上海') then '一线城市' else '�
 | age | 年龄 | int | 大于0, 小于120 | CHECK |
 | status | 状态 | char(1) | 默认值为1 | DEFAULT |
 | gender | 性别 | char(1) | 无 | 无 |
-```
+
+```sql
 create table user(
 	id int primary key auto_increment,
 	name varchar(10) not null unique, 
@@ -758,8 +757,7 @@ select * from emp where (job,salary) in (select job, salary from emp where name 
 ```
 
 ## 事务
-事务是一组操作集合，不可分割的工作单位。
-事务把所有操作作为一个整体向系统提交或撤销操作，这些操作要么同时成功，要么同时失败。
+事务是一组操作集合，不可分割的工作单位。事务把所有操作作为一个整体向系统提交或撤销操作，这些操作要么同时成功，要么同时失败。
 
 ### 事务四大特性
 * Atomicity 原子性 所有SQL作为一个整体，要么全执行，要么全不执行
@@ -833,7 +831,7 @@ set [session|global] transcation isolation level [read uncommitted | read commit
 #### Read Uncommitted
 Read Uncommitted级别下，一个事务会读到另一个事务未提交的数据，如果另一个事务回滚，当前事务读到的就是脏数据，即脏读(Dirty Read)
 
-例: 创建一张学生表, 插入一条学生记录
+示例: 创建一张学生表, 插入一条学生记录
 ```bash
 create table students (id bigint not null auto_increment, name varchar(36) not null, primary key(id)) engine=InnoDB default charset=utf8;
 insert into students(name) values('Alice');
@@ -864,8 +862,75 @@ mysql> select * from students;
 * 事务A在第五步进行了回滚，事务B再次读取id=1的记录为Alice, 和上一次的数据不一致，这就是脏读
 
 #### Read Committed
-https://liaoxuefeng.com/books/sql/transaction/index.html
+Read Committed隔离级别下，一个事务不会读到另一个事务还没有提交的数据，但可能会遇到不可重复读（Non Repeatable Read）的问题。
+不可重复读是指，一个事务内，多次读同一数据，在这个事务没有结束前，如果另一个事务恰好修改了这个数据，那么第一个事务中两次读的数据就可能不一致。
+
+示例: 创建一张学生表数据
+```
+mysql> select * from students;
++----+-------+
+| id | name  |
++----+-------+
+|  1 | Alice |
++----+-------+
+1 row in set (0.00 sec) 
+```
+分别开两个MySQL连接，按顺序执行事务A和事务B
+| 时刻	| 事务A | 事务B |
+| -- | -- | -- |
+| 1 | SET TRANSACTION ISOLATION LEVEL READ COMMITTED; | SET TRANSACTION ISOLATION LEVEL READ COMMITTED; |
+| 2	| BEGIN; | BEGIN; |
+| 3	| | SELECT * FROM students WHERE id = 1; -- Alice |
+| 4	| UPDATE students SET name = 'Bob' WHERE id = 1; | |	
+| 5	| COMMIT; | |	
+| 6	| | SELECT * FROM students WHERE id = 1; -- Bob |
+| 7	| | COMMIT; |
+
+![](read-committed.png)
+
+说明：
+* 第3步，事务B一开始查询结果为Alice，随后第4步事务A更新了这条记录并提交, 事务B在第6步再次查询时结果变成了Bob。
+* 所以，read committed隔离级别下，事务不可重复读同一条记录，因为两次读到结果可能不一致。
 
 #### Repeatable Read
+Repeatable Read隔离级别下，不会出现脏读，不可重复读，但可能遇到幻读(Phantom read)问题。
+幻读是指，一个事务中，第一次查询某条记录发现不存在，但是当视图更新这条不存在记录时，竟然能成功，并且再次读取同一条记录时，它就神奇地出现了。
+
+示例: 创建一张学生表数据
+```
+mysql> select * from students;
++----+-------+
+| id | name  |
++----+-------+
+|  1 | Alice |
++----+-------+
+1 row in set (0.00 sec) 
+```
+
+分别开两个MySQL连接，按顺序执行事务A和事务B
+| 时刻	| 事务A | 事务B |
+| -- | -- | -- |
+| 1 | SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; | SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; |
+| 2 | BEGIN; | BEGIN; |
+| 3	| |	SELECT * FROM students WHERE id = 99; -- empty |
+| 4 | INSERT INTO students (id, name) VALUES (99, 'Bob'); | |
+| 5 | COMMIT; | |	
+| 6	| SELECT * FROM students WHERE id = 99; -- empty | 
+| 7	| | UPDATE students SET name = 'Alice' WHERE id = 99; -- 1 row affected |
+| 8	| |	SELECT * FROM students WHERE id = 99; -- Alice |
+| 9	| | COMMIT; |
+
+![](repeatable-read.png)
+
+说明：
+* 事务B在第3步第一次读取id=99记录时，读到是空，随后事务A在第4步插入一条id=99记录，事务B在第6步再次读取发现仍然为空
+* 但是，事务B在第7步试图更新这条不存在记录时，居然可以更新成功，并且事务B在第8步再次读取id=99记录时，记录出现了。
+
+总结：幻读就是没有读到的记录，以为不存在，但其实可以更新成功，并且更新成功后再次读取，又出现了。
 
 #### Serializable
+最严格的隔离级别
+
+## 参考
+[https://liaoxuefeng.com/books/sql/](https://liaoxuefeng.com/books/sql/)
+[https://www.bilibili.com/video/BV1Kr4y1i7ru/](https://www.bilibili.com/video/BV1Kr4y1i7ru/)
