@@ -7,24 +7,68 @@ tags: MySQL
 ---
 
 ## 体系结构
-连接层 -> 服务层 -> 存储引擎 —> 存储层
+连接层 -> 服务层 -> 引擎层 —> 存储层
 
-InnoDB
-支持事务，行级锁，外键
-xxx.ibd 路径: /var/lib/mysql/*.ibd xxx表示表名, InnoDB每张表对应一个表空间文件，存储表结构、数据、索引
-ibd2sdi account.ibd
-逻辑存储结构: TableSpace(表空间), Segment(段), Extent(区), Page(页), Row(行)
+## 存储引擎简介
+存储引擎指存储数据，建立索引，更新/查询数据等技术的实现方式。存储引擎是基于表的，不是基于库的。
 
-<!-- more -->
+### 查某个表的存储引擎
+```
+show create table 表名;
+```
+### 查数据库支持的存储引擎
+```
+show engines;
+```
+
+### 创建表时指定引擎
+```
+create table a(
+)engine = MyISAM;
+
+create table b(
+)engine = InnoDB;
+```
+
+## 存储引擎特点
+
+### InnoDB
+* 支持事务，行级锁，外键
+* 每张表对应一个表空间文件XXX.ibd，路径:`/var/lib/mysql/*.ibd`
+* 逻辑存储结构: TableSpace(表空间), Segment(段), Extent(区), Page(页), Row(行)
+
+### MyISAM
+MySQL早期的默认存储引擎
+* 不支持事务，不支持外键
+* 支持表锁，不支持行锁
+* XX.sdi 存储表结构信息, XX.MYD 存储数据 XX.MYI存储索引
+
+### Memory
+表数据存储在内存中，只能将这些表作为临时表或缓存使用
+* 内存存放
+* hash索引(默认)
+* XX.sdi 存储表结构
 
 ## 索引
-https://www.cs.usfca.edu/~galles/visualization/BTree.html
-https://blog.csdn.net/u011240877/article/details/80490663
+索引(index)是帮助MySQL高效查询数据的数据结构。
+优缺点：提高查询效率，但索引本身占用空间，且降低更新表(INSERT,UPDATE,DELETE)的速度。
 
-### 为什么用B+tree
-* 相对于二叉树，层级更少，效率更高
-* B-tree, 非叶子节点也保存数据，导致树高度增加，效率降低
-* 相对Hash索引，支持范围匹配和排序
+### 索引结构
+| 索引结构 | 描述 |
+| -- | -- |
+| B+Tree索引 | 最常见索引, 大部分引擎都支持B+树索引 |
+| Hash索引 | 底层用哈希表实现，只有精确匹配索引列的查询才有效，不支持范围查询和排序 |
+| R-tree(空间索引) | MyISAM的一个特殊索引类型，主要用于地理空间数据类型，通常使用较少 |
+| Full-text(全文索引) | 一种通过建立倒排索引，快速匹配文档的方式，类似与Lucene,Solr,ES |
+
+### 为什么InnoDB选择B+树，不用二叉树，B树
+* 二叉树：顺序插入时，退化成链表，查询性能低；层级较深，查询速度慢。
+* B-Tree: 叶子节点和非叶子节点都保存数据，查询不稳定；相比B+树IO消耗大
+* B+Tree: 只有叶子节点存储数据，一个节点可以存储更多的key，使得树更矮，减少IO操作次数；所有叶子节点构成一个有序链表
+MySQL在原B+Tree基础上，增加一个指向相邻叶子节点的链表指针，提高区间访问性能。
+
+https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.player.switch&vd_source=d8559c2d87607be86810cd806158bb86&p=72
+<!-- more -->
 
 ### 语法
 创建索引
