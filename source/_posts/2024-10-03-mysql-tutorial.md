@@ -17,13 +17,13 @@ tags: MySQL
 * 表的每一列称为字段（Column），同一个表的每一行记录都拥有相同的若干字段。
 * 字段定义了数据类型（整型、浮点型、字符串、日期等），以及是否允许为NULL
 
+<!-- more -->
+
 ## 什么是SQL
 SQL(Structured Query Language)是结构化查询语言，用来访问和操作数据库系统。定义了几种操作数据库的能力：
 * DDL：Data Definition Language 允许用户定义数据，也就是创建表、删除表、修改表结构这些操作。
 * DML：Data Manipulation Language 为用户提供添加、删除、更新数据的能力
 * DQL：Data Query Language 允许用户查询数据，这也是最频繁的数据库日常操作。
-
-<!-- more -->
 
 ## DDL-数据库操作
 
