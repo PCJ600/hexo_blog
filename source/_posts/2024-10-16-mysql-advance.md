@@ -9,8 +9,9 @@ tags: MySQL
 ## 体系结构
 连接层 -> 服务层 -> 引擎层 —> 存储层
 
-## 存储引擎简介
-存储引擎指存储数据，建立索引，更新/查询数据等技术的实现方式。存储引擎是基于表的，不是基于库的。
+## 存储引擎
+存储引擎指存储数据，建立索引，更新/查询数据等技术的实现方式。
+存储引擎是基于表的，不是基于库的。
 
 ### 查某个表的存储引擎
 ```
@@ -29,8 +30,6 @@ create table a(
 create table b(
 )engine = InnoDB;
 ```
-
-## 存储引擎特点
 
 ### InnoDB
 * 支持事务，行级锁，外键
@@ -64,13 +63,30 @@ MySQL早期的默认存储引擎
 ### 为什么InnoDB选择B+树，不用二叉树，B树
 * 二叉树：顺序插入时，退化成链表，查询性能低；层级较深，查询速度慢。
 * B-Tree: 叶子节点和非叶子节点都保存数据，查询不稳定；相比B+树IO消耗大
-* B+Tree: 只有叶子节点存储数据，一个节点可以存储更多的key，使得树更矮，减少IO操作次数；所有叶子节点构成一个有序链表
+* B+Tree: 只有叶子节点存储数据，使得树更矮，减少IO操作次数；所有叶子节点构成一个有序链表
 MySQL在原B+Tree基础上，增加一个指向相邻叶子节点的链表指针，提高区间访问性能。
 
-https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.player.switch&vd_source=d8559c2d87607be86810cd806158bb86&p=72
-<!-- more -->
+### 索引分类
+| 分类 | 含义 | 特点 | 关键字 |
+| -- | -- | -- | -- |
+| 主键索引 | 针对于表中主键创建的索引 | 默认自动创建，只有一个 | PRIMARY |
+| 唯一索引 | 避免同一个表中某数据列的重复 | 可以有多个 | UNIQUE |
+| 常规索引 | 快速定位特定数据 | 可以有多个 | |
+| 全文索引 | 查找文本中关键词 | 可以有多个 | FULLTEXT |
 
-### 语法
+在InnoDB中，根据索引的存储形式，又可以分如下两种：
+| 分类 | 含义 | 特点 |
+| -- | -- | -- |
+| 聚集索引(Clustered Index) | 将数据和索引一起存储，叶子节点保存了行数据 | 有且只有一个 |
+| 二级索引(Secondary Index) | 将数据和索引分开存储，叶子节点关联对应主键 | 可存在多个 |
+
+聚集索引选取规则：
+* 如果存在主键，主键索引就是聚集索引
+* 如果不存在主键，使用第一个唯一索引作为聚集索引
+* 如没有主键和合适的唯一索引，InnoDB会自动生成一个rowid作为隐藏的聚集索引
+
+
+### 索引语法
 创建索引
 ```
 create [unique|fulltext] index index_name on table_name (index_col_name,...);
@@ -84,13 +100,12 @@ show index from table_name;
 drop index index_name on table_name;
 ```
 
-例：
-```
-select * from tb_user;
-|id | name | email | profession | age | gender | status | createtime |
+例：按如下要求完成索引的创建
+```sql
 create table tb_user(
 	id bigint auto_increment primary key,
 	name varchar(10),
+	phone char(11),
 	email varchar(36),
 	profession varchar(36),
 	age tinyint unsigned,
@@ -100,42 +115,61 @@ create table tb_user(
 )engine=InnoDB;
 ```
 
-name设置索引
-phone非空创建唯一索引
-profession,age,status设置联合索引
-email建立索引
-```
+要求：
+* name设置索引
+* phone非空创建唯一索引
+* profession,age,status设置联合索引
+* email建立索引
+
+创建索引
+```sql
 create index idx_user_name on tb_user(name);
 create unique index idx_user_phone on tb_user(phone);
 create index idx_user_pro_age_sta on tb_user(profession,age,status);
 create index idx_user_email on tb_user(email);
 ```
-
-### 性能分析
-SQL执行效率
-show [session|global] status;查看数据库insert,update,delete,select频次
+查看索引
 ```
-mysql> show global status like 'com_______';
+mysql> show index from tb_user;
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name             | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| tb_user |          0 | PRIMARY              |            1 | id          | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| tb_user |          0 | idx_user_phone       |            1 | phone       | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_name        |            1 | name        | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            1 | profession  | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            2 | age         | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            3 | status      | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_email       |            1 | email       | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+```
+
+## SQL性能分析
+
+### 查询SQL执行频率
+通过如下命令，查看SQL中增删改查的频率
+```
+mysql> show global status like 'Com_______';
 +---------------+-------+
 | Variable_name | Value |
 +---------------+-------+
 | Com_binlog    | 0     |
-| Com_commit    | 1     |
-| Com_delete    | 2     |
+| Com_commit    | 0     |
+| Com_delete    | 0     |
 | Com_import    | 0     |
-| Com_insert    | 30    |
+| Com_insert    | 0     |
 | Com_repair    | 0     |
 | Com_revoke    | 0     |
-| Com_select    | 231   |
+| Com_select    | 4     |
 | Com_signal    | 0     |
-| Com_update    | 9     |
+| Com_update    | 0     |
 | Com_xa_end    | 0     |
 +---------------+-------+
 ```
+### 慢查询日志
+记录所有执行时间超过指定参数long_query_time(默认:10秒)的所有SQL语句日志
 
-慢查询日志
-记录所有执行时间超过指定参数long_query_time(默认:10秒)的SQL语句日志
-默认没开
+MySQL的慢查询日志默认没有开，需要手动配置
 ```
 mysql> show variables like 'slow_query%';
 +---------------------+-----------------------------------+
@@ -145,45 +179,399 @@ mysql> show variables like 'slow_query%';
 | slow_query_log_file | /var/lib/mysql/localhost-slow.log |
 +---------------------+-----------------------------------+
 ```
+修改`/etc/my.cnf.d/mysql-server.cnf`, 在[mysqld]最后添加两行，开启MySQL慢查询日志，设置慢查询超时时间2秒
+```
+slow-query-log=on
+long_query_time=2
+```
+重启mysqld, 执行`systemctl restart mysqld`，再确认修改后的配置已生效
+```
+mysql> show variables like 'slow_query%';
++---------------------+-----------------------------------+
+| Variable_name       | Value                             |
++---------------------+-----------------------------------+
+| slow_query_log      | ON                                |
++---------------------+-----------------------------------+
+mysql> show variables like 'long_query_time';
++-----------------+----------+
+| Variable_name   | Value    |
++-----------------+----------+
+| long_query_time | 2.000000 |
++-----------------+----------+
+```
+### profile详情
+先打开profile开关
+```
+mysql> select @@profiling;
++-------------+
+| @@profiling |
++-------------+
+|           0 |
++-------------+
+1 row in set, 1 warning (0.00 sec)
 
-
-
-### 索引
-
-#### 为什么需要索引
-关系数据库中可能存在上万甚至上亿条记录，想要获得非常快的查询速度，就需要使用索引。
-
-#### 什么是索引
-索引是关系数据库中对某一列或多个列的值进行预排序的数据结构。
-通过索引，数据库系统不必扫描整个表，而是直接定位到符合条件的记录，这样就大大加快了查询速度。
-
-#### 查看索引
-```sql
-show index from student;
+mysql> set profiling = 1;
+```
+执行SQL操作后，通过show profiles查看指令的执行耗时
+```
+mysql> show profiles;
++----------+------------+------------------------------+
+| Query_ID | Duration   | Query                        |
++----------+------------+------------------------------+
+|        1 | 0.00027175 | select * from tb_user        |
+|        2 | 0.00008450 | show profiles for query 1    |
++----------+------------+------------------------------+
+mysql> show profile for query 1;
+mysql> show profile cpu for query 1;
 ```
 
-#### 添加索引
-```sql
-create table student (id bigint primary key not null auto_increment, class_id int, name varchar(32), gender int, score int);
-alter table student add index idx_score (score);
+### explain
 ```
-* 索引的效率取决于索引列的值是否散列，即该列的值如果越互不相同，那么索引效率越高。
-* 可以对一张表创建多个索引。索引的优点是提高了查询效率，缺点是在插入、更新和删除记录时，需要同时修改索引
-* 对于主键，关系数据库会自动对其创建主键索引。使用主键索引的效率是最高的，因为主键会保证绝对唯一。
+explain select * from tb_user where id = 1;
+```
 
-#### 唯一索引
-添加唯一索引
-```sql
-ALTER TABLE student ADD UNIQUE INDEX uni_name (name);
+实例：给tb_user表生成100w条数据，用于测试查询性能
 ```
-只对某一列添加一个唯一约束而不创建唯一索引：
-```sql
-ALTER TABLE student ADD CONSTRAINT uni_name UNIQUE (name);
+#!/usr/bin/env python3
+import random
+from datetime import datetime, timedelta
+import string
+
+#insert into tb_user(name,phone,email,profession,age,gender,status,createtime) values('Jony','12345678111', 'example@163.com', 'RD',18,'M',1,NOW());
+
+def generate_phone():
+    return '1' + ''.join([str(random.randint(0, 9)) for _ in range(10)])
+
+def generate_random_date():
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 12, 31)
+    time_between_dates = end_date - start_date
+    days_between_dates = time_between_dates.days
+    random_number_of_days = random.randint(0, days_between_dates)
+    random_date = start_date + timedelta(days=random_number_of_days)
+    return random_date.strftime('%Y-%m-%d')
+
+def generate_random_name(length=5):
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for _ in range(length))
+
+def insert_data():
+    with open('./test.sql', 'w') as f:
+        for i in range(1000000):
+            name = generate_random_name()
+            phone = generate_phone()
+            email = generate_random_name() + '@163.com'
+            profession = random.choice(['Sales', 'R&D', 'Marketing', 'OPS'])
+            age = random.randint(0,130)
+            gender = random.choice(['F','M'])
+            status = random.choice([0, 1])
+            date = generate_random_date()
+            output = "insert into tb_user(name,phone,email,profession,age,gender,status,createtime) values('{name}','{phone}', '{email}', '{profession}',{age},'{gender}', {status}, '{date}');".format(name=name, phone=phone, email=email, profession=profession, age=age, gender=gender, status=status, date=date)
+            f.write(output + '\n')
+
+insert_data()
 ```
-删除索引
-```sql
-alter table mytable drop index uni_name;
+再从SQL文件中批量导入tb_user表的数据到数据库pc
 ```
+mysql -u root -p -D pc < test.sql 
+```
+
+explain执行计划中各字段含义
+```
+mysql> explain select name from tb_user where id = 1;
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+| id | select_type | table   | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | const | PRIMARY       | PRIMARY | 8       | const |    1 |   100.00 | NULL  |
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+```
+* id
+表示查询中执行select子句或操作表的顺序，id相同执行顺序从上到下，id不同，值越大越先执行
+* select_type
+表示select类型，常见取值有simple, primary, union, subquery(有子查询)
+* type
+表示连接类型，性能由好到差为NULL, system, const, eq_ref, ref, range, index, all
+* possible_keys
+显示可能应用在这张表的索引，一个或多个
+* key
+表示实际用到的索引，如果为NULL说明没使用索引
+* key_len
+表示索引中字节数，该值为索引字段最大可能长度，并非实际使用长度，长度越短越好
+* rows
+MySQL认为必须要执行查询的行数，在InnoDB表中，是一个估计值，可能并不总是准确的
+* filtered
+表示返回结果的行数占需读取行数百分比，filtered值越大越好
+
+例: explain type = NULL (没有查表)
+```
+mysql> explain select 'A';
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------+
+| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra          |
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------+
+|  1 | SIMPLE      | NULL  | NULL       | NULL | NULL          | NULL | NULL    | NULL | NULL |     NULL | No tables used |
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------+
+```
+例: explain type = const (走主键索引/唯一索引)
+```
+mysql> explain select name from tb_user where id = 1;
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+| id | select_type | table   | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | const | PRIMARY       | PRIMARY | 8       | const |    1 |   100.00 | NULL  |
++----+-------------+---------+------------+-------+---------------+---------+---------+-------+------+----------+-------+
+```
+例: explain type = ref (走普通的非唯一索引)
+```
+mysql> explain select name from tb_user where name = 'uXrBh';
++----+-------------+---------+------------+------+---------------+---------------+---------+-------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys | key           | key_len | ref   | rows | filtered | Extra       |
++----+-------------+---------+------------+------+---------------+---------------+---------+-------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_name | idx_user_name | 43      | const |    1 |   100.00 | Using index |
++----+-------------+---------+------------+------+---------------+---------------+---------+-------+------+----------+-------------+
+```
+
+## 索引应用
+
+### 最左前缀法则
+* 对于索引了多列的场景，最左前缀法则指查询从索引的最左列开始，且不跳过索引中的列
+* 如果跳跃某一列，索引将部分失效(后面字段索引失效)
+
+例：先查看tb_user表的索引
+```sql
+mysql> show index from tb_user;
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name             | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| tb_user |          0 | PRIMARY              |            1 | id          | A         |      245768 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_name        |            1 | name        | A         |      269997 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            1 | profession  | A         |           3 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            2 | age         | A         |         535 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_pro_age_sta |            3 | status      | A         |        1051 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_phone       |            1 | phone       | A         |      271498 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| tb_user |          1 | idx_user_email       |            1 | email       | A         |      269341 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++---------+------------+----------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+```
+例: 符合最左前缀法则，走联合索引(profession,age,status)
+```
+mysql> explain select * from tb_user where profession = 'R&D' and age = 31 and status = 1;
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref               | rows | filtered | Extra |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 154     | const,const,const |  261 |   100.00 | NULL  |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+```
+例：查询条件改成只有profession，仍然走联合索引(profession,age,status)
+```
+mysql> explain select * from tb_user where profession = 'R&D';
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref   | rows   | filtered | Extra |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 147     | const | 127438 |   100.00 | NULL  |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+```
+例：查询条件改成age, status，索引失效，走了全表扫描
+```
+mysql> explain select * from tb_user where age = 31 and status = 1;
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 271498 |     1.00 | Using where |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+```
+例：查询条件改成profession, status，索引部分失效，只有profession走了索引
+```
+mysql> explain select * from tb_user where profession = 'R&D' and status = 1;
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-----------------------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref   | rows   | filtered | Extra                 |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-----------------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 147     | const | 127438 |    10.00 | Using index condition |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-----------------------+
+```
+例：查询条件改成age, status, profession, 走联合索引(profession,age,status) (只要存在即可，和语句中的先后位置无关)
+```
+explain select * from tb_user where age = 31 and status = 1 and profession = 'R&D';
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref               | rows | filtered | Extra |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 154     | const,const,const |  261 |   100.00 | NULL  |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+```
+
+### 范围查询
+联合索引中，出现范围查询，则范围查询右侧的列索引失效
+
+例: age使用了范围查询，status没有走索引
+```
+mysql> explain select * from tb_user where profession = '软件工程' and age > 30 and status = '0';
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+| id | select_type | table   | partitions | type  | possible_keys        | key                  | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb_user | NULL       | range | idx_user_pro_age_sta | idx_user_pro_age_sta | 149     | NULL |    1 |    10.00 | Using index condition |
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+```
+例：把 age > 30 改成 age >= 30，都可以走索引 (业务允许情况下，尽量用>=代替>)
+```
+mysql> explain select * from tb_user where profession = '软件工程' and age >= 30 and status = '0';
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+| id | select_type | table   | partitions | type  | possible_keys        | key                  | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb_user | NULL       | range | idx_user_pro_age_sta | idx_user_pro_age_sta | 154     | NULL |    1 |    10.00 | Using index condition |
++----+-------------+---------+------------+-------+----------------------+----------------------+---------+------+------+----------+-----------------------+
+```
+
+### 在索引列上进行运算，索引会失效
+
+例: 对phone做substring运算，发现索引失效, type = ALL
+```
+mysql> explain select * from tb_user where phone = '10931949622';
++----+-------------+---------+------------+------+----------------+----------------+---------+-------+------+----------+-----------------------+
+| id | select_type | table   | partitions | type | possible_keys  | key            | key_len | ref   | rows | filtered | Extra                 |
++----+-------------+---------+------------+------+----------------+----------------+---------+-------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_phone | idx_user_phone | 45      | const |    1 |   100.00 | Using index condition |
++----+-------------+---------+------------+------+----------------+----------------+---------+-------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> explain select * from tb_user where substring(phone,10,2) = '22';
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 271498 |   100.00 | Using where |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+```
+
+### 字符串不加引号
+字符串类型字段使用时，不加引号，索引将失效。
+
+例：查询手机号时，忘了加引号，也能查出结果，但索引失效
+```
+mysql> explain select * from tb_user where phone = 10931949622;
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys  | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | idx_user_phone | NULL | NULL    | NULL | 271498 |    10.00 | Using where |
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+```
+
+### 头部模糊匹配，索引失效
+
+例: like查询手机号。使用头部模糊匹配'%262'，索引失效；尾部模糊匹配'109%'，索引有效
+```
+mysql> explain select * from tb_user where phone like '109%';
++----+-------------+---------+------------+-------+----------------+----------------+---------+------+------+----------+-----------------------+
+| id | select_type | table   | partitions | type  | possible_keys  | key            | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+---------+------------+-------+----------------+----------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb_user | NULL       | range | idx_user_phone | idx_user_phone | 45      | NULL | 2713 |   100.00 | Using index condition |
++----+-------------+---------+------------+-------+----------------+----------------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> explain select * from tb_user where phone like '%622';
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 271498 |    11.11 | Using where |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-------------+
+```
+
+### or连接的条件
+用or分割开的条件，如果or前条件中列有索引，or后条件没有索引，查询不会走索引
+```
+mysql> explain select * from tb_user where phone = '10931949622' or age = 23;
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys  | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | idx_user_phone | NULL | NULL    | NULL | 271498 |    10.00 | Using where |
++----+-------------+---------+------------+------+----------------+------+---------+------+--------+----------+-------------+
+```
+
+### 数据分布情况也会影响是否使用索引
+如果MySQL评估使用索引比全表更慢，则不使用索引
+
+例: tb_user表数据profression都是not null的，使用where is not null查询没有走索引
+```
+mysql> explain select * from tb_user where profession is not null ;
++----+-------------+---------+------------+------+----------------------+------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys        | key  | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+------+----------------------+------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | idx_user_pro_age_sta | NULL | NULL    | NULL | 271498 |    50.00 | Using where |
++----+-------------+---------+------------+------+----------------------+------+---------+------+--------+----------+-------------+
+```
+
+### 索引提示
+SQL提示，是优化数据库的重要手段。指在SQL语句中加入一些认为提示来达到优化操作的目的。
+
+例：先创建一个profession单列索引
+```
+mysql> create index idx_user_pro on tb_user(profession);
+```
+再查询profession为'R&D'的员工。MySQL可以用普通索引idx_user_pro，也可以用联合索引idx_user_pro_age_sta
+```
+mysql> explain select * from tb_user where profession = 'R&D';
++----+-------------+---------+------------+------+-----------------------------------+----------------------+---------+-------+--------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys                     | key                  | key_len | ref   | rows   | filtered | Extra |
++----+-------------+---------+------------+------+-----------------------------------+----------------------+---------+-------+--------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta,idx_user_pro | idx_user_pro_age_sta | 147     | const | 127438 |   100.00 | NULL  |
++----+-------------+---------+------------+------+-----------------------------------+----------------------+---------+-------+--------+----------+-------+
+```
+
+use index (建议使用索引)
+```
+mysql> explain select * from tb_user use index(idx_user_pro) where profession = 'R&D';
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+--------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys | key          | key_len | ref   | rows   | filtered | Extra |
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+--------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro  | idx_user_pro | 147     | const | 127772 |   100.00 | NULL  |
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+--------+----------+-------+
+```
+ignore index
+```
+mysql> explain select * from tb_user ignore index(idx_user_pro) where profession = 'R&D';
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref   | rows   | filtered | Extra |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 147     | const | 127438 |   100.00 | NULL  |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------+--------+----------+-------+
+```
+force index (强制使用索引)
+```
+mysql> explain select * from tb_user force index(idx_user_pro) where profession = 'R&D';
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+-------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys | key          | key_len | ref   | rows  | filtered | Extra |
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+-------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro  | idx_user_pro | 147     | const | 90499 |   100.00 | NULL  |
++----+-------------+---------+------------+------+---------------+--------------+---------+-------+-------+----------+-------+
+```
+
+### 覆盖索引
+查询使用到了索引，并且查询的所有列，在该索引中已经全部能够找到(不需要回表)
+
+例: tb_user表已有联合索引(profession,age,status), 查询所有列在该索引中能找到时, Extra='Using index'，当查询字段新增name时，Extra='NULL'
+```
+mysql> explain select id,profession,age,status from tb_user where profession = 'R&D'  and age = 31 and status = '0';
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref               | rows | filtered | Extra       |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 154     | const,const,const |  249 |   100.00 | Using index |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> explain select id,profession,age,status,name from tb_user where profession = 'R&D'  and age = 31 and status = '0';
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys        | key                  | key_len | ref               | rows | filtered | Extra |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_user_pro_age_sta | idx_user_pro_age_sta | 154     | const,const,const |  249 |   100.00 | NULL  |
++----+-------------+---------+------------+------+----------------------+----------------------+---------+-------------------+------+----------+-------+
+```
+注:
+* using index condition (查找使用了索引，但需要回表)
+* using where; using index; (查找使用了索引，且需要数据都能在索引列中找到，无需回表)
+
+**聚集索引和辅助索引** 
+![](mysql-cluster-index.png)
+注：
+* 聚集索引
+* 辅助索引 叶子节点存主键ID (聚集索引叶子节点已经存储行数据，没必要每个辅助索引也存一份行数据，只存主键ID节省空间)
+
+<!-- https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.player.switch&vd_source=d8559c2d87607be86810cd806158bb86&p=85 -->
 
 ## 查看MySQL版本
 https://github.com/mysql/mysql-server/releases/tag/mysql-8.0.36
