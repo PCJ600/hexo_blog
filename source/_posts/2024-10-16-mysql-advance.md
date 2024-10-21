@@ -571,7 +571,177 @@ mysql> explain select id,profession,age,status,name from tb_user where professio
 * 聚集索引
 * 辅助索引 叶子节点存主键ID (聚集索引叶子节点已经存储行数据，没必要每个辅助索引也存一份行数据，只存主键ID节省空间)
 
-<!-- https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.player.switch&vd_source=d8559c2d87607be86810cd806158bb86&p=85 -->
+
+### 前缀索引
+当字段类型为字符串(varchar,text)时，可以只将字符串的一部分前缀，建立索引，这样可以大大节约索引空间，从而提高索引效率
+
+语法:
+```sql
+create index idx_XXX on table_name(column(n));
+```
+前缀长度
+可以根据索引选择性决定，选择性指不重复索引值/数据表记录总数，选择性越高说明查询效率越好
+唯一索引选择性为1，是最好的索引选择性
+```
+select count(distinct substring(email, 1, 5)/count(*) from tb_user;
+```
+例: 给email建立前缀索引，取长度为5
+```
+create index idx_email_5 on tb_user(email(5));
+```
+
+### 单列索引与联合索引
+联合索引指一个索引包含了多个列。
+业务场景中，如果存在多个查询条件，建议建立联合索引，而非单列索引。
+
+
+## SQL优化
+
+### 插入数据
+* 批量插入，不要一条一条插入
+```
+insert into test values(1),(2),(3);
+```
+* 手动提交事务
+```
+start transaction;
+insert into tb_test values(1),(2),(3);
+insert into tb_test values(4),(5),(6);
+insert into tb_test values(7),(8),(9);
+commit;
+```
+* 主键顺序插入
+
+* 大批量插入数据，使用load指令加载本地文件到数据库
+```sql
+mysql --local-infile -u root -p
+set global local_infile = 1;
+load data local infile '*.log' into table `tb_user` fields terminated by ',' terminated by '\n';
+```
+### 主键优化
+* 页分裂
+![](primary-key-opt.png)
+
+* 页合并
+删除一行记录时，实际上记录没有被物理删除，只是被标记为删除，当页中删除记录达到阈值(MERGE_THERSHOLD)，InnoDB会试图合并两个页以节省空间
+
+* 主键设计原则
+满足业务需求情况下，尽量降低主键长度
+插入数据时，尽量选择顺序插入，选择使用AUTO_INCREMENT自增主键
+尽量不使用UUID或其他自然主键(比如身份证号)
+
+### order by优化
+using filesort: 在排序缓冲区sort buffer中完成排序操作，未通过索引直接返回排序结果
+using index: 通过有序索引顺序扫描直接返回的，这种无需额外排序，效率较高
+
+例: 没有建立索引，排序查询走Using filesort.
+```
+mysql> explain select id, age, phone from tb_user order by age;
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+----------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows   | filtered | Extra          |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+----------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 271498 |   100.00 | Using filesort |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+----------------+
+```
+例：建立索引，排序查询走Using index
+```
+mysql> create index idx_user_age_phone on tb_user(age,phone);
+mysql> explain select id, age, phone from tb_user order by age,phone;
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_user_age_phone | 47      | NULL | 271498 |   100.00 | Using index |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-------------+
+
+mysql> explain select id, age, phone from tb_user order by age desc ,phone desc;
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+----------------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                | key_len | ref  | rows   | filtered | Extra                            |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+----------------------------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_user_age_phone | 47      | NULL | 271498 |   100.00 | Backward index scan; Using index |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+----------------------------------+
+
+mysql> explain select id, age, phone from tb_user order by age asc ,phone desc;
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-----------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                | key_len | ref  | rows   | filtered | Extra                       |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-----------------------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_user_age_phone | 47      | NULL | 271498 |   100.00 | Using index; Using filesort |
++----+-------------+---------+------------+-------+---------------+--------------------+---------+------+--------+----------+-----------------------------+
+```
+
+注:
+* 使用排序字段建立合适索引，多字段排序时也遵循最左前缀法则
+* 尽量使用覆盖索引
+* 多字段排序，一个升序一个降序，需指定联合索引创建的规则(ASC/DESC)
+* 如果不可避免出现filesort，大数量排序时可适当增加排序缓冲区大小sort_buffer_size(默认256k)
+```
+mysql> show variables like 'sort_buffer_size';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| sort_buffer_size | 262144 |
++------------------+--------+
+```
+
+### group by优化
+
+先删除所有索引，测试group by查询结果为Using temporary(效率很低)
+```
+mysql> explain select profession,count(*) from tb_user group by profession;
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-----------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows   | filtered | Extra           |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-----------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 271498 |   100.00 | Using temporary |
++----+-------------+---------+------------+------+---------------+------+---------+------+--------+----------+-----------------+
+```
+创建索引后，测试group by查询结果为Using index
+```
+mysql> create index idx_pro_age_sta on tb_user(profession,age,status);
+mysql> explain select profession,count(*) from tb_user group by profession;
++----+-------------+---------+------------+-------+-----------------+-----------------+---------+------+--------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys   | key             | key_len | ref  | rows   | filtered | Extra       |
++----+-------------+---------+------------+-------+-----------------+-----------------+---------+------+--------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | idx_pro_age_sta | idx_pro_age_sta | 154     | NULL | 271498 |   100.00 | Using index |
++----+-------------+---------+------------+-------+-----------------+-----------------+---------+------+--------+----------+-------------+
+```
+
+### limit优化
+分页的记录越靠后，查询耗时越大。
+优化思路：一般分页查询时，通过创建覆盖索引+子查询形式优化。
+
+例：
+···
+select * from tb_sku order by id limit 9000000,10;
+select s.* from tb_sku s, (select id from tb_sku order by id limit 900000,10) a where s.id = a.id;
+···
+
+### count优化
+表数据量大时, count(*)执行耗时较多
+
+* count(主键)
+遍历整张表，把每一行主键id取出来返回给服务层。服务层直接按行累加(无需判断null)。
+* count(字段)
+如果没有not null约束，需要把每一行字段值取出来返回给服务层，服务层需判断是否为null，不为null才累加。
+* count(1)
+遍历整张表，但不取值。服务层对于返回的每一行，放一个数字'1'进去，直接按行进行累加。
+* count(*)
+不会把全部字段取出来，而是专门做了优化，不取值，服务层直接按行累加。
+
+总结: 效率最高count(*), 尽量使用count(*)
+
+### update优化
+更新数据时，一定要根据索引更新，否则会出现锁表的现象。
+
+例: 没有对name建立索引的条件下，以下update语句会锁住整张表
+```
+update student set no = '123' where name = 'haha';
+```
+
+<!-- https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86&p=96 -->
+
+TO BE CONTINUED !!!
+
+
+
 
 ## 查看MySQL版本
 https://github.com/mysql/mysql-server/releases/tag/mysql-8.0.36
