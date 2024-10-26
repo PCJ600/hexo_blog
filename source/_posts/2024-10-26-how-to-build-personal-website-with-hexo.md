@@ -39,13 +39,12 @@ sitemap:
     tag: false
     category: false
 ```
-tag:false, category:false: 网站地图排除标签和分类页面
-将sitemap.xml, post-sitemap.xml, page-sitemap.xml 提交后Google Search Console
+* tag:false, category:false: 网站地图排除标签和分类页面
+* 将sitemap.xml, post-sitemap.xml, page-sitemap.xml 提交后Google Search Console
 
 ### 添加robots.txt
-`robots.txt`是存放在网站根目录下的一个纯文本文件，可以指定搜索引擎蜘蛛只抓取指定内容，或禁止抓取网站部分内容，可以指定sitemap地址
-[robots.txt在线生成工具](https://www.w3cschool.cn/tools/index?name=createrobots)
-在source目录下新建robots.txt
+* `robots.txt`是存放在网站根目录下的一个纯文本文件，可以指定搜索引擎蜘蛛只抓取指定内容，或禁止抓取网站部分内容，可以指定sitemap地址 [robots.txt在线生成工具](https://www.w3cschool.cn/tools/index?name=createrobots)
+* 在source目录下新建robots.txt
 
 ### nofollow标签
 

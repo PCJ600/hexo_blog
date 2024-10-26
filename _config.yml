@@ -152,3 +152,9 @@ sitemap:
   path: sitemap.xml
   tag: false
   category: false
+
+nofollow:
+  enable: true
+  field: site
+  exclude:
+    - 'exclude1.com'
