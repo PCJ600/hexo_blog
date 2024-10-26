@@ -709,10 +709,10 @@ mysql> explain select profession,count(*) from tb_user group by profession;
 优化思路：一般分页查询时，通过创建覆盖索引+子查询形式优化。
 
 例：
-···
+```
 select * from tb_sku order by id limit 9000000,10;
 select s.* from tb_sku s, (select id from tb_sku order by id limit 900000,10) a where s.id = a.id;
-···
+```
 
 ### count优化
 表数据量大时, count(*)执行耗时较多
@@ -726,7 +726,7 @@ select s.* from tb_sku s, (select id from tb_sku order by id limit 900000,10) a 
 * count(*)
 不会把全部字段取出来，而是专门做了优化，不取值，服务层直接按行累加。
 
-总结: 效率最高count(*), 尽量使用count(*)
+总结: count(\*)效率最高
 
 ### update优化
 更新数据时，一定要根据索引更新，否则会出现锁表的现象。
@@ -738,8 +738,273 @@ update student set no = '123' where name = 'haha';
 
 <!-- https://www.bilibili.com/video/BV1Kr4y1i7ru?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86&p=96 -->
 
-TO BE CONTINUED !!!
 
+## 视图
+视图(View)是一种虚拟存在的表，视图仅保存查询的SQL逻辑，不保存查询结果。
+
+创建视图
+```
+create view tb_user_v1 as select id, name from tb_user where id <= 10;
+```
+查询视图
+```
+select * from tb_user_v1;
+```
+修改视图
+```
+alter view tb_user_v1 as select id from tb_user where id <= 10;
+```
+删除
+```
+drop view tb_user_v1;
+```
+
+### 检查选项cascade
+视图可以插入数据，通过视图插入的数据不一定能在视图中查询到(比如插入id>10的记录)
+
+例: 创建视图时指定with cascaded check option，可以阻止通过视图插入查不到的数据
+```
+mysql> create or replace view tb_user_v1 as select id, name from tb_user where id <= 10 with cascaded check option;
+
+mysql> insert into tb_user_v1(id,name) values(100,'hello');
+ERROR 1369 (HY000): CHECK OPTION failed 'pc.tb_user_v1'
+```
+
+## 存储过程
+
+### 创建过程
+```
+delimiter $$
+create procedure p1()
+begin
+	select count(*) from tb_user;
+end$$
+
+delimiter ;
+mysql> call p1();
++----------+
+| count(*) |
++----------+
+|   272633 |
++----------+
+1 row in set (0.02 sec)
+```
+
+### 查看过程
+```
+select * from information_schema.ROUTINES where ROUTINE_SCHEMA = 'itcast';
+show create procedure 存储过程名称;
+```
+
+### 删除过程
+```
+drop procedure if exists p1;
+```
+
+### 变量
+* 全局变量(GLOBAL)
+* 会话变量(SESSION)
+
+### 查看系统变量
+```
+show [session|global] variables;
+show [session|global] variables like '...';
+select @@[session|global].变量;
+```
+
+### 设置系统变量
+```
+set [session|global] 系统变量名=值;
+```
+注：
+* 未指定session或global时，默认为session,会话级变量
+* mysql重启后，所设置全局参数会失效，要想不失效，可以在/etc/my.cnf中配置。
+
+### 用户定义和使用变量
+```
+set @var_name := expr [, @var_name = expr]; -- 定义变量
+select @var_name; -- 使用变量
+```
+注：用户定义变量无需对其进行声明或初始化，只不过获取到的值为NULL
+
+### if语句
+```
+create procedure p3()
+begin
+	declare score int default 58;
+	declare result varchar(10);
+	
+	if score >= 85 then
+		set result := '优秀';
+	elseif score >= 60 then
+		set result := '及格';
+	else
+		set result := '不及格';
+	end if
+	select result;
+end;
+
+call p3();
+```
+
+### 参数
+例：入参为分数，出参为(优秀，及格，不及格)
+```
+create procedure p4(in score int, out result varchar(10))
+begin
+	if score >= 85 then
+		set result := '优秀';
+	elseif score >= 60 then
+		set result := '及格';
+	else
+		set result := '不及格';
+	end if
+	select result;
+end;
+
+call p4(68, @result);
+```
+
+### case
+例：求月份所属季度
+```
+create procedure p6(in month int)
+begin
+	declare result varchar(10);
+	
+	case
+		when month >= 1 and month <= 3 then
+			set result := '第一季度';
+		when month >= 4 and month <= 6 then
+			set result := '第二季度';
+		when month >= 7 and month <= 9 then
+			set result := '第三季度';
+		when month >= 10 and month <= 12 then
+			set result := '第四季度';
+		else
+			set result := '非法参数';
+	end case;
+	
+	select concat('输入月份为: ', month, ', 所属季度为: ', result);
+end;
+
+call p6(4);
+```
+
+### while
+例: 计算从1累加到n的和
+```
+create procedure p7(in n int)
+begin
+	declare total int default 0;
+	while n>0 do
+		set total := total + n;
+		set n := n + 1;
+	end while;
+	select total;
+end;
+
+call p7(10);
+```
+
+### repeat
+例：计算从1累加到n的和
+```
+create procedure p8(in n int)
+begin
+	declare total int default 0;
+	repeat
+		set total := total + n;
+		set n := n - 1;
+	until n <= 0
+	end repeat;
+	
+	select total;
+end;
+```
+
+### 游标(cursor)
+用来存储查询结果集的数据类型
+
+例：
+```
+create procedure p11(in uage int)
+begin
+	declare u_cursor cursor for select name,profession from tb_user where age <= uage;
+	declare uname varchar(100);
+	declare upro varchar(100);
+	declare exit handler for SQLSTATE '02000';
+	
+	drop table if exists tb_user_pro;
+	create table if not exists tb_user_pro(
+		id int primary key auto_increment,
+		name varchar(100),
+		profession varchar(100)
+	);
+	open u_cursor;
+	while true do
+		fetch u_cursor into uname,upro;
+		insert into tb_user_pro values(null,uname,upro);
+	end while;
+	close u_cursor;
+end;
+
+call p11(40);
+```
+### 存储函数
+存储函数是有返回值的存储过程，参数只能是IN类型。
+
+例：从1到n累加
+```
+create function fun1(n int)
+returns int
+begin
+	declare total int default 0;
+	while n>0 do
+		set total := total + n;
+		set n := n - 1;
+	end while;
+	
+	return total;
+end;
+```
+
+## 锁(重点)
+
+锁是计算机协调多个进程或线程并发访问某一资源的机制
+* 全局锁: 锁定数据库中的所有表
+* 表级锁: 每次操作锁住整张表
+* 行级锁: 每次操作锁住对应的行数据
+
+### 全局锁
+对整个数据库实例加锁，加锁后整个实例处于只读状态，后续的DML写语句，DDL语句都被阻塞。
+典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
+
+实例:
+···sql
+flush table with read lock;
+
+update student set name = 'XXX';
+... 阻塞
+ C -- query aborted
+···
+
+数据库中加全局锁，是一个比较重的操作，存在以下问题:
+* 如果在主库上备份，那么在备份期间都不能更新
+* 如果在从库上备份，那么备份期间从库不能执行主库同步来的二进制日志(binlog)，会导致主从延迟
+
+InnoDB引擎中，可以在备份加上参数 --single-transaction完成不加锁的一致性数据备份。
+
+
+
+
+## 触发器(项目中很少用??)
+触发器是与表有关的数据库对象，指在insert/update/delete之前或之后，触发并执行触发器中定义的SQL语句集合。
+| 触发器类型 | NEW和OLD |
+| -- | -- |
+| INSERT型触发器 | NEW表示将要或者已经新增的数据 |
+| UPDATE型触发器 | OLD表示修改之前的数据，NEW表示将要或已经修改后的数据 |
+| DELETE型触发器 | OLD表示将要或者已经删除的数据 |
 
 
 
