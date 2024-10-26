@@ -5,8 +5,8 @@
 # Site
 title: PC's Blog
 subtitle: Life is short, Play more!
-description: ''
-keywords:
+description: "PC's Blog, PC的博客, PC的日志"
+keywords: "PC,博客,Blog,Hexo"
 author: PC
 language: zh-CN
 timezone: Asia/Shanghai
@@ -102,12 +102,6 @@ include:
 exclude:
 ignore:
 
-# Extensions
-plugins: hexo-generator-sitemap
-## Plugins: https://hexo.io/plugins/
-## Themes: https://hexo.io/themes/
-theme: next
-
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
@@ -151,3 +145,8 @@ codeblock:
     enable: true
     show_result: true
     style: default
+
+sitemap:
+  path: sitemap.xml
+  tag: false
+  category: false
