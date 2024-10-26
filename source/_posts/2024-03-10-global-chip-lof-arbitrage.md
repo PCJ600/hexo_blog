@@ -2,7 +2,7 @@
 layout: next
 title: 全球芯片LOF大幅溢价，痛失巨肉我拍断大腿！
 date: 2024-03-10 22:42:02
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

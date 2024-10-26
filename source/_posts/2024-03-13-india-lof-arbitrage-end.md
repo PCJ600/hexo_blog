@@ -2,7 +2,7 @@
 layout: next
 title: 每天的三哥小鸡腿没了
 date: 2024-03-13 19:47:03
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

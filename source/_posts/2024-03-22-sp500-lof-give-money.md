@@ -2,7 +2,7 @@
 layout: next
 title: 标普500LOF又来送钱，一拖七拖拉机开起来！
 date: 2024-03-22 20:03:51
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

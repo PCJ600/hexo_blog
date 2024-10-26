@@ -2,7 +2,7 @@
 layout: next
 title: 印度基金低风险套利回顾
 date: 2024-02-17 19:44:06
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

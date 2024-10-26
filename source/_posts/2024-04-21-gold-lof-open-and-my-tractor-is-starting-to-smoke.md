@@ -2,7 +2,7 @@
 layout: next
 title: '又来！黄金主题LOF溢价40个点开放申购，拖拉机都开冒烟了！'
 date: 2024-04-21 20:38:23
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

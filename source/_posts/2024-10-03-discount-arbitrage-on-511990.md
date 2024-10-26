@@ -2,8 +2,8 @@
 layout: next
 title: '华宝添益(511990)折价套利记录'
 date: 2024-10-03 10:37:43
-categories: 套利往事
-tags: 套利往事
+categories: investment
+tags: investment
 ---
 
 ## 套利原理介绍

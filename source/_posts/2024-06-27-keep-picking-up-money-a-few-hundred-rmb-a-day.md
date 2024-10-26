@@ -2,7 +2,7 @@
 layout: next
 title: 继续捡钱，每天几百块！
 date: 2024-06-27 21:53:54
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 

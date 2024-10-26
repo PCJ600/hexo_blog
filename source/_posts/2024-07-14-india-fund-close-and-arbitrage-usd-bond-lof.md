@@ -2,7 +2,7 @@
 layout: next
 title: 标普印度基金关门，继续套利美元债LOF
 date: 2024-07-14 22:13:53
-categories: 套利往事
+categories: investment
 tags: investment
 ---
 
