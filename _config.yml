@@ -5,7 +5,7 @@
 # Site
 title: PC's Blog
 subtitle: Life is short, Play more!
-description: "PC's Blog, PC的博客, PC的日志"
+description: "PC的博客"
 keywords: "PC,博客,Blog,Hexo"
 author: PC
 language: zh-CN
@@ -145,6 +145,8 @@ codeblock:
     enable: true
     show_result: true
     style: default
+
+theme: next
 
 sitemap:
   path: sitemap.xml

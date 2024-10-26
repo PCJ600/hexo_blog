@@ -32,6 +32,23 @@ timezone: Asia/Shanghai
 ```
 npm install hexo-generator-seo-friendly-sitemap --save
 ```
+Hexo配置文件中添加
+```
+sitemap:
+    path: sitemap.xml
+    tag: false
+    category: false
+```
+tag:false, category:false: 网站地图排除标签和分类页面
+将sitemap.xml, post-sitemap.xml, page-sitemap.xml 提交后Google Search Console
+
+### 添加robots.txt
+`robots.txt`是存放在网站根目录下的一个纯文本文件，可以指定搜索引擎蜘蛛只抓取指定内容，或禁止抓取网站部分内容，可以指定sitemap地址
+[robots.txt在线生成工具](https://www.w3cschool.cn/tools/index?name=createrobots)
+在source目录下新建robots.txt
+
+### nofollow标签
+
 
 ### 给博客文章生成短链
 编辑站点的`_config.yml`(非主题`_config.yml`)
@@ -60,3 +77,4 @@ post:
 ## 参考资料
 [https://mini-pi.github.io/2024/02/28/how-to-make-blog-wedsite](https://mini-pi.github.io/2024/02/28/how-to-make-blog-wedsite)
 [https://www.duheweb.com/post/20210414222449.html](https://www.duheweb.com/post/20210414222449.html)
+[https://blog.dejavu.moe/posts/hexo-seo/](https://blog.dejavu.moe/posts/hexo-seo/)
