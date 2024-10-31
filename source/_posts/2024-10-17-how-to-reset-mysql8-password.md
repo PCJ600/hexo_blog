@@ -1,6 +1,6 @@
 ---
 layout: next
-title: MySQL8.0以上版本如何重置密码
+title: MySQL8.0如何重置密码
 date: 2024-10-17 20:24:36
 categories: MySQL
 tags: MySQL

@@ -1,6 +1,6 @@
 ---
 layout: next
-title: 在Rocky Linux9.4上安装MySQL
+title: 在RHEL9上安装MySQL
 date: 2024-09-16 14:47:56
 categories: MySQL
 tags: MySQL
