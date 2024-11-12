@@ -6,14 +6,52 @@ categories: k8s
 tags: k8s
 ---
 
-## 解决方法
-强制删除deployment和pod后，问题解决：
-```bash
+## 先尝试强制删除deployment和pod等资源
+```
 kubectl -n ${ns} delete deployment --all --force
 kubectl -n ${ns} delete pod --all --force
 ```
-判断namespace的状态是否为Terminating：
+
+## 如果还是失败，通过API强制删除namespace
+
+### 获取需要强制删除的namespace信息
+```
+kubectl get ns ${ns} -o json > old_ns.json
+```
+<!-- more -->
+
+### 删除finalizers
+```
+jq 'del(.spec.finalizers)' old_ns.json > new_ns.json
+```
+
+### 运行kube-proxy
+```
+# kubectl proxy &
+Starting to serve on 127.0.0.1:8001
+```
+
+### 通过API强制删除namespace
+```
+curl -k -H "Content-Type: application/json" -X PUT --data-binary @new_ns.json http://127.0.0.1:8001/api/v1/namespaces/${ns}/finalize
+```
+
+### 最后关闭kube-proxy, 确认namespace被成功删除
+
+最后给出一个Shell脚本，强制删除Terminating状态的namespace
 ```bash
+#!/bin/bash
+
+# 变量ns表示需要强制删除的namespace
+kubectl get ns ${ns} -o json > old_ns.json
+jq 'del(.spec.finalizers)' old_ns.json > new_ns.json
+
+kubectl proxy &
+KUBECTL_PROXY_PID=$!
+curl -k -H "Content-Type: application/json" -X PUT --data-binary @new_ns.json http://127.0.0.1:8001/api/v1/namespaces/${ns}/finalize
+kill ${KUBECTL_PROXY_PID}
+
+# 检查namespace是否陷入Terminating状态
 function check_if_namespace_is_terminating() {
     status=$(kubectl get ns ${ns} -o json | jq .status.phase -r)
     if [ "$status" = "Terminating" ]; then
@@ -22,11 +60,6 @@ function check_if_namespace_is_terminating() {
     return 0
 }
 ```
-<!-- more -->
 
-其他解决方法参考：
-* [A namespace is stuck in the Terminating state](https://www.ibm.com/docs/en/cloud-private/3.2.0?topic=console-namespace-is-stuck-in-terminating-state)
-* [移除該死的Terminating Namespace](https://medium.com/%E8%BC%95%E9%AC%86%E5%B0%8F%E5%93%81-pks%E8%88%87k8s%E7%9A%84%E9%BB%9E%E6%BB%B4/%E7%A7%BB%E9%99%A4%E8%A9%B2%E6%AD%BB%E7%9A%84terminating-namespace-c6594ebe351)
-
-原因参考：
-* [删除namespace为什么会Terminating](https://cloud.tencent.com/developer/article/1802531)
+## 参考
+https://www.iszy.cc/posts/force-delete-k8s-namespace/
