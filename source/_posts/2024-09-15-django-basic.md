@@ -7,7 +7,7 @@ tags: Django
 ---
 
 ## Django快速上手
-参考: [Django快速上手](https://pcj600.github.io/2024/08/23/2024-08-23-how-to-install-django-on-rhel9/)
+参考: [Django快速上手](https://pcj600.github.io/2024/0823230254.html)
 
 ## 再写几个页面
 编辑`demo1/urls.py`, 添加URL和视图函数映射
@@ -235,10 +235,10 @@ def login(request):
 框架：业务代码 -> ORM -> (pymysql,MySQLdb,mysqlclient) -> Database
 
 ### 安装MySQL
-参考: [https://pcj600.github.io/2024/09/16/2024-09-16-how-to-install-mysql-on-rhel9/](https://pcj600.github.io/2024/09/16/2024-09-16-how-to-install-mysql-on-rhel9/)
+参考: [https://pcj600.github.io/2024/0916144756.html](https://pcj600.github.io/2024/0916144756.html)
 
 ### 安装mysqlclient
-参考: [https://pcj600.github.io/2024/09/16/2024-09-16-mysqlclient-connot-install-via-pip/](https://pcj600.github.io/2024/09/16/2024-09-16-mysqlclient-connot-install-via-pip/)
+参考: [https://pcj600.github.io/2024/0916170317.html](https://pcj600.github.io/2024/0916170317.html)
 
 ### ORM
 * 支持创建、修改、删除表(不用你写SQL语句), 但无法创建数据库

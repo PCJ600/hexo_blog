@@ -1,13 +1,19 @@
 ---
 layout: next
-title: Nginx基本使用
+title: Nginx入门
 date: 2024-11-09 15:10:34
 categories: Nginx
 tags: Nginx
 ---
 
 # Nginx简介
-一个开源、高性能、高可靠的web服务器，支持热部署。占用内存少，并发能力强，使用BSD协议(允许免费使用或修改)。
+高性能的web服务器, 反向代理服务器, 负载均衡器, HTTP缓存
+
+# 竞品
+* Apache - 老牌Web服务器, 重量级, 高并发差
+* Lighttpd - 轻量级,高性能Web
+* Tomcat, Jetty - Java, 重量级Web
+* IIS - 基于Windows
 
 # Nginx版本
 * Nginx
@@ -15,17 +21,31 @@ tags: Nginx
 * OpenResty
 * Tengine
 
-# Nginx使用场景
-反向代理、虚拟主机、域名解析、负载均衡、防盗链、url重定向、https
+# Nginx应用场景
+* http服务器(静态服务器)
+* 虚拟主机（一台服务器虚拟多个网站)
+* 反向代理、负载均衡
+* 安全管理, API Gateway, 跨域问题, UrlRewrite
 
-# Nginx特点
-* 高并发环境，比其他WEB服务器有更快响应
-* 低内存消耗，单机支持10万以上并发连接
-* 支持热部署
-* BSD许可协议，允许用户免费使用Nginx，且允许用户在自己项目中直接使用或修改Nginx源码
+# Nginx特点/为什么用Nginx
+* 响应快
+* 高并发(单机支持10w+, 并发连接上限取决与内存)
+* 高扩展性
+* 低内存消耗
+* 高可靠性(worker进程异常退出, master进程可以快速拉起新的worker进程提供服务)
+* 热部署(不停止服务, 升级Nginx的可执行文件, 更新配置，更换日志文件)
+* 配置简单
+* 最自由的BSD许可协议
 
 # Nginx安装
 [https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
+
+# 内核参数优化
+* file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
+* tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
+* tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
+* tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
+* tcp_syncookies: 解决TCP的SYN攻击
 
 <!-- more -->
 
@@ -39,6 +59,12 @@ nginx -s stop   # 向主进程发TERM信号，立即停止所有服务
 nginx -T        # 查看当前配置
 nginx -t        # 测试配置是否有问题
 ```
+
+stop快速停止服务, worker进程和master进程收到信号后立刻跳出循环
+quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连接处理完，最后退出进程
+
+# Nginx进程间的关系
+一个master进程管理多个worker进程, worker进程数和CPU核心数相等
 
 # Nginx主配置文件
 
@@ -257,8 +283,7 @@ this is vod web site
 ```
 
 # 基于域名的几种互联网需求解析
-hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
-
+补充: hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
 
 ## 多用户二级域名需求(微博)
 *.weibo.com -> Nginx -> 真正的业务服务器(拿到域名，解析出二级域名)
@@ -267,15 +292,14 @@ hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本
 
 
 # 反向代理
-正向代理：你访问谷歌用的梯子
-反向代理：Nginx代理了"目标服务器"，去和客户端交互, 目标服务器被隐藏，客户看不见。
-client -> router(互联网) -> 企业机房网关(gateway) -> Nginx -> 目标服务器
+正向代理：国内无法访问谷歌, 必须用梯子，这个梯子就是正向代理
+反向代理：指Nginx代理了"目标服务器"，去和客户端交互; 对于客户端来说, 目标服务器被隐藏。
 
-URLWrite
+
+
 
 # 负载均衡 
 Nginx -> 服务器集群(任意一台提供的服务都是相同的)
-
 **实战操作:** 
 先准备三台RHEL9 VM机器，每台机器都安装Nginx
 ```
@@ -283,7 +307,6 @@ Nginx -> 服务器集群(任意一台提供的服务都是相同的)
 192.168.52.201 Nginx2
 192.168.52.202 Nginx3
 ```
-
 ## 场景1: 配置最简单的proxypass (客户请求Nginx1, Nginx1把所有请求转发到Nginx2)
 Nginx1上配置proxypass, 指向Nginx2, 把请求Nginx1的流量转发到Nginx2, 返回"Welcome to Nginx2"
 先修改Nginx1的nginx.conf
@@ -318,7 +341,6 @@ cat "Welcome to Nginx2" > /var/www/html/index.html
 curl 192.168.52.200:80
 Welcome to nginx2
 ```
-
 ## 场景2: 配置多个proxypass
 请求Nginx1后, Nginx1通过RR算法把请求转发给Nginx2, Nginx3
 
@@ -421,7 +443,131 @@ Welcome to Nginx3
 * fair根据后端服务器响应时间选择, 会造成网络倾斜，并不常用
 * url_hash也不常用，不能做到维持会话，比如注册和登录的url是不同的，可能会转发到不同的服务器
 
+# 动静分离
+TODO
+
+# URLReWrite
+
+## 一个最简单的URLReWrite例子
+场景: 客户 -> 互联网 -> Nginx(网关服务器，反向代理/负载均衡器) -> 业务服务器
+准备两台VM机器:
+```
+192.168.52.200 VM1 Nginx(80端口)
+192.168.52.201 VM2 业务服务器(5000端口)
+```
+实现如下效果:
+* 访问 http://192.168.52.200/2.html, Nginx将请求转发到http://192.168.52.201:5000/admin?page=2
+* 浏览器上只能看到http://192.168.52.200/2.html, 参数admin?page=2被隐藏
+
+步骤：
+1、先在VM2上搭建一个简单的目标服务器(这里用Flask搭建)
+安装Flask
+```
+yum install -y python3-pip
+pip3 install Flask
+```
+添加web.py
+```py
+#!/usr/bin/env python3
+
+from flask import Flask, request
+
+app = Flask(__name__)
+@app.route('/')
+def index():
+    return 'hello'
+
+@app.route('/admin', methods=['GET'])
+def show_admin():
+    page = request.args.get('page', default=0, type=int)
+    return f'You are on page {page}'
+
+if __name__ == '__main__':
+    app.run()
+```
+启动server
+```
+flask --app web run --host=0.0.0.0 # 默认端口5000
+```
+
+2. 再修改VM1上的Nginx配置文件，启动Nginx
+```
+    upstream my_servers {
+        server 192.168.52.201:5000;
+
+    }
+    server {
+        listen       80;
+        server_name  _;
+        include /etc/nginx/default.d/*.conf;
+		
+        location / {
+            rewrite ^/([0-9]+).html$ /admin?page=$1 break;	# rewriteUrl
+            proxy_pass http://my_servers;
+        }
+		# ignore error_page ...
+    }
+```
+
+3. 测试URLReWrite OK
+```
+# curl 192.168.52.200/2.html
+You are on page 2
+# curl 192.168.52.200/admin?page=2
+You are on page 2
+# curl 192.168.52.201:5000/admin?page=2
+You are on page 2
+# curl 192.168.52.201:5000/2.html
+404 Not Found
+```
+
+# 防盗链
+判断referer字段，如果不是合法的referer，返回403
+修改Nginx.conf
+```
+    server {
+        listen       80;
+        server_name  vod.petertest.com;
+        include /etc/nginx/default.d/*.conf;
+        location / {
+            valid_referers none 192.168.52.200; # referer不对, 返回403
+            if ($invalid_referer) {
+                return 403;
+            }
+            root /www/vod;
+        }
+```
+使用curl测试防盗链:
+```
+# 没有指定referer, 或referer为本机IP, 返回200 OK
+[root@localhost ~]# curl -I 192.168.52.200/kuangsan.png
+HTTP/1.1 200 OK
+[root@localhost ~]# curl --referer "http://192.168.52.200" -I 192.168.52.200/kuangsan.png
+HTTP/1.1 200 OK
+
+# referer不合法, 返回403
+[root@localhost ~]# curl --referer "http://4399.com" -I 192.168.52.200/kuangsan.png
+HTTP/1.1 403 Forbidden
+```
+
+# 高可用场景及解决方案
+问题: Nginx本身不可用怎么办
+```
+客户 -> 互联网 -> Nginx1(192.168.52.200)(主) -> Web Servers 
+							|
+				  Nginx2(192.168.52.201)(备) 
+```
+直接交换两台Nginx的IP很麻烦，会有IP冲突问题; 可以使用一个虚拟IP作为入口
+```
+客户 -> 互联网 -> Virtual IP -> 主Nginx IP -> 业务服务器
+```
+keepalived+Nginx实现高可用 https://www.cnblogs.com/youzhibing/p/7327342.html
+
+# HTTPS
+TODO: 自签一个证书，做一个HTTPS服务, 测试一下看看
 
 
+# Nginx进阶(高并发网站技术架构实战)
 
-
+Ingress-Controller
+https://www.cnblogs.com/crazymakercircle/p/17052040.html
