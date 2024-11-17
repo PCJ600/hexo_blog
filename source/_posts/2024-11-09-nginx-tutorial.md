@@ -59,7 +59,6 @@ nginx -s stop   # 向主进程发TERM信号，立即停止所有服务
 nginx -T        # 查看当前配置
 nginx -t        # 测试配置是否有问题
 ```
-
 stop快速停止服务, worker进程和master进程收到信号后立刻跳出循环
 quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连接处理完，最后退出进程
 
@@ -67,7 +66,6 @@ quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连�
 一个master进程管理多个worker进程, worker进程数和CPU核心数相等
 
 # Nginx主配置文件
-
 主配置文件`/etc/nginx/nginx.conf`, 基础配置说明如下:
 ```
 user nginx;                               # 以Nginx用户启动
@@ -111,7 +109,6 @@ http {
         error_page 404 /404.html;
         location = /404.html {
         }
-
         error_page 500 502 503 504 /50x.html;
         location = /50x.html {
         }
@@ -119,172 +116,14 @@ http {
 }
 ```
 
-# 虚拟主机配置
-* 虚拟主机是指，在一台服务器主机虚拟出多台主机，每台虚拟主机都可以具有独立的域名，具有完整的服务器功能
-* 同一台主机上的虚拟主机之间是完全独立的。从网站访问者来看，每一台虚拟主机和一台独立的主机完全一样。
-* 利用虚拟主机，不必为每个要运行的网站提供一台单独的Nginx服务器或单独运行一组Nginx进程。虚拟主机提供了在同一台服务器、同一组Nginx进程上运行多个网站的功能。
+# 虚拟主机配置(server_name配置)
+[https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
 
-## 实例：在一台机器上配置多台虚拟主机
-例如，我需要实现如下效果:
-* 访问80端口返回/www/www页面, 显示"this is www web site"
-* 访问88端口返回/www/vod页面，显示"this is vod web site"
-
-**操作步骤：**
-配置多个站点
-```
-mkdir -p /www/vod /www/www
-cat "welcome to vod site" > /www/vod/index.html
-cat "welcome to www site" > /www/www/index.html
-```
-修改nginx.conf，添加两个server配置，如下
-```
-    # 虚拟主机1
-    server {
-        listen       80;
-        server_name  _;
-        root         /www/www;
-
-        include /etc/nginx/default.d/*.conf;
-
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-    # 虚拟主机2
-    server {
-        listen       88;			# 第二个虚拟主机使用88端口
-        server_name  _;
-        root         /www/vod;		# 访问/www/vod下的页面
-
-        include /etc/nginx/default.d/*.conf;
-
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-```
-使用`nginx -s reload`重新加载配置，测试80,88两个端口可以访问
-```
-# curl localhost:88
-this is vod web site
-# curl localhost:80
-this is www web site
-```
-注: 如遇到Nginx报错: bind() to 0.0.0.0:8088 failed (13: Permission denied), 可参考[link](https://pcj600.github.io/2024/1110141108.html)
-
-
-# servername的多种匹配方式
-
-## 同一个servername中匹配多个域名
-例如，我需要通过不同的域名访问相同的页面, 实现如下效果：
-* vod.petertest.com -> 访问/vww/vod 页面 -> 输出 this is vod site
-* vod1.petertest.com -> 也访问/www/vod 页面 -> 输出 this is vod site
-
-**操作步骤：**
-nginx.conf中, 只需一个server配置项，就可以配多个servername, 不需要复制server配置块。修改方法如下:
-```
-    server {
-        listen       80;
-        server_name  vod.petertest.com vod1.petertest.com;	# 在一个server中配置多个servername
-        root         /www/vod;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-```
-测试结果:
-```
-# curl vod.petertest.com
-this is vod web site
-# curl vod1.petertest.com
-this is vod web site
-```
-
-## 通配符匹配多个servername
-修改nginx.conf
-```
-    server {
-        listen       80;
-        server_name  *.petertest.com;
-        root         /www/vod;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-```
-
-## 通配符结束匹配
-例如，我需要实现如下匹配：
-* vod.petertest.com 匹配到`/www/www`
-* 其他vod.petertest.XXX 匹配到`/www/vod`
-
-**操作步骤：**
-修改Nginx.conf, 如下:
-```
-    server {
-        listen       80;
-        server_name  vod.petertest.com;
-        root         /www/www;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-    server {
-        listen       80;
-        server_name  vod.petertest.*;			# 通配符结束匹配
-        root         /www/vod;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-```
-
-测试结果
-```
-# curl vod.petertest.com
-this is www web site
-# curl vod.petertest.io
-this is vod web site
-```
-
-## 正则匹配
-例如，我需要实现如下匹配：
-* vod.petertest.com 匹配到`/www/www`
-* 其他vod.petertest.XXX 匹配到`/www/vod` 
-
-**操作步骤：**
-修改Nginx.conf, 如下:
-```
-    server {
-        listen       80;
-        server_name  vod.petertest.com;
-        root         /www/www;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-    server {
-        listen       80;
-        server_name  ~^[0-9]+\.petertest\.com$;			# 通配符结束匹配
-        root         /www/vod;
-        include /etc/nginx/default.d/*.conf;
-		# ...
-    }
-```
-测试结果：
-```
-# curl vod.petertest.com
-this is www web site
-# curl 123.petertest.com
-this is vod web site
-```
+## Nginx Location配置
+[TODO]
 
 # 基于域名的几种互联网需求解析
 补充: hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
-
 ## 多用户二级域名需求(微博)
 *.weibo.com -> Nginx -> 真正的业务服务器(拿到域名，解析出二级域名)
 ## 短网址
@@ -294,9 +133,6 @@ this is vod web site
 # 反向代理
 正向代理：国内无法访问谷歌, 必须用梯子，这个梯子就是正向代理
 反向代理：指Nginx代理了"目标服务器"，去和客户端交互; 对于客户端来说, 目标服务器被隐藏。
-
-
-
 
 # 负载均衡 
 Nginx -> 服务器集群(任意一台提供的服务都是相同的)

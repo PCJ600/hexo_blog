@@ -130,5 +130,100 @@ welcome to vod site
 welcome to aud site
 ```
 
+## Nginx server_name的其他配置案例
+### 同一个server_name匹配多个域名
+通过不同的域名访问相同的页面, 实现如下效果：
+* 访问vod.petertest.com -> 返回/vww/vod 页面
+* 访问vod1.petertest.com -> 也返回/www/vod 页面
+
+方法：修改nginx.conf的server配置块, 一个server_name中配置多个域名，如下:
+```
+    server {
+        listen       80;
+        server_name  vod.petertest.com vod1.petertest.com;	# 在一个server中配置多个servername
+        root         /www/vod;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+```
+测试结果:
+```
+# curl vod.petertest.com
+this is vod web site
+# curl vod1.petertest.com
+this is vod web site
+```
+### 通配符匹配多个server_name
+例如，访问`.petertest.com`结尾的域名，返回/www/vod页面
+
+Nginx.conf配置如下：
+```
+    server {
+        listen       80;
+        server_name  *.petertest.com;	# 通配符匹配
+        root         /www/vod;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+```
+### 通配符结束匹配
+实现如下效果：
+* 访问vod.petertest.com -> 返回/vww/vod 页面
+* 访问vod.petertest.XXX -> 返回/www/aud 页面
+
+Nginx.conf配置如下：
+```
+    server {
+        listen       80;
+        server_name  vod.petertest.com;
+        root         /www/www;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+    server {
+        listen       80;
+        server_name  vod.petertest.*;			# 通配符结束匹配
+        root         /www/aud;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+```
+测试结果:
+```
+# curl vod.petertest.com
+this is www web site
+# curl vod.petertest.io
+this is aud web site
+```
+### 正则匹配
+实现如下效果：
+* 访问vod.petertest.com -> 返回/vww/vod 页面
+* 访问123.petertest.com -> 返回/www/aud 页面
+
+Nginx.conf配置如下：
+```
+    server {
+        listen       80;
+        server_name  vod.petertest.com;
+        root         /www/www;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+    server {
+        listen       80;
+        server_name  ~^[0-9]+\.petertest\.com$;			# 正则匹配
+        root         /www/vod;
+        include /etc/nginx/default.d/*.conf;
+		# ...
+    }
+```
+测试结果:
+```
+# curl vod.petertest.com
+this is www web site
+# curl 123.petertest.com
+this is aud web site
+```
+
 ## 参考
 [手把手教你配置Nginx的虚拟主机](https://juejin.cn/post/7096443628326748174)

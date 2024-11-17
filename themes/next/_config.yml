@@ -179,6 +179,7 @@ site_state: true
 social:
   #GitHub: https://github.com/yourname || fab fa-github
   E-Mail: nju_pc@163.com || fa fa-envelope
+  CSDN: https://blog.csdn.net/pcj_888 || fab fa-weibo
   #Weibo: https://weibo.com/yourname || fab fa-weibo
   #Google: https://plus.google.com/yourname || fab fa-google
   #Twitter: https://twitter.com/yourname || fab fa-twitter
