@@ -21,8 +21,6 @@ tags: Nginx
 * OpenResty
 * Tengine
 
-<!-- more -->
-
 # Nginx应用场景
 * http服务器(静态服务器)
 * 虚拟主机（一台服务器虚拟多个网站)
@@ -42,12 +40,8 @@ tags: Nginx
 # Nginx安装
 [https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
 
-# 内核参数优化
-* file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
-* tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
-* tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
-* tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
-* tcp_syncookies: 解决TCP的SYN攻击
+
+<!-- more -->
 
 # Nginx常用命令
 ```
@@ -116,8 +110,16 @@ http {
 }
 ```
 
-# 虚拟主机配置(server_name配置)
+# 内核参数优化
+* file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
+* tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
+* tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
+* tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
+* tcp_syncookies: 解决TCP的SYN攻击
+
+# 虚拟主机配置
 [https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
+server_name配置: [TODO]
 
 ## Nginx Location配置
 [TODO]
@@ -130,154 +132,8 @@ http {
 *.com/asdasjda12312 -> Nginx -> 真正的网址
 
 
-# 反向代理
-正向代理：国内无法访问谷歌, 必须用梯子，这个梯子就是正向代理
-反向代理：指Nginx代理了"目标服务器"，去和客户端交互; 对于客户端来说, 目标服务器被隐藏。
-
-# 负载均衡 
-Nginx -> 服务器集群(任意一台提供的服务都是相同的)
-**实战操作:** 
-先准备三台RHEL9 VM机器，每台机器都安装Nginx
-```
-192.168.52.200 Nginx1 
-192.168.52.201 Nginx2
-192.168.52.202 Nginx3
-```
-## 场景1: 配置最简单的proxypass (客户请求Nginx1, Nginx1把所有请求转发到Nginx2)
-Nginx1上配置proxypass, 指向Nginx2, 把请求Nginx1的流量转发到Nginx2, 返回"Welcome to Nginx2"
-先修改Nginx1的nginx.conf
-```
-    server {
-        listen       80;
-        server_name  vod.petertest.com;
-        include /etc/nginx/default.d/*.conf;
-        location / {
-            proxy_pass http://192.168.52.201;	# 配置proxy_pass
-        }
-		# ...
-    }
-```
-再修改Nginx2的nginx.conf
-```
-    server {
-        listen       80;
-        server_name  _;
-        root         /var/www/html;
-        # Load configuration files for the default server block.
-        include /etc/nginx/default.d/*.conf;
-    }
-```
-Nginx2添加一个主页
-```
-mkdir -p /var/www/html
-cat "Welcome to Nginx2" > /var/www/html/index.html
-```
-测试
-```
-curl 192.168.52.200:80
-Welcome to nginx2
-```
-## 场景2: 配置多个proxypass
-请求Nginx1后, Nginx1通过RR算法把请求转发给Nginx2, Nginx3
-
-**实战操作:**
-修改Nginx1的配置文件
-```
-# 添加upstream，和server同级
-upstream my_servers{
-	server 192.168.52.201:80;
-	server 192.168.52.202:80;
-}
-server {
-    listen       80;
-    server_name  _;
-    location / {
-		proxy_pass http://my_servers;
-	}
-    # Load configuration files for the default server block.
-    include /etc/nginx/default.d/*.conf;
-}
-```
-测试
-```
-# curl 192.168.52.200:80
-Welcome to nginx2
-# curl 192.168.52.200:80
-Welcome to Nginx3
-```
-
-## 负载均衡策略
-### 设置权重策略(weight)
-修改Nginx1的配置文件，如下:
-```
-upstream my_servers {
-    server 192.168.52.201:80 weight=4;
-    server 192.168.52.202:80 weight=1;
-}
-```
-测试
-```
-# curl 192.168.52.200:80
-Welcome to nginx2
-# curl 192.168.52.200:80
-Welcome to nginx2
-# curl 192.168.52.200:80
-Welcome to Nginx3
-# curl 192.168.52.200:80
-Welcome to nginx2
-# curl 192.168.52.200:80
-Welcome to nginx2
-```
-### 让某台服务器下线(down)
-修改Nginx1的配置文件，如下:
-```
-upstream my_servers {
-    server 192.168.52.201:80 weight=4 down;
-    server 192.168.52.202:80 weight=1;
-}
-```
-测试: (Nginx2下线, 所有请求只转发到了Nginx3)
-```
-# curl 192.168.52.200:80
-Welcome to Nginx3
-# curl 192.168.52.200:80
-Welcome to Nginx3
-```
-### 备用服务器(backup)
-把一台服务器设为backup，是指正常情况Nginx不会把请求转到这台服务器，但如果其他服务器都出现故障，Nginx会把请求转到这台备用服务器
-
-修改Nginx1的配置文件，如下:
-```
-upstream my_servers {
-    server 192.168.52.201:80;
-    server 192.168.52.202:80 backup;
-}
-```
-测试, 设置Nginx3为backup后, Nginx1把请求只转发到了Nginx2；此时我手动stop Nginx2, Nginx1把请求都转发到了Nginx3
-```
-# curl 192.168.52.200:80
-Welcome to nginx2
-# curl 192.168.52.200:80
-Welcome to nginx2
-
-# 此时手动stop Nginx2 
-# curl 192.168.52.200:80
-Welcome to Nginx3
-```
-
-### 其他负载均衡策略(不常用)
-| 策略 | 描述 |
-| -- | -- |
-| ip_hash | 根据客户端IP地址转发到同一台服务器，可以保持会话 |
-| least_conn | 最少连接访问 |
-| url_hash | 根据用户访问的url定向转发请求，需要三房插件 |
-| fair | 根据后端服务器响应时间选择，需要三方插件 |
-注: 
-* 单纯使用RR算法的问题: 不能维持会话
-* 一般不用ip_hash, 因为客户的IP地址经常会改变
-* least_conn也不常用, 对于不同带宽配置的服务器, 用least_conn策略不合适;
-* fair根据后端服务器响应时间选择, 会造成网络倾斜，并不常用
-* url_hash也不常用，不能做到维持会话，比如注册和登录的url是不同的，可能会转发到不同的服务器
+## 负载均衡/反向代理
+TODO
 
 # 动静分离
 TODO
