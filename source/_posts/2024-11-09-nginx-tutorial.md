@@ -39,7 +39,12 @@ tags: Nginx
 
 # Nginx安装
 [https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
-
+# 虚拟主机配置
+[https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
+## Nginx Location配置
+[https://pcj600.github.io/2024/1117141829.html](https://pcj600.github.io/2024/1117141829.html)
+## 负载均衡/反向代理
+[http://pcj600.github.io/2024/1117165553.html](http://pcj600.github.io/2024/1117165553.html)
 
 <!-- more -->
 
@@ -110,19 +115,7 @@ http {
 }
 ```
 
-# 内核参数优化
-* file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
-* tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
-* tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
-* tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
-* tcp_syncookies: 解决TCP的SYN攻击
 
-# 虚拟主机配置
-[https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
-server_name配置: [TODO]
-
-## Nginx Location配置
-[TODO]
 
 # 基于域名的几种互联网需求解析
 补充: hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
@@ -132,8 +125,12 @@ server_name配置: [TODO]
 *.com/asdasjda12312 -> Nginx -> 真正的网址
 
 
-## 负载均衡/反向代理
-TODO
+# 内核参数优化
+* file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
+* tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
+* tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
+* tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
+* tcp_syncookies: 解决TCP的SYN攻击
 
 # 动静分离
 TODO
@@ -258,8 +255,8 @@ keepalived+Nginx实现高可用 https://www.cnblogs.com/youzhibing/p/7327342.htm
 # HTTPS
 TODO: 自签一个证书，做一个HTTPS服务, 测试一下看看
 
-
 # Nginx进阶(高并发网站技术架构实战)
-
 Ingress-Controller
+Openresty
+
 https://www.cnblogs.com/crazymakercircle/p/17052040.html
