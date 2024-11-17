@@ -11,11 +11,11 @@ tags: Nginx
 
 ## 解决方法
 查阅资料，发现这类bind无权限问题，大多由SElinux引起。SELinux有三种模式，如下：
+<!-- more -->
 * enforcing：强制模式，此时SELinux 运行中
 * permissive：宽容模式，此时SELinux运行中，会像 enforcing 模式一样加载安全策略，但不会拒绝任何操作。
 * disabled：关闭，SELinux 没有运行。
 
-<!-- more -->
 
 查看当前SELinux状态，为enforcing
 ```

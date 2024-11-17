@@ -5,9 +5,6 @@ date: 2024-11-14 19:58:46
 categories: draft
 tags: draft
 ---
-https://www.bilibili.com/video/BV1oi421m7Qa?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86
-https://102no.com/2021/06/07/10-nginx-learn-books/#%E3%80%8ANginx%E5%BC%80%E5%8F%91%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B
-(Nginx/Redis/kernel)
 
 Nginx 1.20.1
 * Nginx.conf如何解析
@@ -16,12 +13,16 @@ Nginx 1.20.1
 * 线程池源码
 * 进程间通信共享内存的实现
 
+<!-- more -->
 经典问题:
 * 多进程如何实现
 * 惊群
 * 内存池
 * 多个进程锁
 
+https://www.bilibili.com/video/BV1oi421m7Qa?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86
+https://102no.com/2021/06/07/10-nginx-learn-books/#%E3%80%8ANginx%E5%BC%80%E5%8F%91%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B
+(Nginx/Redis/kernel)
 # ngx_modules.c文件定义ngx_modules数组
 
 # Nginx.conf解析

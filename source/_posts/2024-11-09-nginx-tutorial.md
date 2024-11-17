@@ -21,6 +21,8 @@ tags: Nginx
 * OpenResty
 * Tengine
 
+<!-- more -->
+
 # Nginx应用场景
 * http服务器(静态服务器)
 * 虚拟主机（一台服务器虚拟多个网站)
@@ -46,8 +48,6 @@ tags: Nginx
 * tcp_fin_timeout: 表示服务器主动关闭连接时, socket保持在FIN_WAIT_2状态最大时间
 * tcp_max_tw_buckets: 表示OS允许TIME_WAIT套接字数量的最大值, 如果超过这个数字, TIME_WAIT被立刻清除并打印告警, 过多的TIME_WAIT会导致Web服务器变慢
 * tcp_syncookies: 解决TCP的SYN攻击
-
-<!-- more -->
 
 # Nginx常用命令
 ```
