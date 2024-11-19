@@ -14,8 +14,8 @@ server {
     listen 80;
     location /downloads/ {
         root /var/www/downloads;
-	    autoindex on; # 显示目录
-		autoindex_localtime on;a
+        autoindex on; # 显示目录
+        autoindex_localtime on;
     }
 }
 ```
