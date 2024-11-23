@@ -10,7 +10,7 @@ tags: Nginx
 URL重写, 是Nginx中用于将请求重定向到其他URL的过程
 
 # URLRewrite的应用场景
-* 域名迁移。 当企业更换域名时，通过URL重写将旧域名的访问永久重定向到新域名。(避免用户流失)
+* 域名迁移。 当企业更换域名时，通过URL重写将旧域名的访问永久重定向到新域名，避免用户流失。
 * URL规范化。通过URL重写，使URL更加规范和美观，提升用户体验。
 * 伪静态。重写动态URL为静态URL，提高搜索引擎的收录效率和网站排名
 * 安全性增强。隐藏真实文件目录, 防止攻击者直接访问文件
@@ -18,12 +18,12 @@ URL重写, 是Nginx中用于将请求重定向到其他URL的过程
 # URLRewrite案例演示
 <!-- more -->
 
-## 域名迁移
+## 案例1: 域名迁移
 当企业更换域名时，通过URL重写将旧域名的访问永久重定向到新域名，避免用户流失。
-例如访问京东，通过www.360buy.com, www.jingdong.com，最终都重定向到www.jd.com
+例如访问京东，通过`www.360buy.com`, `www.jingdong.com`，最终都重定向到`www.jd.com`
 
 **案例演示**
-访问www.petertest1.cn或www.petertest2.cn, 永久重定向到www.peter.com
+访问`www.petertest1.cn`或`www.petertest2.cn`, 永久重定向到`www.peter.com`
 
 ### 创建一台Linux虚拟机, 准备三个域名
 修改虚拟机的/etc/hosts文件，内容如下:
@@ -89,10 +89,12 @@ Location: http://www.peter.com/
 
 附: 301永久重定向抓包
 先通过tcpdump抓包`tcpdump -i ens33 tcp and port not 22 -w output.pcap`, 再用Wireshark分析
-![](301.png)
-这里可以看出重定向和请求转发的区别：客户端收到301后，客户端会重新发起一次HTTP请求；而内部转发是服务器行为，客户端感知不到。
 
-## 伪静态
+![](301.png)
+
+这里可以看出重定向和请求转发的区别：客户端收到301后，客户端会再发起一次新的HTTP请求；而内部转发是服务器行为，客户端感知不到。
+
+## 案例2: 伪静态
 伪静态是指，把动态URL转换为静态URL的过程，以对用户更友好的方式显示在浏览器地址栏中。
 
 **案例演示**
@@ -111,7 +113,7 @@ Location: http://www.peter.com/
             return 200 '<h1>query_string: $query_string</h1>';
         }
         location ~ /page/(\d+)$ {
-            rewrite ^/page/(\d+)$ /page.php?id=$1 last; # 把用户输入的`http://peter.com/page.php?id=1`重定向到`http://peter.com/page/1`
+            rewrite ^/page/(\d+)$ /page.php?id=$1 last;
         }
     }
 ```

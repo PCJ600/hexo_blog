@@ -6,8 +6,6 @@ categories: Nginx
 tags: Nginx
 ---
 
-https://wiki.wgpsec.org/knowledge/web/same-origin-policy.html
-
 # Nginx简介
 高性能的web服务器, 反向代理服务器, 负载均衡器, HTTP缓存
 
@@ -64,6 +62,8 @@ quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连�
 [https://pcj600.github.io/2024/1119221949.html](https://pcj600.github.io/2024/1119221949.html)
 ## Nginx+keepalived高可用
 [https://pcj600.github.io/2024/1123135607.html](https://pcj600.github.io/2024/1123135607.html)
+## Nginx URLRewrite
+[https://pcj600.github.io/2024/1123152532.html](https://pcj600.github.io/2024/1123152532.html)
 
 
 ## Nginx缓存
@@ -94,6 +94,7 @@ no-cache弱缓存
 * epoch指定Expires的值为'1, January, 1970,00:00:01 GMT', Cache-Control值为no-cache
 * max指定Expires的值'31 December 2037 23:59:59 GMT', Cache-Control值为10年
 * off默认不缓存
+
 ## 基于域名的几种互联网需求解析
 hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
 ## 多用户二级域名需求(微博)
@@ -114,6 +115,7 @@ hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本
 Ingress-Controller
 Openresty
 https://www.cnblogs.com/crazymakercircle/p/17052040.html
+
 # 内核参数优化
 * file-max: 表示进程可以同时打开的最大句柄数，这个参数直接限制最大并发连接数
 * tcp_tw_reuse: 设为1, 允许将TIME-WAIT的socket重新用于新TCP连接
