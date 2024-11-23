@@ -52,7 +52,6 @@ nginx -t        # 测试配置是否有问题
 stop快速停止服务, worker进程和master进程收到信号后立刻跳出循环
 quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连接处理完，最后退出进程
 
-
 # Nginx安装
 [https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
 # 虚拟主机配置
@@ -63,92 +62,31 @@ quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连�
 [http://pcj600.github.io/2024/1117165553.html](http://pcj600.github.io/2024/1117165553.html)
 ## 跨域问题
 [https://pcj600.github.io/2024/1119221949.html](https://pcj600.github.io/2024/1119221949.html)
+## Nginx+keepalived高可用
+[https://pcj600.github.io/2024/1123135607.html](https://pcj600.github.io/2024/1123135607.html)
 
-# 静态资源防盗链(TODO)
+## 静态资源防盗链
 资源盗链指内容不在自己服务器，而是通过技术手段，绕过别人限制将别人内容放到自己页面上最终显示给用户，盗取大网站流量，用别人的资源搭自己网站
-
-HTTP Header Referer
-
 浏览器向web请求时，一般会带上referer，来告诉浏览器此网页是从哪个链接跳转过来的
 后台服务器可以根据Referer判断自己是否为受信任的网站，如果是则放行，不是可以拒绝访问
-https://www.bilibili.com/video/BV1ov41187bq?vd_source=d8559c2d87607be86810cd806158bb86&spm_id_from=333.788.player.switch&p=65
-直接访问可以，通过XX页面访问不行
-
 更精细的控制: Nginx第三方模块ngx_http_accesskey_module
 
-<!-- more -->
-
-
-
-# Nginx进程间的关系
-一个master进程管理多个worker进程, worker进程数和CPU核心数相等
-
-# Nginx主配置文件
-主配置文件`/etc/nginx/nginx.conf`, 基础配置说明如下:
-```
-user nginx;                               # 以Nginx用户启动
-worker_processes auto;                    # work process进程的个数
-error_log /var/log/nginx/error.log;       # 错误日志路径
-pid /run/nginx.pid; 
-
-include /usr/share/nginx/modules/*.conf;
-
-events {
-    worker_connections 1024;              # 单个进程可接收连接数
-}
-
-http {
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log  /var/log/nginx/access.log  main;
-
-    sendfile            on;
-    tcp_nopush          on;
-    tcp_nodelay         on;
-    keepalive_timeout   65;
-    types_hash_max_size 4096;
-
-    include             /etc/nginx/mime.types;		# 服务器发送MIME type给客户端，让客户端知道请求的文件类型
-    default_type        application/octet-stream;
-
-    include /etc/nginx/conf.d/*.conf;
-
-    server {
-        listen       80;							# LISTEN端口
-        listen       [::]:80;
-        server_name  _;								# 主机名
-        root         /usr/share/nginx/html;			# 在哪里找页面
-
-        # Load configuration files for the default server block.
-        include /etc/nginx/default.d/*.conf;
-
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-}
-```
-
-# 基于域名的几种互联网需求解析
-补充: hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
+## 基于域名的几种互联网需求解析
+hosts泛解析 https://cloud.tencent.com/developer/article/1534150 
+(dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
 ## 多用户二级域名需求(微博)
 *.weibo.com -> Nginx -> 真正的业务服务器(拿到域名，解析出二级域名)
 ## 短网址
 *.com/asdasjda12312 -> Nginx -> 真正的网址
 
-# Nginx浏览器缓存的概念
+## Nginx缓存
 web缓存种类:
 * 客户端缓存(浏览器缓存)
 * 服务端缓存(Nginx/Redis/Memcached)
 
 为了节约网络资源加速浏览，对用户最近请求过文档进行存储，再次请求这个页面时，浏览器就可以从本地磁盘显示文档，加速浏览。
 
-# HTTP协议中与缓存相关的Header
+### HTTP协议中与缓存相关的Header
 Expires: 缓存过期的日期和时间
 Cache-Control: 设置和缓存相关的配置信息
 Last-Modified: 请求资源最后修改时间(服务端的时间)
@@ -156,14 +94,11 @@ ETag: 请求变量的实体标签的当前值，例如MD5
 https://cloud.tencent.com/developer/article/2264687
 https://harttle.land/2017/04/04/using-http-cache.html
 https://blog.csdn.net/sunny_day_day/article/details/107993349
-
-Etag重要性 https://www.cnblogs.com/52linux/archive/2012/04/26/2470865.html
-![]()
-
+https://www.cnblogs.com/52linux/archive/2012/04/26/2470865.html
 * 强缓存(直接取本地，不发请求到后端)
 * 弱缓存(问一下后端，后端判断无变化，返回304)
 
-# Nginx缓存设置(TODO)
+### Nginx缓存设置(TODO)
 expires指令
 控制HTTP应答中的"Expires"(1.0的配置，问题是服务端时间和客户端时间存在不一致)和"Cache-Control"
 ```
@@ -176,17 +111,17 @@ no-cache弱缓存
 * max指定Expires的值'31 December 2037 23:59:59 GMT', Cache-Control值为10年
 * off默认不缓存
 
-# 动静分离
+## 动静分离
 TODO
 
-# URLReWrite
+## URLReWrite
 Rewrite是Nginx提供的一个重要基本功能，用于实现URL的重写
 URLReWrite依赖于PCRE支持，在编译安装Nginx之前，需要安装PCRE库
 Nginx使用ngx_http_rewrite_module模块解析并处理Rewrite
 
 官方文档: http://nginx.org/en/docs/http/ngx_http_rewrite_module.html
 
-## URLReWrite的应用场景
+### URLReWrite的应用场景
 域名跳转
 域名镜像
 独立域名
@@ -194,60 +129,7 @@ Nginx使用ngx_http_rewrite_module模块解析并处理Rewrite
 合并目录
 防盗链的实现
 
-## 域名跳转
-例: 访问www.360buy.com www.jingdong.com -> 最终跳转到www.jd.com
 
-准备三个域名，修改hosts文件
-vim /etc/hosts
-```
-192.168.52.200 www.petertest1.cn
-192.168.52.200 www.petertest2.cn
-192.168.52.200 www.peter.com
-```
-配置Nginx, 访问www.peter.com, 返回主页
-```
-    server {
-        listen       80;
-        server_name  www.peter.com;
-        access_log   access.log;
-        include /etc/nginx/default.d/*.conf;
-        location / {
-            default_type text/html;
-            return 200 '<h1>Welcome to peter</h1>';
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-
-    # rewrite配置
-    server {
-        listen 80;
-        server_name www.petertest1.cn www.petertest2.cn;
-        rewrite ^/ http://www.peter.com;
-    }
-```
-
-浏览器访问http://www.petertest1.cn或http://www.petertest2.cn, 会跳转到http://www.peter.com
-```
-curl http://www.petertest2.cn -i
-HTTP/1.1 302 Moved Temporarily
-...
-Location: http://www.peter.com
-```
-
-### 重定向后URL丢了，怎么带上URL
-http://www.petertest1.cn/getUser -> http://www.peter.com/getUser
-修改nginx.conf的rewrite配置，如下：
-```
-    # rewrite case
-    server {
-        listen 80;
-        server_name www.petertest1.cn www.petertest2.cn;
-        rewrite ^(.*) http://www.peter.com$1;
-    }
-```
 
 ## 独立域名
 一个web项目有多个模块，每个模块可设置独立域名
@@ -275,7 +157,7 @@ server{
 }
 ```
 
-## URL后自动添加/
+## URL后自动添加
 https://www.cnblogs.com/Nicholas0707/p/12210551.html
 /hello  301永久重定向 再 /hello/ 200 OK
 /hello/ 200 OK
