@@ -39,17 +39,6 @@ https://wiki.wgpsec.org/knowledge/web/same-origin-policy.html
 * 配置简单
 * 最自由的BSD许可协议
 
-# Nginx安装
-[https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
-# 虚拟主机配置
-[https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
-## Nginx Location配置
-[https://pcj600.github.io/2024/1117141829.html](https://pcj600.github.io/2024/1117141829.html)
-## 负载均衡/反向代理
-[http://pcj600.github.io/2024/1117165553.html](http://pcj600.github.io/2024/1117165553.html)
-
-<!-- more -->
-
 # Nginx常用命令
 ```
 nginx -h        # 查看Nginx用法
@@ -62,6 +51,34 @@ nginx -t        # 测试配置是否有问题
 ```
 stop快速停止服务, worker进程和master进程收到信号后立刻跳出循环
 quit优雅停止服务, 关闭监听端口,停止接收新连接，把当前连接处理完，最后退出进程
+
+
+# Nginx安装
+[https://pcj600.github.io/2024/1109163902.html](https://pcj600.github.io/2024/1109163902.html)
+# 虚拟主机配置
+[https://pcj600.github.io/2024/1116173059.html](https://pcj600.github.io/2024/1116173059.html)
+## Nginx Location配置
+[https://pcj600.github.io/2024/1117141829.html](https://pcj600.github.io/2024/1117141829.html)
+## 负载均衡/反向代理
+[http://pcj600.github.io/2024/1117165553.html](http://pcj600.github.io/2024/1117165553.html)
+## 跨域问题
+[https://pcj600.github.io/2024/1119221949.html](https://pcj600.github.io/2024/1119221949.html)
+
+# 静态资源防盗链(TODO)
+资源盗链指内容不在自己服务器，而是通过技术手段，绕过别人限制将别人内容放到自己页面上最终显示给用户，盗取大网站流量，用别人的资源搭自己网站
+
+HTTP Header Referer
+
+浏览器向web请求时，一般会带上referer，来告诉浏览器此网页是从哪个链接跳转过来的
+后台服务器可以根据Referer判断自己是否为受信任的网站，如果是则放行，不是可以拒绝访问
+https://www.bilibili.com/video/BV1ov41187bq?vd_source=d8559c2d87607be86810cd806158bb86&spm_id_from=333.788.player.switch&p=65
+直接访问可以，通过XX页面访问不行
+
+更精细的控制: Nginx第三方模块ngx_http_accesskey_module
+
+<!-- more -->
+
+
 
 # Nginx进程间的关系
 一个master进程管理多个worker进程, worker进程数和CPU核心数相等
@@ -117,7 +134,6 @@ http {
 }
 ```
 
-
 # 基于域名的几种互联网需求解析
 补充: hosts泛解析 https://cloud.tencent.com/developer/article/1534150 (dnsmaxq) 本机DNS指向dnsmasq,dnsmasq做泛解析，把域名都解析到同一个IP
 ## 多用户二级域名需求(微博)
@@ -160,176 +176,147 @@ no-cache弱缓存
 * max指定Expires的值'31 December 2037 23:59:59 GMT', Cache-Control值为10年
 * off默认不缓存
 
-
-# Nginx跨域问题解决(TODO)
-浏览器同源策略：协议,域名(IP),端口相同均为同源
-
-什么是跨域问题：
-两台服务器A,B，如果从服务器A页面发送异步请求到服务器B获取数据，如A和B不满足同源策略，就会出现跨域问题
-
-案例
-服务器A 静态页面,点击按钮，请求B
-服务器B 返回JSON数据
-
-https://www.bilibili.com/video/BV1ov41187bq?vd_source=d8559c2d87607be86810cd806158bb86&spm_id_from=333.788.player.switch&p=63
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 静态资源防盗链(TODO)
-资源盗链指内容不在自己服务器，而是通过技术手段，绕过别人限制将别人内容放到自己页面上最终显示给用户，盗取大网站流量，用别人的资源搭自己网站
-
-HTTP Header Referer
-
-浏览器向web请求时，一般会带上referer，来告诉浏览器此网页是从哪个链接跳转过来的
-后台服务器可以根据Referer判断自己是否为受信任的网站，如果是则放行，不是可以拒绝访问
-https://www.bilibili.com/video/BV1ov41187bq?vd_source=d8559c2d87607be86810cd806158bb86&spm_id_from=333.788.player.switch&p=65
-直接访问可以，通过XX页面访问不行
-
-更精细的控制: Nginx第三方模块ngx_http_accesskey_module
-
 # 动静分离
 TODO
 
 # URLReWrite
+Rewrite是Nginx提供的一个重要基本功能，用于实现URL的重写
+URLReWrite依赖于PCRE支持，在编译安装Nginx之前，需要安装PCRE库
+Nginx使用ngx_http_rewrite_module模块解析并处理Rewrite
 
-## 一个最简单的URLReWrite例子
-场景: 客户 -> 互联网 -> Nginx(网关服务器，反向代理/负载均衡器) -> 业务服务器
-准备两台VM机器:
-```
-192.168.52.200 VM1 Nginx(80端口)
-192.168.52.201 VM2 业务服务器(5000端口)
-```
-实现如下效果:
-* 访问 http://192.168.52.200/2.html, Nginx将请求转发到http://192.168.52.201:5000/admin?page=2
-* 浏览器上只能看到http://192.168.52.200/2.html, 参数admin?page=2被隐藏
+官方文档: http://nginx.org/en/docs/http/ngx_http_rewrite_module.html
 
-步骤：
-1、先在VM2上搭建一个简单的目标服务器(这里用Flask搭建)
-安装Flask
-```
-yum install -y python3-pip
-pip3 install Flask
-```
-添加web.py
-```py
-#!/usr/bin/env python3
+## URLReWrite的应用场景
+域名跳转
+域名镜像
+独立域名
+目录自动添加
+合并目录
+防盗链的实现
 
-from flask import Flask, request
+## 域名跳转
+例: 访问www.360buy.com www.jingdong.com -> 最终跳转到www.jd.com
 
-app = Flask(__name__)
-@app.route('/')
-def index():
-    return 'hello'
-
-@app.route('/admin', methods=['GET'])
-def show_admin():
-    page = request.args.get('page', default=0, type=int)
-    return f'You are on page {page}'
-
-if __name__ == '__main__':
-    app.run()
+准备三个域名，修改hosts文件
+vim /etc/hosts
 ```
-启动server
+192.168.52.200 www.petertest1.cn
+192.168.52.200 www.petertest2.cn
+192.168.52.200 www.peter.com
 ```
-flask --app web run --host=0.0.0.0 # 默认端口5000
-```
-
-2. 再修改VM1上的Nginx配置文件，启动Nginx
-```
-    upstream my_servers {
-        server 192.168.52.201:5000;
-
-    }
-    server {
-        listen       80;
-        server_name  _;
-        include /etc/nginx/default.d/*.conf;
-		
-        location / {
-            rewrite ^/([0-9]+).html$ /admin?page=$1 break;	# rewriteUrl
-            proxy_pass http://my_servers;
-        }
-		# ignore error_page ...
-    }
-```
-
-3. 测试URLReWrite OK
-```
-# curl 192.168.52.200/2.html
-You are on page 2
-# curl 192.168.52.200/admin?page=2
-You are on page 2
-# curl 192.168.52.201:5000/admin?page=2
-You are on page 2
-# curl 192.168.52.201:5000/2.html
-404 Not Found
-```
-
-# 防盗链
-判断referer字段，如果不是合法的referer，返回403
-修改Nginx.conf
+配置Nginx, 访问www.peter.com, 返回主页
 ```
     server {
         listen       80;
-        server_name  vod.petertest.com;
+        server_name  www.peter.com;
+        access_log   access.log;
         include /etc/nginx/default.d/*.conf;
         location / {
-            valid_referers none 192.168.52.200; # referer不对, 返回403
-            if ($invalid_referer) {
-                return 403;
-            }
-            root /www/vod;
+            default_type text/html;
+            return 200 '<h1>Welcome to peter</h1>';
         }
-```
-使用curl测试防盗链:
-```
-# 没有指定referer, 或referer为本机IP, 返回200 OK
-[root@localhost ~]# curl -I 192.168.52.200/kuangsan.png
-HTTP/1.1 200 OK
-[root@localhost ~]# curl --referer "http://192.168.52.200" -I 192.168.52.200/kuangsan.png
-HTTP/1.1 200 OK
 
-# referer不合法, 返回403
-[root@localhost ~]# curl --referer "http://4399.com" -I 192.168.52.200/kuangsan.png
-HTTP/1.1 403 Forbidden
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+
+    # rewrite配置
+    server {
+        listen 80;
+        server_name www.petertest1.cn www.petertest2.cn;
+        rewrite ^/ http://www.peter.com;
+    }
 ```
 
-# 高可用场景及解决方案
+浏览器访问http://www.petertest1.cn或http://www.petertest2.cn, 会跳转到http://www.peter.com
+```
+curl http://www.petertest2.cn -i
+HTTP/1.1 302 Moved Temporarily
+...
+Location: http://www.peter.com
+```
+
+### 重定向后URL丢了，怎么带上URL
+http://www.petertest1.cn/getUser -> http://www.peter.com/getUser
+修改nginx.conf的rewrite配置，如下：
+```
+    # rewrite case
+    server {
+        listen 80;
+        server_name www.petertest1.cn www.petertest2.cn;
+        rewrite ^(.*) http://www.peter.com$1;
+    }
+```
+
+## 独立域名
+一个web项目有多个模块，每个模块可设置独立域名
+```
+http://search.itcast.com:81 # 商品搜索模块
+http://item.itcast.com:82 # 商品详情模块
+http://cart.itcast.com:83 # 访问商品购物车模块
+```
+
+```
+server{
+    listen 81;
+	server_name search.itcast.com;
+	rewrite ^(.*) http://www.itcast.cn/search$1;
+}
+server{
+    listen 82;
+	server_name item.itcast.com;
+	rewrite ^(.*) http://www.itcast.cn/item$1;
+}
+server{
+    listen 83;
+	server_name cart.itcast.com;
+	rewrite ^(.*) http://www.itcast.cn/cart$1;
+}
+```
+
+## URL后自动添加/
+https://www.cnblogs.com/Nicholas0707/p/12210551.html
+/hello  301永久重定向 再 /hello/ 200 OK
+/hello/ 200 OK
+
+http://192.168.52.200/hello 和 http://192.168.52.200/hello/ 区别:
+如果URL最后不加斜杠, Nginx会自动做一个301的重定向, 重定向地址如下：
+```
+server_name_in_redirect on | off (0.8.48版本以前默认为on)
+值为on, http://server_name/hello/;
+值为off http://原URL中的域名/hello/;
+```
+如果值为on, 访问不带斜杠，比如http://192.168.52.200/hello，重定向到http://localhost/hello/会有问题!
+(只有老版本有这个问题)
+
+## 合并目录
+SEO(搜索引擎排名靠前)
+
+例如: 网站有一个资源文件路径: /server/11/22/33/44/20.html
+不利于搜索引擎优化，客户也不好记
+
+
+# Nginx安全控制和SSL加密介绍
+(TODO)
+
+
+
+# Nginx挂了怎么办，怎么实现高可用
+https://www.cnblogs.com/crazymakercircle/p/15476154.html
 问题: Nginx本身不可用怎么办
-```
-客户 -> 互联网 -> Nginx1(192.168.52.200)(主) -> Web Servers 
-							|
-				  Nginx2(192.168.52.201)(备) 
-```
-直接交换两台Nginx的IP很麻烦，会有IP冲突问题; 可以使用一个虚拟IP作为入口
-```
-客户 -> 互联网 -> Virtual IP -> 主Nginx IP -> 业务服务器
-```
-keepalived+Nginx实现高可用 https://www.cnblogs.com/youzhibing/p/7327342.html
 
-# HTTPS
-TODO: 自签一个证书，做一个HTTPS服务, 测试一下看看
+**双机热备方案**
+在一台服务器提供服务, 另一台服务器作为备用。当一台服务器不可用另一台就会顶替上去
+
+
+
+
+
+
+
+
+
 
 # Nginx进阶(高并发网站技术架构实战)
 Ingress-Controller
