@@ -21,20 +21,21 @@ tags: Docker
 * 更简单的更新管理。使用Dockerfile，只需小的配置修改，就能替代以往大量更新工作
 
 <!-- more -->
-# Docker应用场景
-自动化测试和CI/CD(持续集成/发布)
-
 # Docker和虚拟机比较
 Docker作为一种轻量级的虚拟化方式，与传统的虚拟机相比具有显著优势:
 * Docker容器很快，启动和停止在秒级实现
 * Docker容器对系统资源需求更少，一台主机可运行数千Docker容器
 * 多个容器之间共享OS
 
-# Docker安装
-[https://pcj600.github.io/2024/1017195632.html](https://pcj600.github.io/2024/1017195632.html)
-
 # Docker应用场景
 * CI/CD (持续集成/持续部署) 
+
+# Docker安装
+[https://pcj600.github.io/2024/1017195632.html](https://pcj600.github.io/2024/1017195632.html)
+# Docker配置国内源加速
+[https://pcj600.github.io/2024/1031225813.html](https://pcj600.github.io/2024/1031225813.html)
+# 修改Docker容器存储路径
+[https://pcj600.github.io/2021/1016200721.html](https://pcj600.github.io/2021/1016200721.html)
 
 # Docker三个核心概念
 镜像，容器，仓库
@@ -209,8 +210,6 @@ docker rm [CONTAINER ID]
 ```
 
 ## 仓库
-
-### 什么是仓库
 存放镜像的地方, 比如DockerHub，可以上传自己的镜像；主机也可以从仓库下载镜像。
 
 # 数据卷
