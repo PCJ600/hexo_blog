@@ -11,6 +11,7 @@ tags: Docker
 ## 添加docker repo, 更新源, 安装docker-ce
 ```
 dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+sed -i 's+https://download.docker.com+https://mirrors.tuna.tsinghua.edu.cn/docker-ce+' /etc/yum.repos.d/docker-ce.repo # 使用国内源
 dnf update
 dnf install -y docker-ce
 ```
