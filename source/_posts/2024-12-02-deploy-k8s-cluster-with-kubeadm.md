@@ -11,16 +11,18 @@ Linux虚拟机3台, 能联网, 我使用的发行版是Rocky Linux 9.4
 最低配置: 2CPU, 2G内存, 20G硬盘
 3台虚拟机的IP和域名设置如下
 ```
-k8s-master 192.168.52.200
-k8s-node1 192.168.52.201
-k8s-node2 192.168.52.202
+k8s-master 192.168.52.200 (k8s主节点)
+k8s-node1 192.168.52.201 (k8s从节点1)
+k8s-node2 192.168.52.202 (k8s从节点2)
 ```
 
 # 准备操作
-
-## 关闭防火墙和SeLinux
+<!-- more -->
+## 关闭防火墙
+```
 systemctl stop firewalld
 systemctl disable firewalld
+```
 
 ## 关闭SELINUX
 ```
@@ -28,16 +30,26 @@ setenforce 0
 sed --follow-symlinks -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 ```
 
-## 修改hosts文件和主机名
+## 修改主机名
+k8s主节点执行
+```
+hostnamectl set-hostname k8s-master
+```
+从节点1执行
+```
+hostnamectl set-hostname k8s-node1
+```
+从节点2执行
+```
+hostnamectl set-hostname k8s-node2
+```
+
+## 修改hosts文件
 修改/etc/hosts, 添加三台虚拟机的IP和域名
 ```
 k8s-master 192.168.52.200
 k8s-node1 192.168.52.201
 k8s-node2 192.168.52.202
-```
-修改主机名
-```
-hostnamectl set-hostname k8s-master
 ```
 
 ## 配置交换分区
@@ -65,8 +77,8 @@ sysctl -p /etc/sysctl.d/k8s.conf
 
 # 2. 安装基础软件
 
-## RockyLinux国内源
-换国内源
+## 国内用户需要把YUM源换成国内的
+RockyLinux换国内源
 ```
 sed -e 's|^mirrorlist=|#mirrorlist=|g' \
     -e 's|^#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://mirrors.aliyun.com/rockylinux|g' \
@@ -82,7 +94,7 @@ dnf makecache
 dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 dnf install -y containerd
 ```
-查看安装版本信息
+查看containerd版本信息
 ```
 # ctr version
 Client:
@@ -134,7 +146,7 @@ The connection to the server localhost:8080 was refused - did you specify the ri
 [root@k8s-master yum.repos.d]# kubelet --version
 Kubernetes v1.28.2
 ```
-注: kubelet现在每隔几秒就会重启，因为它陷入了一个等待 kubeadm 指令的死循环。
+说明: kubelet现在每隔几秒就会重启，因为它陷入了一个等待 kubeadm 指令的死循环。接下来需要在主节点执行kubeadm init
 
 # 初始化集群
 
@@ -146,10 +158,10 @@ kubeadm init --apiserver-advertise-address 192.168.52.200 \
 			 --pod-network-cidr=198.18.0.0/16
 ```
 参数说明: 
-–apiserver-advertise-address：监听地址
+–apiserver-advertise-address：监听地址，填主节点IP
 –image-repository：指定镜像地址为阿里云的。因为默认的谷歌镜像, 你在国内无法访问
 –kubernetes-version：指定kubernetes的版本
-–pod-network-cidr=198.18.0.0/16 (这个cidr是纸Pod的IP地址范围，需要根据你的网络环境自定义，不能和其他IP地址发生冲突）https://cloud.baidu.com/article/3216942
+–pod-network-cidr=198.18.0.0/16 (这个cidr表示Pod的IP地址范围，需要根据你的网络环境自定义，不能和其他IP发生冲突即可) 
 
 执行时间较长，需要等几分钟, 执行成功后，会打印如下内容，提示你下一步怎么做
 ```
@@ -175,7 +187,7 @@ kubeadm join 192.168.52.200:6443 --token zk8fth.5psohqfk9lomq0tw \
         --discovery-token-ca-cert-hash sha256:f32851bb6a86cc7f0a394f1d77e1db5b217cde1b0f40909ee3916959519173f7
 ```
 
-我使用的是root用户，参照k8s提示，只需export环境变量KUBECONFIG，具方法如下：
+我使用的是root用户，参照上面的提示，只需export环境变量KUBECONFIG，方法如下：
 编辑/etc/profile，结尾添加一行
 ```
 export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -203,7 +215,7 @@ kube-system   kube-scheduler-k8s-master            1/1     Running   0          
 ```
 wget https://docs.projectcalico.org/manifests/calico.yaml
 ```
-指定CALICO_IPV4POOL_CIDR的值为`198.18.0.0/16`
+指定CALICO_IPV4POOL_CIDR的值为`198.18.0.0/16` (和kubeadm init的cidr保持一致)
 ```
 # The IP Pool CIDR for this installation
 - name: CALICO_IPV4POOL_CIDR
@@ -215,14 +227,16 @@ wget https://docs.projectcalico.org/manifests/calico.yaml
 ctr -n k8s.io image list
 ```
 
-手动拉取这些镜像(所有节点都要执行)
-国内镜像站: https://docker.aityp.com
+再手动从国内镜像站拉取需要的镜像(国内镜像站: https://docker.aityp.com)
+查看calico.yaml中需要拉取的镜像列表
 ```
 # cat calico.yaml | grep image:
           image: docker.io/calico/cni:v3.25.0
           image: docker.io/calico/node:v3.25.0
           image: docker.io/calico/kube-controllers:v3.25.0 
-		  
+```
+手动拉取镜像, 再重新打tag
+```		  
 ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/cni:v3.25.0
 ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/cni:v3.25.0 docker.io/calico/cni:v3.25.0
 
@@ -232,19 +246,18 @@ ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/cali
 ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/kube-controllers:v3.25.0
 ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/kube-controllers:v3.25.0 docker.io/calico/kube-controllers:v3.25.0 
 ```
-安装calico
+创建calico Pod
 ```
 kubectl apply -f calico.yaml
 ```
 安装calicoctl
-https://docs.tigera.io/calico/latest/operations/calicoctl/install
 ```
 curl -L https://github.com/projectcalico/calico/releases/download/v3.29.1/calicoctl-linux-amd64 -o calicoctl
 chmod +x ./calicoctl
 cp calicoctl /usr/bin/
 ```
 
-验证calico
+查看calico Pod是否创建成功
 ```
 kubectl get pods -A
 NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
@@ -257,7 +270,9 @@ kube-system   kube-apiserver-k8s-master                  1/1     Running   0    
 kube-system   kube-controller-manager-k8s-master         1/1     Running   0          62m
 kube-system   kube-proxy-89c9k                           1/1     Running   0          62m
 kube-system   kube-scheduler-k8s-master                  1/1     Running   0          62m
-
+```
+calicoctl查看主节点状态是否OK(TODO)
+```
 calicoctl node status
 calicoctl get nodes
 calicoctl get endpoints
@@ -274,7 +289,7 @@ zk8fth.5psohqfk9lomq0tw
 ```
 kubeadm token create
 ```
-<control-plane-host>:<control-plane-port> 
+\<control-plane-host\>:\<control-plane-port\> 
 control-plane-host填主节点的IP地址，或主节点的hostname
 control-plane-port端口默认为6443
 
@@ -290,13 +305,7 @@ f32851bb6a86cc7f0a394f1d77e1db5b217cde1b0f40909ee3916959519173f7
 kubeadm join --token zk8fth.5psohqfk9lomq0tw \
 		192.168.52.200:6443 \
 		--discovery-token-ca-cert-hash sha256:f32851bb6a86cc7f0a394f1d77e1db5b217cde1b0f40909ee3916959519173f7
-```
 
-提示:
-```
-# kubeadm join --token zk8fth.5psohqfk9lomq0tw \
-                192.168.52.200:6443 \
-                --discovery-token-ca-cert-hash sha256:f32851bb6a86cc7f0a394f1d77e1db5b217cde1b0f40909ee3916959519173f7
 [preflight] Running pre-flight checks
         [WARNING Service-Kubelet]: kubelet service is not enabled, please run 'systemctl enable kubelet.service'
 [preflight] Reading configuration from the cluster...
@@ -315,6 +324,11 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 将kubelet设为开机自启动
 ```
 systemctl enable kubelet.service
+```
+
+## 回到主节点，查看从节点是否加入成功
+```
+kubectl get nodes
 ```
 
 ## 遇到问题: calico从节点状态还是notready [TODO]
@@ -353,7 +367,3 @@ https://cloud.tencent.com/developer/article/2255721
 https://github.com/usualheart/install_k8s_official
 https://docker.aityp.com/image/docker.io/nginx:1.27.3
 https://www.xtplayer.cn/calico/readiness-probe-failed-calico-node-is-not-ready-bird-is-not-ready/
-
-
-
-

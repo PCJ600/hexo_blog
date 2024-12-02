@@ -146,19 +146,19 @@ Volume, configmap(解决配置文件在容器里固定死的问题), secret, dow
 
 # k8s安装
 
-## minikube
+## Microk8s (Done)
+
+## minikube (TODO?)
 个人学习安装，不适用于生产环境
 https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download
 
-## kubeadm
+## kubeadm (DOING)
 
 
-环境：
-k8s-master 192.168.113.120
-k8s-node1 192.168.113.121
-k8s-node2 192.168.113.122
-2核 2G内存 20G硬盘
-k8s 1.23.6
+# 创建Pod和Service(第一个Nginx Pod)
+
+
+
 
 
 
