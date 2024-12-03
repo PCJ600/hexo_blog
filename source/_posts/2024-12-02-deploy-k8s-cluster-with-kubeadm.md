@@ -5,6 +5,7 @@ date: 2024-12-02 22:23:52
 categories: k8s
 tags: k8s
 ---
+https://medium.com/@redswitches/install-kubernetes-on-rocky-linux-9-b01909d6ba72
 
 # 环境要求
 Linux虚拟机3台, 能联网, 我使用的发行版是Rocky Linux 9.4 
@@ -47,9 +48,9 @@ hostnamectl set-hostname k8s-node2
 ## 修改hosts文件
 修改/etc/hosts, 添加三台虚拟机的IP和域名
 ```
-k8s-master 192.168.52.200
-k8s-node1 192.168.52.201
-k8s-node2 192.168.52.202
+192.168.52.200 k8s-master 
+192.168.52.201 k8s-node1 
+192.168.52.202 k8s-node2 
 ```
 
 ## 配置交换分区
@@ -59,12 +60,19 @@ swapoff -a
 ```
 如需要永久禁用交换分区，修改`/etc/fstab`, 删除swap分区那一行的配置。
 
-## 设置内核参数
+## 加载内核模块, 再设置内核参数
+临时加载内核模块
 ```
 modprobe ip_vs_rr
 modprobe br_netfilter
 ```
-
+每次启动自动加载
+vim /etc/modules-load.d/k8s.conf
+```
+overlay
+br_netfilter
+```
+再设置内核参数
 ```
 cat <<EOF | tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -77,8 +85,8 @@ sysctl -p /etc/sysctl.d/k8s.conf
 
 # 2. 安装基础软件
 
-## 国内用户需要把YUM源换成国内的
-RockyLinux换国内源
+## 国内用户需要更换YUM源
+RockyLinux换阿里源
 ```
 sed -e 's|^mirrorlist=|#mirrorlist=|g' \
     -e 's|^#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://mirrors.aliyun.com/rockylinux|g' \
@@ -88,11 +96,26 @@ sed -e 's|^mirrorlist=|#mirrorlist=|g' \
 dnf makecache
 ```
 
-## 安装containerd
-安装containerd (通过yum方式安装containerd后)
+## 所有机器安装containerd
+containerd 
 ```
 dnf config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+#dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo # 海外用户
 dnf install -y containerd
+```
+
+配置containerd
+```
+containerd config default > /etc/containerd/config.toml
+```
+再修改`/etc/containerd/config.toml`
+* 把SystemdCGroup的值改成true
+* 把sandbox_image改为`registry.aliyuncs.com/google_containers/pause:3.9` (国内用户需要做这一步，把镜像换成阿里的)
+
+启动containerd
+```
+systemctl daemon-reload
+systemctl enable --now containerd
 ```
 查看containerd版本信息
 ```
@@ -102,22 +125,9 @@ Client:
 # runc -v
 runc version 1.2.2
 ```
-配置containerd
-```
-containerd config default > /etc/containerd/config.toml
-```
-再修改`/etc/containerd/config.toml`
-* 把SystemdCGroup的值改成true
-* 把sandbox_image改为`registry.aliyuncs.com/google_containers/pause:3.9` (换国内阿里源)
 
-启动containerd
-```
-systemctl daemon-reload
-systemctl enable --now containerd
-```
-
-## 安装kubeadm, kubelet, kubectl
-先添加阿里云的k8s源
+## 所有机器安装kubeadm, kubelet, kubectl
+先添加k8s的repo
 ```
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -128,12 +138,12 @@ gpgcheck=1
 repo_gpgcheck=1
 gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 EOF
-yum install -y kubelet kubeadm kubectl
 ```
+
 再安装kubelet, kubeadm, kubectl
 ```
-sudo yum install -y kubelet kubeadm kubectl
-sudo systemctl enable --now kubelet
+yum install -y kubelet kubeadm kubectl
+systemctl enable --now kubelet
 ```
 查看kubelet, kubeadm, kubectl版本
 ```
@@ -211,46 +221,56 @@ kube-system   kube-scheduler-k8s-master            1/1     Running   0          
 ```
 
 ## 在主节点安装网络插件
-安装网络插件，可以选择calico或者flannel，我这里选calico，安装最新版本。
+安装网络插件，可以选择calico或者flannel，我这里选calico，安装最新版本
+calico插件安装参考官方文档: https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart
+
+1 Install the Tigera Calico operator and custom resource definitions.
 ```
-wget https://docs.projectcalico.org/manifests/calico.yaml
+yum install -y wget
+wget https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml
+kubectl create -f tigera-operator.yaml
 ```
-指定CALICO_IPV4POOL_CIDR的值为`198.18.0.0/16` (和kubeadm init的cidr保持一致)
+2 Install Calico by creating the necessary custom resource. 
 ```
-# The IP Pool CIDR for this installation
-- name: CALICO_IPV4POOL_CIDR
-  value: "198.18.0.0/16"
+wget https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/custom-resources.yaml
+修改custom-resources.yaml, 把cidr改成198.18.0.0/16
+kubectl create -f custom-resources.yaml
+```
+3 Confirm that all of the pods are running with the following command.
+```
+watch kubectl get pods -n calico-system
+```
+Wait until each pod has the STATUS of Running.
+4 Remove the taints on the control plane so that you can schedule pods on it.
+```
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+node/k8s-master untainted
+```
+5. Confirm that you now have a node in your cluster with the following command.
+```
+kubectl get nodes -o wide
+NAME         STATUS   ROLES           AGE     VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                 CONTAINER-RUNTIME
+k8s-master   Ready    control-plane   5h16m   v1.28.2   10.206.216.96   <none>        Rocky Linux 9.4 (Blue Onyx)   5.14.0-427.13.1.el9_4.x86_64   containerd://1.7.24
 ```
 
-查看k8s镜像
+**国内源安装镜像，改tag**
 ```
-ctr -n k8s.io image list
+[root@k8s-master ~]# ctr -n k8s.io image list | awk '{print $1}'
+REF
+docker.io/calico/apiserver:v3.29.1
+docker.io/calico/cni:v3.29.1
+docker.io/calico/csi:v3.29.1
+docker.io/calico/kube-controllers:v3.29.1
+docker.io/calico/node-driver-registrar:v3.29.1
+docker.io/calico/node:v3.29.1
+docker.io/calico/pod2daemon-flexvol:v3.29.1
+docker.io/calico/typha:v3.29.1
+quay.io/tigera/operator:v1.36.2
 ```
 
-再手动从国内镜像站拉取需要的镜像(国内镜像站: https://docker.aityp.com)
-查看calico.yaml中需要拉取的镜像列表
-```
-# cat calico.yaml | grep image:
-          image: docker.io/calico/cni:v3.25.0
-          image: docker.io/calico/node:v3.25.0
-          image: docker.io/calico/kube-controllers:v3.25.0 
-```
-手动拉取镜像, 再重新打tag
-```		  
-ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/cni:v3.25.0
-ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/cni:v3.25.0 docker.io/calico/cni:v3.25.0
-
-ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/node:v3.25.0
-ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/node:v3.25.0 docker.io/calico/node:v3.25.0
-
-ctr -n k8s.io images pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/kube-controllers:v3.25.0
-ctr -n k8s.io images tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/calico/kube-controllers:v3.25.0 docker.io/calico/kube-controllers:v3.25.0 
-```
-创建calico Pod
-```
-kubectl apply -f calico.yaml
-```
 安装calicoctl
+https://docs.tigera.io/calico/latest/operations/calicoctl/install
+
 ```
 curl -L https://github.com/projectcalico/calico/releases/download/v3.29.1/calicoctl-linux-amd64 -o calicoctl
 chmod +x ./calicoctl
@@ -273,9 +293,18 @@ kube-system   kube-scheduler-k8s-master                  1/1     Running   0    
 ```
 calicoctl查看主节点状态是否OK(TODO)
 ```
-calicoctl node status
-calicoctl get nodes
-calicoctl get endpoints
+# calicoctl node status
+Calico process is running.
+
+IPv4 BGP status
+No IPv4 peers found.
+
+IPv6 BGP status
+No IPv6 peers found.
+
+# calicoctl get nodes
+NAME
+k8s-master
 ```
 
 ## 把其他两个从节点加入集群
@@ -327,25 +356,60 @@ systemctl enable kubelet.service
 ```
 
 ## 回到主节点，查看从节点是否加入成功
+需要先等待Pod创建完成，再查看节点
 ```
-kubectl get nodes
-```
+watch kubectl get pods -A
+Every 2.0s: kubectl get pods -A                                                                                                                   k8s-master: Tue Dec  3 16:50:53 2024
 
-## 遇到问题: calico从节点状态还是notready [TODO]
-```
+NAMESPACE          NAME                                       READY   STATUS    RESTARTS   AGE
+calico-apiserver   calico-apiserver-7f67554766-dfzc9          1/1     Running   0          22m
+calico-apiserver   calico-apiserver-7f67554766-xsdlk          1/1     Running   0          22m
+calico-system      calico-kube-controllers-6b7df74554-qxqgf   1/1     Running   0          22m
+calico-system      calico-node-7lhhg                          1/1     Running   0          10m
+calico-system      calico-node-ksrfp                          1/1     Running   0          22m
+calico-system      calico-node-lnt8q                          1/1     Running   0          10m
+calico-system      calico-typha-6855cf6f56-dzfd4              1/1     Running   0          22m
+calico-system      calico-typha-6855cf6f56-z77jt              1/1     Running   0          10m
+calico-system      csi-node-driver-cn6h5                      2/2     Running   0          10m
+calico-system      csi-node-driver-pqrw8                      2/2     Running   0          10m
+calico-system      csi-node-driver-rhd5m                      2/2     Running   0          22m
+kube-system        coredns-5dd5756b68-84wqr                   1/1     Running   0          5h32m
+kube-system        coredns-5dd5756b68-hc9xm                   1/1     Running   0          5h32m
+kube-system        etcd-k8s-master                            1/1     Running   0          5h32m
+kube-system        kube-apiserver-k8s-master                  1/1     Running   0          5h32m
+kube-system        kube-controller-manager-k8s-master         1/1     Running   0          5h32m
+kube-system        kube-proxy-2hmd5                           1/1     Running   0          10m
+kube-system        kube-proxy-4h2cz                           1/1     Running   0          10m
+kube-system        kube-proxy-6qptd                           1/1     Running   0          5h32m
+kube-system        kube-scheduler-k8s-master                  1/1     Running   0          5h32m
+tigera-operator    tigera-operator-c7ccbd65-rddsw             1/1     Running   0          5h25m
+
 # kubectl get nodes
-NAME         STATUS     ROLES           AGE   VERSION
-k8s-master   Ready      control-plane   93m   v1.28.2
-k8s-node1    NotReady   <none>          9s    v1.28.2
-k8s-node2    NotReady   <none>          4s    v1.28.2
+NAME         STATUS   ROLES           AGE     VERSION
+k8s-master   Ready    control-plane   5h33m   v1.28.2
+k8s-node1    Ready    <none>          11m     v1.28.2
+k8s-node2    Ready    <none>          11m     v1.28.2
 
-ube-system   kube-scheduler-k8s-master                  1/1     Running                 0          96m
-[root@k8s-master home]# kubectl get pods -A -o wide
-NAMESPACE     NAME                                       READY   STATUS                  RESTARTS   AGE    IP               NODE         NOMINATED NODE   READINESS GATES
-kube-system   calico-kube-controllers-658d97c59c-gftzg   1/1     Running                 0          47m    198.18.235.195   k8s-master   <none>           <none>
-kube-system   calico-node-rm4tg                          0/1     Init:ImagePullBackOff   0          3m8s   192.168.52.201   k8s-node1    <none>           <none>
-kube-system   calico-node-x7dhl                          1/1     Running                 0          47m    192.168.52.200   k8s-master   <none>           <none>
-kube-system   calico-node-zmq4h                          0/1     Init:ErrImagePull       0          3m3s   192.168.52.202   k8s-node2    <none>           <none>         <none>
+# calicoctl node status
+calicoctl node status
+Calico process is running.
+
+IPv4 BGP status
++---------------+-------------------+-------+----------+-------------+
+| PEER ADDRESS  |     PEER TYPE     | STATE |  SINCE   |    INFO     |
++---------------+-------------------+-------+----------+-------------+
+| 10.206.216.98 | node-to-node mesh | up    | 08:48:32 | Established |
+| 10.206.216.99 | node-to-node mesh | up    | 08:49:43 | Established |
++---------------+-------------------+-------+----------+-------------+
+
+IPv6 BGP status
+No IPv6 peers found.
+
+# calicoctl get nodes
+NAME
+k8s-master
+k8s-node1
+k8s-node2
 ```
 
 ## 从节点如何退出

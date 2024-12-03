@@ -146,39 +146,54 @@ Volume, configmap(解决配置文件在容器里固定死的问题), secret, dow
 
 # k8s安装
 
-## Microk8s (Done)
-
-## minikube (TODO?)
+## 安装Microk8s
+https://pcj600.github.io/2024/1201142626.html
+## 安装minikube(单机版kubernetes)
 个人学习安装，不适用于生产环境
-https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download
-
-## kubeadm (DOING)
-
+## kubeadm安装kubernetes集群
+https://pcj600.github.io/2024/1202222352.html
 
 # 创建Pod和Service(第一个Nginx Pod)
+https://pcj600.github.io/2024/1202220520.html
 
 
+TODO: configmap, volume
+
+# 探针技术
+https://www.bilibili.com/video/BV1MT411x7GH?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86&p=28
+
+## 探针类型
+* StartupProbe (失败后等待)
+* LivenessProbe (失败后重启Pod)
+* ReadinessProbe (失败后外部流量无法访问)
+
+应用启动完成，才有必要启动两个探针
+* 应用初始化的时候，不要接收客户请求 (ReadinessProbe)
+* 存活 (LivenessProbe)
+
+应用启动时间太长，ReadinessProbe或LivenessProbe会提前触发 (StartUpProbe)
+当配置了startupProbe后，会先禁用其他探针，直到StartupProbe成功后，探针才会继续
+
+## 探测类型
+* ExecAction 容器内执行一个命令，返回值为0说明成功
+* TCPSocketAction 通过TCP连接检测容器内端口是否开放
+* HTTPGetAction 通过HTTP请求检测，如果接口返回在200-400之间，认为健康
+
+timeoutSeconds 超时时间
+periodSeconds 检测间隔时间
+successThreshold: 成功几次就认为成功
+faliureThreshold: 失败几次就认为失败
+
+## PreStop
+
+## Label和Selector
+
+## Deployment(无状态),Stateful(有状态),DaemonSet()
+
+Deployment 创建、滚动更新、回滚、暂停恢复
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+https://juejin.cn/post/7163135453489528845
 
 
 
