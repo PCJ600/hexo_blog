@@ -191,6 +191,9 @@ faliureThreshold: 失败几次就认为失败
 ## Deployment(无状态),Stateful(有状态),DaemonSet()
 
 Deployment 创建、滚动更新、回滚、暂停恢复
+Stateful
+StatefulSet是Kubernetes中用于部署有状态应用的一种资源对象。有状态应用通常需要持久化存储和唯一标识，例如数据库（如MySQL、PostgreSQL、MongoDB）、消息队列（如RabbitMQ、Kafka）、分布式存储（如Elasticsearch、Cassandra）等。这些应用在企业中广泛存在，并且对于稳定性、有序性和持久化存储有很高的要求。
+DaemonSet (收集日志)
 
 
 https://juejin.cn/post/7163135453489528845
