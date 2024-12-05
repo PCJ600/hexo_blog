@@ -6,44 +6,6 @@ categories: k8s
 tags: k8s
 ---
 
-# 几个概念
-Infrastructure as a Service 基础设施即服务
-platform as a Service 平台即服务
-Software as a Service 软件即服务
-
-
-# 搭建k8s集群
-* minikube(学习用)
-* 二进制安装
-* kubeadm
-* 命令行工具
-
-
-搭建k8s集群 
-- kubectl
-- API
-Pod
-- 探针
-- 生命周期
-Label和selector
-Deployment
-StatefulSet
-DaemonSet
-
-HPA
-Service
-- ClusterIP, ExternalName, NodePort, LoadBalancer
-- Ingress 
-
-配置和存储
-- 配置管理
-- 持久化存储
-
-运维管理
-- Promethous
-- ELK日志
-- 可视化界面
-
 目标:
 * k8s各资源对象及实践
 * 运用k8s各项调度策略
@@ -51,162 +13,198 @@ Service
 * 掌握pod控制器及运用
 * 掌握k8s微服务DevOps实践
 
+# kubernetes简介
+Google开源的容器集群管理系统，主要功能:
+* 基于容器的应用部署、维护、滚动升级
+* 负载均衡，服务发现
+* 跨机器和跨地区的集群调度
+* 自动伸缩
+* 无状态服务和有状态服务
+* 广泛的volume支持
+* 插件机制保证扩展性
 
-# k8s是什么
-一个开源的，用于管理云平台中多主机上的容器化的应用。目标是让部署容器化应用简单且高效
+# 创建第一个k8s Pod
+https://blog.csdn.net/pcj_888/article/details/144200265
+TODO: 扩容缩容、滚动升级、回滚、资源限制、健康检查
 
-# 为什么需要k8s
-**传统部署**
-war包 -> 上传服务器 -> 放到Tomcat服务器路径，重启
-存在的问题: 
-* 人工部署太繁琐
-* 多个服务间资源竞争，没有做资源隔离
+# 创建k8s集群
+https://blog.csdn.net/pcj_888/article/details/144240636
 
-**容器化部署**
-实现资源隔离: 文件系统，网络，CPU，内存，磁盘，进程隔离
+# kubernetes架构
+一个k8s集群由分布式存储etcd, 控制节点controller，和服务节点Node组成，k8s主要组件如下：
+* etcd保存整个集群状态
+* apiserver提供资源操作唯一入口，提供认证、授权、访问控制、API注册和发现等机制
+* controller manager负责维护集群状态，如故障检测、自动扩展、滚动更新
+* kubelet负责维护容器生命周期，同时负责Volume和网络(CNI)管理
+* kube-proxy负责为Service提供cluster内部的服务发现和负载均衡
 
-# 竞品
-* Apache Mesos
-* Docker Swarm
-* Google kubernetes (最主流)
+![k8s-architecture.png](k8s-architecture.png)
 
-# 集群架构和组件
+插件Add-ons
+* kube-dns负责为整个集群提供dns服务
+* ingress controller为服务提供外网入口
+* fluentd-elasticsearch提供集群日志采集、存储与查询
+* dashboard提供GUI
 
-## 控制面板组件
-* etcd(基于键值的分布式数据库，提供了基于Raft算法实现自主的集群高可用，持久化存储)
-* kube-apiserver (接口服务，基于REST风格开发k8s接口的服务)
-* kube-controller-manager (控制器管理器，管理各个类型控制器，针对k8s中各种资源进行管理)
-* cloud-controller-manager (云控制器管理器，第三方云平台提供的控制器)
-* kube-scheduler (调度器, 负责将Pod基于一定算法，调用到更合适的节点上)
 
-## 节点组件
-* kubelet (负责POD生命周期、存储)
-* kube-proxy(负责服务发现，负载均衡)
-* container runtime(容器运行时环境, docker, containerd, CRI-O)
+# kubenetes基本概念
 
-## 附加组件
-* kube-dns(为整个集群提供DNS服务)
-* ingress controller(外部访问服务)
-* Prometheus(资源监控)
-* dashboard(控制台)
-* federation
-* fluentd-elasticsearch(日志收集)
+## Pod
+Pod是一组紧密关联的容器， 是k8s调度的基本单位
+Pod设计理念是支持多个容器在一个Pod中共享网络和文件系统，可通过进程间通信和文件共享的方式完成服务
 
-**Master节点**
+## Node
+Node是Pod真正运行的主机。为了管理Pod,每个Node上至少要运行container runtime、kubelet和kube-proxy
+
+## Namespace
+Namespace提供一种机制，将同一集群的资源划分为相互隔离的组
+pod,service,deploymeny都是属于某一个namespace的，而node,persistentVolume不属于任何namespace
+
+## Service
+Service是应用服务的抽象，通过labels为应用提供负载均衡和服务发现。
+匹配labels的Pod IP和端口列表组成endpoints, 由kube-proxy负责将服务IP负载均衡到这些endpoints上
+
+## 声明式API
+相对于命令式API, 声明式API对于重复操作的效果是稳定的，运行多次也不会出错
+
+## Deployment
+Deployment(部署)表示用户对k8s集群的一次更新操作。 可以是创建一个服务，更新一个服务，或者是滚动升级一个服务
+
+## Service
+Pod只是运行服务的实例，随时可能在一个节点停止，在另一个节点以新的IP启动，因此不能以确定IP和端口提供服务。
+Service实现了服务发现和负载均衡的核心功能。
+* 每个Service对应一个集群内有效的虚拟IP，集群内部通过虚拟IP访问一个服务
+* k8s集群中微服务的负载均衡由kube-proxy实现。kube-proxy是一个分布式代理服务器，每个服务节点都有一个
+
+## DaemonSet
+业务Pod可能在有些节点运行多个Pod, 有些节点又没有Pod运行。而DaemonSet保证每个节点上都要有一个Pod运行。
+典型的DaemonSet包括: 日志、监控(比如fluentd) 
+
+## StatefulSet
+StatefulSet是管理一组有状态pod的部署和扩展的控制器。
+
+## Volume
+k8s的volume(存储卷)和Docker的类似。Docker的volume作用范围为一个容器，k8s的volume作用范围是一个Pod
+每个Pod中声明的存储卷由Pod中所有容器共享
+
+## PV(Persistent Volume)和PVC(Persistent Volume Claim)
+PV和PVC的关系，和Node与Pod关系类似
+
+## Secret
+Secret用于保存和传递密码、秘钥、认证凭证等敏感信息
+
+## 环境变量
+
+
+
+## ImagePullPolicy
+* Always: 不管镜像是否存在都拉取
+* Never: 不管镜像是否存在都不会进行拉取
+* IfNotPresent：默认值，只有镜像不存在时，才会进行镜像拉取
+
+注:
+* 默认为IfNotPresent, 但:latest标签镜像默认为Always
+* 生产环境要避免使用:latest标签，开发环境可借助:latest自动拉取最新镜像
+
+## 访问DNS的策略
+https://juejin.cn/post/6844903665879220231
+通过设置dnsPolicy参数，设置访问DNS的策略。默认为ClusterFirst
+
+* ClusterFirst
+* ClusterFirstHostNet
+* Default
+* None
+
+** ClusterFirst**
+默认值, 优先使用kubedns或coredns解析，如果不成功使用宿主机DNS解析
+有一个冲突，如果Pod设置了HostNetwork=true, ClusterFirst会强制转换为Default
+
+**Default**
+表示Pod里DNS配置和宿主机完全一致(/etc/resolv.conf完全一致)
+
+**ClusterFirstWithHostNet**
+Pod以host模式启动时，会使用宿主机的/etc/resolv.conf配置
+如果Pod中仍然需要用k8s集群的DNS服务，需要将dnsPolicy设置为ClusterFirstWithHostNet
+
+**None**
+清除Pod预设的DNS配置。如果设置为None，为了避免Pod里没有任何DNS，需要添加dnsConfig描述自定义的DNS参数，例:
 ```
-                    api-server
-kube-controller-manager cloud-controller-manager
-                  kube-scheduler
-                       etcd
+spec:
+  dnsConfig:
+    nameservers:
+	  - 1.2.3.4
+	searches:
+	  - my.dns.search.suffix
+	options:
+	  - name: ndots
+	    value: "2"
 ```
-**普通节点**
+
+**使用主机的IPC命名空间**
+设置hostIPC参数为True, 使用主机的IPC命名空间，默认为False
+
+**使用主机的网络命名空间**
+设置hostNetwork参数为True, 使用主机的网络命名空间，默认为False
+
+**使用主机的PID空间**
+设置hostPID参数为True, 使用主机的PID命名空间，默认为False
+
+
+# POD几种常见的状态
+* Pending 挂起
+* Running Pod所有容器已创建，且至少一个容器正处于运行状态、正在启动状态或重启状态
+* Succeeded Pod所有容器都执行成功后推出，并且没有处于重启的容器
+* Failed Pod至少一个容器推出为失败
+* Unknown kubelet故障，无法获得Pod状态
+
+## Pod重启策略(RestartPolicy)
+支持三种RestartPolicy
+* Always 只要退出就重启 （默认)
+* OnFailure 失败退出(exit code不为0)才重启
+* Never 退出后不再重启
+
+# 健康检查(三种探针)
+https://juejin.cn/post/7163135179177852936
+为了探测容器状态，k8s提供了两种探针:
+* LivenessProbe 存活性探针, 如果不正常就删除容器，再根据Pod重启策略作响应动作。
+* ReadinessProbe 就绪性探针，如果检测失败，将Pod的IP:Port从对应endpoint列表中删除。这种机制防止流量转发到不可用Pod上
+* StartupProbe 如果应用本身启动时间过长，LivenessProbe和ReadinessProbe可能会检测失败，导致容器不停地重启。 StartupProbe探针只是在容器启动后按照配置满足一次后，不在进行后续的探测。
+
+如果三个探针同时存在，先执行StartupProbe，禁用其他两个探针。直到满足StartupProbe，再启动其他两个探针。
+
+## LivenessProbe和ReadinessProbe支持如下三种探测方法
+* ExecAction 容器中指定的命令，退出码为0表示探测成功。
+* HTTPGetAction 通过HTTP GET请求容器，如果HTTP响应码【200，400)，认为容器健康。
+* TCPSocketAction 通过容器的IP地址和端口号执行TCP检查。如果建立TCP链接，则表明容器健康。
+
+可以给探针配置可选字段，用来更精确控制Liveness和Readiness两种探针行为
+* initialDelaySeconds: 容器启动后等待多少秒后探针才开始工作，默认是0秒
+* periodSeconds: 执行探测的时间间隔，默认为10秒
+* timeoutSeconds: 探针执行检测请求后，等待响应的超时时间，默认为1秒
+* failureThreshold: 探测失败的重试次数，重试一定次数后认为失败。
+* successThreshold: 探针在失败后，被视为成功的最小连续成功数。默认值是 1。 存活和启动探测的这个值必须是 1。最小值是 1。
+
+# 容器生命周期钩子
+容器生命周期钩子(Container Lifecycle Hooks)监听容器生命周期的特定事件
+* postStart 容器启动后执行，这里是异步执行，无法保证一定在ENTRYPOINT之后运行。 如果失败，容器会被删除，根据RestartPolicy决定是否重启
+* preStop 容器停止前执行，用于资源清理
+
+钩子函数回调支持两种方式
+* exec 容器内执行命令
+* httpGet: 向指定URL发起GET请求
+
+# 使用能力机制(Capabilities)
+例如：可以给容器增加CAP_NET_ADMIN，根据需要添加或删除网卡
+
+# 调度到指定Node
+使用nodeSelector，首先给Node加标签
 ```
-kubelet              kube-proxy
-pod1        pod2           pod3
-container-runtime 容器运行时环境
+kubectl label nodes <your-node-name> disktype=ssd
 ```
-
-# 服务分类
-* 无状态应用：不会对本地环境产生依赖，例如不会存储数据到本地磁盘 (例: client -> Nginx -> Web)
-* 有状态应用：会对本地环境产生依赖，例如会存储数据到本地磁盘(例: client -> Web -> Redis
-有状态应用的扩容，还需要考虑到数据同步，备份
-
-# 资源的分类
-* 元数据型
-	* HPA (Pod自动扩容)
-	* PodTemplate
-	* LimitRange
-* 集群型
-	* Node
-	* ClusterRole
-	* ClusterRoleBinding
-* 命名空间型
-	* 无状态服务
-		* ReplicationController (RC) 动态更新Pod副本数
-		* ReplicaSet (RS) 动态更新Pod副本数, 通过selector选择对哪些pod生效
-		* Deployment 提供更丰富的部署功能，针对RS的更高层级封装 (主流用这个, RC/RS不用)
-	* 有状态服务
-		* StatefulSet (网络问题，数据持久化)
-			* Headless Service (对于有状态服务的DNS管理)
-			* volumeClaimTemplate (用于创建持久化卷的模板)
-	* 守护进程
-		* DaemonSet
-	* 任务/定时任务
-		* Job
-		* Cronjob
-
-# 滚动升级/回滚
-
-# Service和ingress控制器
-
-# 其他资源
-Volume, configmap(解决配置文件在容器里固定死的问题), secret, downwardAPI
-
-<!--   实战部分  -->
-
-# k8s安装
-
-## 安装Microk8s
-https://pcj600.github.io/2024/1201142626.html
-## 安装minikube(单机版kubernetes)
-个人学习安装，不适用于生产环境
-## kubeadm安装kubernetes集群
-https://pcj600.github.io/2024/1202222352.html
-
-# 创建Pod和Service(第一个Nginx Pod)
-https://pcj600.github.io/2024/1202220520.html
-
-
-TODO: configmap, volume
-
-# 探针技术
-https://www.bilibili.com/video/BV1MT411x7GH?spm_id_from=333.788.videopod.episodes&vd_source=d8559c2d87607be86810cd806158bb86&p=28
-
-## 探针类型
-* StartupProbe (失败后等待)
-* LivenessProbe (失败后重启Pod)
-* ReadinessProbe (失败后外部流量无法访问)
-
-应用启动完成，才有必要启动两个探针
-* 应用初始化的时候，不要接收客户请求 (ReadinessProbe)
-* 存活 (LivenessProbe)
-
-应用启动时间太长，ReadinessProbe或LivenessProbe会提前触发 (StartUpProbe)
-当配置了startupProbe后，会先禁用其他探针，直到StartupProbe成功后，探针才会继续
-
-## 探测类型
-* ExecAction 容器内执行一个命令，返回值为0说明成功
-* TCPSocketAction 通过TCP连接检测容器内端口是否开放
-* HTTPGetAction 通过HTTP请求检测，如果接口返回在200-400之间，认为健康
-
-timeoutSeconds 超时时间
-periodSeconds 检测间隔时间
-successThreshold: 成功几次就认为成功
-faliureThreshold: 失败几次就认为失败
-
-## PreStop
-
-## Label和Selector
-
-## Deployment(无状态),Stateful(有状态),DaemonSet()
-
-Deployment 创建、滚动更新、回滚、暂停恢复
-Stateful
-StatefulSet是Kubernetes中用于部署有状态应用的一种资源对象。有状态应用通常需要持久化存储和唯一标识，例如数据库（如MySQL、PostgreSQL、MongoDB）、消息队列（如RabbitMQ、Kafka）、分布式存储（如Elasticsearch、Cassandra）等。这些应用在企业中广泛存在，并且对于稳定性、有序性和持久化存储有很高的要求。
-DaemonSet (收集日志)
-
-
-https://juejin.cn/post/7163135453489528845
-
-
-
-
-
-
-
-
-
-
-
-https://www.zhaowenyu.com/kubernetes-doc/brief-intro/k8s-history.html
-https://www.cnblogs.com/joexu01/p/16722936.html
+再指定Pod只运行在带有disktype=ssd标签的Node上:
+```
+spec:
+  nodeSelector:
+    disktype: ssd
+```
+Page 65: 自定义hosts
