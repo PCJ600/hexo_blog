@@ -23,6 +23,7 @@ tag:
 * 一台RockyLinux 9, 用于运行k8s, 部署Squid
 
 <!-- more -->
+
 # 1. 在Docker环境中运行Squid, 准备Squid镜像
 这一步的流程如下:
 * 安装Docker
@@ -195,12 +196,7 @@ HTTP/1.1 200 OK
 容器内执行`ulimit -n`的值为1073741816，这个值太大了，导致Squid申请了过大的内存。 这里需要给docker run添加参数`--ulimit nofile=65535:65535`
 
 # 2. 在k8s中部署Squid
-在单机k8s中部署Squid。Pod副本数设置为1, 使用宿主机网络, 监听3128端口。 掌握如下内容：
-* 导入镜像
-* 创建Deployment, volume
-* 限制Pod的内存资源
-* 设置容器的ulimits 
-* 为Pod设置探针，检测健康状态
+在单机k8s中部署Squid。Pod副本数设置为1, 使用宿主机网络, 监听3128端口。
 
 ## 在RockyLinux9 VM上搭建单机k8s
 k8s单机环境用kubernetes, Microk8s, k3s都可以, 我用的是kubernetes; k8s搭建方式参考:
@@ -320,7 +316,7 @@ spec:
       storage: 4Gi
 ```
 
-**修改`squid-deployment.yaml`文件, 引用volume
+**修改`squid-deployment.yaml`文件, 引用volume**
 ```
 apiVersion: apps/v1
 kind: Deployment
