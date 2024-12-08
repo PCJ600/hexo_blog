@@ -30,7 +30,7 @@ TODO: 扩容缩容、滚动升级、回滚、资源限制、健康检查
 # 创建k8s集群
 https://blog.csdn.net/pcj_888/article/details/144240636
 
-# kubernetes架构
+# kubernete核心组件
 一个k8s集群由分布式存储etcd, 控制节点controller，和服务节点Node组成，k8s主要组件如下：
 * etcd保存整个集群状态
 * apiserver提供资源操作唯一入口，提供认证、授权、访问控制、API注册和发现等机制
@@ -46,6 +46,8 @@ https://blog.csdn.net/pcj_888/article/details/144240636
 * fluentd-elasticsearch提供集群日志采集、存储与查询
 * dashboard提供GUI
 
+# 组件通信
+![image1.png](image1.png)
 
 # kubenetes基本概念
 
@@ -94,7 +96,6 @@ PV和PVC的关系，和Node与Pod关系类似
 Secret用于保存和传递密码、秘钥、认证凭证等敏感信息
 
 ## 环境变量
-
 
 
 ## ImagePullPolicy
@@ -196,15 +197,324 @@ https://juejin.cn/post/7163135179177852936
 # 使用能力机制(Capabilities)
 例如：可以给容器增加CAP_NET_ADMIN，根据需要添加或删除网卡
 
-# 调度到指定Node
-使用nodeSelector，首先给Node加标签
+
+# K8s负载均衡有如下几种机制
+* service
+* ingress Controller
+* Service Load Balancer
+
+Service是对一组提供相同功能的Pods抽象，并为他们提供一个统一的入口。实现服务发现和负载均衡功能
+Service有四种类型:
+* ClusterIP 默认类型，自动分配一个仅cluster内部可以访问的虚拟IP
+* NodePort 在ClusterIP基础上，为Service在每台机器上绑定一个端口，这样就可以通过<NodeIP>:NodePort来访问服务
+* LoadBalancer
+* ExternalName
+
+## Service的定义
+Service通过yaml, 例如:定义一个nginx服务，将服务80端口转发到default namespace中带有标签run=nginx的Pod的80端口
 ```
-kubectl label nodes <your-node-name> disktype=ssd
-```
-再指定Pod只运行在带有disktype=ssd标签的Node上:
-```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: default
+  labels:
+    run: nginx
 spec:
-  nodeSelector:
-    disktype: ssd
+  type: ClusterIP
+  selector:
+    run: nginx
+  ports:
+    - name: nginx
+      protocol: TCP
+      port: 80
+      targetPort: 80
 ```
-Page 65: 自定义hosts
+
+# 保留源IP
+各种类型的Service对源IP处理方法不同:
+* clusterIP Service: 使用iptables模式
+* NodePort Service: 源IP会做SNAT
+
+# Ingress controller
+Service只支持4层负载均衡，没有7层功能。 Ingress可以解决这个问题
+
+# k8s存储卷
+容器数据是非持久化的，容器消亡后数据跟着丢失，所以Docker提供volume机制将数据持久化存储
+类似的，k8s提供了更强大的Volume机制和丰富插件，解决了容器数据持久化和容器间共享数据的问题
+
+与Docker不同，k8s volume生命周期与Pod绑定
+Pod删除时。 volume才会清理，数据是否丢失取决于Volume类型。例如PV数据不会丢，emptyDir会丢失
+
+## Persistent Volume
+PV提供网络存储资源，而PVC请求存储资源
+Volume生命周期:
+* Provisioning
+* Binding
+* Using
+* Releasing
+* Reclaiming
+Volume状态:
+* Avaliable 可用
+* Bound 已分配给PVC
+* Released PVC解绑但未执行回收策略
+* Failed 发生错误
+
+# Deployment
+为Pod提供了一个声明式定义的方法，应用场景方法:
+* 滚动升级和回滚应用
+* 扩容和缩容
+* 暂停和继续Deployment
+
+扩容
+```
+kubectl scale deployment nginx-deployment --replicas 10
+```
+回滚
+```
+kubectl rollout undo deployment/nginx-deployment
+```
+
+## 滚动更新(rollout)
+只有Deployment的pod template中的label更新，或者镜像更改时被触发。
+其他更新，例如扩容Deployment不会触发rollout.
+滚动更新的示例: nginx:1.9.1代替nginx:1.7.9
+```
+kubectl set image deployment/nginx-deployment nginx=nginx=1.9.1
+Deployment "nginx-deployment" image updated
+```
+查看rollout状态，执行
+```
+kubectl rollout status deployment/nginx-deployment
+```
+
+## 回滚deployment(rollback)
+```
+kubectl rollout history deployment/nginx-deployment
+```
+回退到历史版本
+```
+kubectl rollout undo deployment/nginx-deployment
+```
+也可以使用--to-revision参数指定某个历史版本
+```
+kubectl rollout undo deployment/nginx-deployment --to-revision=2
+```
+
+## 比例扩容
+
+
+# Secret
+举例: 创建tls的secret
+
+# StatefulSet
+有状态服务
+* 稳定持久化存储，Pod重新调度后还是能访问到相同持久化数据
+* 稳定网络标志, Pod重新调度后PodName和HostName不变
+* 有序部署，有序扩展( 从0到N-1, 下一个Pod运行前，所有之前的Pod必须是Running和Ready状态)
+
+StatefulSet中每个Pod的DNS格式为`statefulSetName-{0..N-1}.serviceName.namespace.svc.cluster.local`
+
+# DaemonSet
+DaemonSet保证在每个Node上都运行一个容器副本，常用于部署一些集群的日志，监控，或者其他系统管理应用，典型应用包括:
+* 日志收集, 比如fluentd, logstash
+* 系统监控, 比如Prometheus
+* 系统程序, 比如kube-proxy, kube-dns, glusterd, ceph
+
+# Resource Quotas
+资源配额(Resource Quotas)是用来限制用户资源用量的一种机制
+它的工作原理:
+* 资源配额应用在Namespace上, 并且每个Namespace最多只能有一个ResourceQuota对象
+* 开启计算资源配额后，创建容器时必须配置计算资源请求或限制
+* 用户超额后禁止创建新的资源
+
+# 资源配合类型
+* 计算资源, CPU和memory
+* 存储资源, 包括存储资源总量以及指定storage class的总量
+* 对象数, 即可创建的对象的个数
+	* pods, rc, configmaps, secrets
+	* resourcequotas, persistentvolumeclaims
+	* services, services.loadbalancers, services.nodeports
+
+默认情况, k8s所有容器没有任何CPU和内存限制, LimitRange可以用来给Namespace增加一个资源限制，包括最小、最大、默认资源
+
+# Pod隔离
+使用标签选择器控制Pod之间流量
+允许前端Pod访问后端Pod的XX端口, 允许后端Pod访问数据库的XX端口
+
+# ingress
+internet -> ingress -> services
+
+# configmap
+保存配置数据的键值对, 处理不包含敏感信息的字符串
+
+三种使用方式:
+* 设置环境变量
+* 设置容器命令行参数
+* 在Volume中直接挂载文件或目录
+
+# Finalizer
+用于实现控制器的异步预测删除钩子，可以通过metadata.finalizers指定finalizer
+
+# etcd
+CoreOS基于Raft开发的分布式key-value存储
+* 基本的key-value存储
+* 监听机制
+* key的过期和续约机制，用于监控和服务发现
+* 原子CAS和CAD，用于分布式锁和leader选举
+
+# API Server
+k8s最核心组件之一，提供如下功能:
+* 提供集群功能的REST API接口，包括认证，授权，准入控制，以及集群状态变更等
+* 提供其他模块之间的数据交互和通信的枢纽
+
+![apiserver.png](apiserver.png)
+
+# kube-scheduler
+负责分配调度Pod到集群内的节点上，监听kube-apiserver，查询未分配Node的Pod，然后根据调度策略为Pod分配节点
+
+指定Node节点调度
+* nodeSelector 只调度到匹配指定label的Node上
+* nodeAffinity 功能更丰富的Node选择器，比如支持集合操作
+* podAffinity 调度到满足条件的Pod所在的Node上
+
+例如, 给Node打标签:
+```
+kubectl label nodes node-01 disktype=ssd
+```
+
+# Taints和tolerations
+
+用于保证Pod不被调度到不合适的Node上，Taint应用于Node, toleration用于Pod上
+例: 使用taint命令给node1添加taints
+```
+kubectl taint nodes node1 key1=value1:NoSchedule
+kubectl taint nodes node1 key1=value2:NoExecute
+```
+
+目前支持的taint类型
+* Noschedule 新的Pod不调度到该Node上, 不影响正在运行的Pod
+* PreferNoSchedule: soft版的NoSchedule，尽量不调度到该Node\
+* NoExecute: 新的Pod不调度到该Node上, 并且删除evict已在运行的Pod
+
+# Controller manager
+通过apiserver监控整个集群状态，确保集群处于预期的工作状态
+
+# kubelet
+每个节点上运行一个kubelet服务进程，默认监听10250端口，接受并执行主节点发来的指令，管理Pod和容器
+![kubelet.png](kubelet.png)
+
+# 容器运行时
+![cri.png](cri.png)
+
+# kube-proxy 
+监听API server中service和endpoint变化，通过iptables为服务配置负载均衡
+
+iptables性能问题(服务多的时候,iptables规则可能上万，大规模会有性能问题)
+还有ipvs的方案
+
+```
+-A KUBE-MARK-DROP -j MARK --set-xmark 0x8000/0x8000
+-A KUBE-MARK-MASQ -j MARK --set-xmark 0x4000/0x4000
+-A KUBE-POSTROUTING -m comment --comment "kubernetes service traffic
+requiring SNAT" -m mark --mark 0x4000/0x4000 -j MASQUERADE
+-A KUBE-SEP-55QZ6T7MF3AHPOOB -s 10.244.1.6/32 -m comment --comment "d
+efault/http:" -j KUBE-MARK-MASQ
+-A KUBE-SEP-55QZ6T7MF3AHPOOB -p tcp -m comment --comment "default/htt
+p:" -m tcp -j DNAT --to-destination 10.244.1.6:80
+-A KUBE-SEP-KJZJRL2KRWMXNR3J -s 10.244.1.5/32 -m comment --comment "d
+efault/http:" -j KUBE-MARK-MASQ
+-A KUBE-SEP-KJZJRL2KRWMXNR3J -p tcp -m comment --comment "default/htt
+p:" -m tcp -j DNAT --to-destination 10.244.1.5:80
+-A KUBE-SERVICES -d 10.101.85.234/32 -p tcp -m comment --comment "def
+ault/http: cluster IP" -m tcp --dport 80 -j KUBE-SVC-7IMAZDGB2ONQNK4Z
+-A KUBE-SVC-7IMAZDGB2ONQNK4Z -m comment --comment "default/http:" -m
+statistic --mode random --probability 0.50000000000 -j KUBE-SEP-KJZJR
+L2KRWMXNR3J
+-A KUBE-SVC-7IMAZDGB2ONQNK4Z -m comment --comment "default/http:" -j
+KUBE-SEP-55QZ6T7MF3AHPOOB
+```
+kube-proxy仅支持TCP和UDP
+
+# kube-dns
+为k8s集群提供命名服务, 一般通过Addon方式部署，从v1.3版本开始，成为一个内建的自启动服务
+源码: https://github.com/kubernetes/dns
+
+# kubectl命令行工具
+
+# kubernetes网络
+* 每个Pod都有一个独立的IP，Pod内所有容器共享一个网络命名空间
+* 集群内所有Pod都在一个直接连通的扁平网络中，可通过IP直接访问
+* Service cluster IP可在集群内部访问，外部请求需要通过NodePort, LoadBalance或Ingress访问
+
+# Host network
+最简单的网络模型就是让容器共享Host的network namespace，使用宿主机的网络协议栈。
+优点:
+* 简单，无需任何额外配置
+* 高校，没有NAT等额外开销
+缺点:
+* 没有任何的网络隔离
+* 可能与Host的其他端口号冲突
+* 容器内做网络配置，可能影响宿主机
+
+# Calico
+一个基于BGP的纯三层的数据中心网络方案(不需要Overlay)
+Calico在每一个计算节点利用Linux Kernel实现一个高校的vRouter来负责数据转发，
+每个vRouter通过BGP协议负责把自己运行workload路由信息像整个Calico网络内传播
+
+# CNI (Container Network Interface)
+基本思想： Container Runtime在创建容器时，先创建好network namespace，然后调用CNI插件为这个netns配置网络，其后再启动容器内的进程
+
+## bridge
+
+## IPVLAN
+从一个主机接口虚拟出多个虚拟网络接口, 所有接口有相同的MAC地址，不同的IP地址
+```
+ip link add link <master-dev> <slave-dev> type ipvlan mode { L2 | L3 }
+```
+
+## MACVLAN
+MACVLAN可以从一个主机接口虚拟出多个macvtap，且每个macvtap设备都有不同的mac地址
+```
+ip link add link <master-dev> name macvtap0 type macvtap
+```
+
+面试题:
+https://github.com/0voice/k8s_awesome_document/blob/main/91%E9%81%93%E5%B8%B8%E8%A7%81%E7%9A%84Kubernetes%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93.md
+
+(是什么，为什么，怎么做?)
+
+* 简述k8s, Docker, minikube
+* 简述k8s常见部署方式
+* 简述k8s集群管理
+* 简述k8s优势
+* 简述k8s相关概念 Master,Node,Pod,Label,Deployment,Service,Volume,Namespace
+* 简述k8s集群相关组件 kube-proxy iptables,ipvs原理
+* 简述k8s创建一个Pod流程
+* 简述k8s中Pod的重启策略
+* 简述k8s中Pod的健康检查方式 https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+* 简述k8s中Pod的常见调度方式
+* 简述k8s Pod生命周期
+* 删除一个Pod过程
+* 简述k8s deployment升级流程,和升级策略
+* 简述DaemonSet
+* 简述k8s自动扩容机制
+* 什么是k8s的service，解决什么问题
+* 简述k8s Service类型(ClusterIP, NodePort, LoadBalancer)
+* 简述k8s service分发后端策略(RoundRobin,SessionAffinity)
+* 如何从k8s外部访问集群内服务?
+* 简述Ingress机制
+* k8s镜像下载策略
+* 简述k8s各模块如何与APIServer通信
+* k8s scheduler
+* k8s kubelet
+* k8s哪些机制保持安全性
+* k8s secret作用(私密数据, Tokens, SSH keys)
+* k8s 网络模型?
+* k8s calico原理?
+* k8s 数据持久化方式?
+* k8s PV和PVC, PV生命周期
+* k8s worker系欸但加入集群过程
+* 容器和主机部署应用的区别
+* k8s 标签和标签选择器有什么用?
+* etcd特点和应用场景
