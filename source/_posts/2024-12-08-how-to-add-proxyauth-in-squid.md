@@ -11,7 +11,6 @@ HTTP basic认证是一种简单的认证机制，要求用户在请求资源前�
 # 实例: 给Squid代理添加HTTP basic认证
 要求: 只允许用户名为peter,密码为123的请求通过认证, 其他请求返回407(Proxy认证失败)
 
-<!-- more -->
 ## 步骤
 1 使用`htpasswd`工具，生成用户名密码。 例如这里添加用户名peter, 密码123.
 ```
@@ -26,6 +25,7 @@ Adding password for user peter
 cat /etc/squid/squid_user
 peter:$XXXXXXXXXXXXXXXXXXX
 ```
+<!-- more -->
 对密码文件设置适当权限
 ```
 chown squid /etc/squid/squid_user

@@ -22,22 +22,15 @@ tag:
 * 一台Centos/RHEL/RockyLinux 7/8/9，安装Docker, 构建Squid的Docker镜像
 * 一台RockyLinux 9, 用于运行k8s, 部署Squid
 
-<!-- more -->
-
 # 1. 在Docker环境中运行Squid, 准备Squid镜像
-这一步的流程如下:
-* 安装Docker
-* 准备Squid主配置文件squid.conf
-* 编写一个Squid启动脚本
-* 创建Dockerfile, 构建镜像
-* 创建docker容器，测试
  
 ## 安装Docker
 参考: [安装Docker](https://blog.csdn.net/pcj_888/article/details/143018460)
+<!-- more -->
 
 ## 准备Squid主配置文件squid.conf  
 我是基于rocky9.3的镜像, 通过yum install方式安装Squid, 默认主配置文件路径在容器中的`/etc/squid/squid.conf`
-使用默认的squid.conf, 无法在容器中正常启动Squid。 需要额外添加如下配置，从而以squid普通用户启动:
+使用默认的squid.conf, 无法在容器中正常启动Squid。 需要额外添加如下配置，从而以squid普通用户启动
 ```
 cache_effective_user squid
 cache_effective_group squid

@@ -24,9 +24,10 @@ acl safe_ports port 80
 acl safe_ports port 443
 acl safe_ports port 8080
 ```
+<!-- more -->
 
 ## ACL使用方法实例
-<!-- more -->
+
 ### 实例1：只允许网段10.206.216.0/24的客户机访问Squid, 拒绝其他客户端请求
 
 修改squid.conf,添加如下几行配置
@@ -68,7 +69,8 @@ curl: (56) Received HTTP code 403 from proxy after CONNECT
 ```
 
 ### 实例3：允许非443端口的FQDN通过
-实际场景中，HTTPS server未必都是443标准端口。 例如: 我需要允许www.yourserver.com:8080这个FQDN通过，拒绝其他HTTPS请求，配置方法如下:
+实际场景中，HTTPS server未必都是443标准端口。 
+比方说,我需要允许`www.yourserver.com:8080`这个FQDN通过，拒绝其他HTTPS请求。 squid.conf可以配置如下
 ```
 acl SSL_ports port 8080
 http_access deny CONNECT !SSL_ports

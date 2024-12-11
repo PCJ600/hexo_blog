@@ -17,7 +17,7 @@ k8s-node2 192.168.52.202 (k8s从节点2)
 ```
 
 # 0. 准备操作
-<!-- more -->
+
 ## 关闭防火墙
 ```
 systemctl stop firewalld
@@ -29,7 +29,7 @@ systemctl disable firewalld
 setenforce 0
 sed --follow-symlinks -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 ```
-
+<!-- more -->
 ## 修改主机名
 k8s主节点执行
 ```
