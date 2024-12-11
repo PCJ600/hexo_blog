@@ -4,7 +4,6 @@ title: VMware虚拟机CPU不支持AVX指令集，但物理CPU支持
 date: 2024-12-10 19:55:46
 categories:
 - VMware
-- troubleshooting
 tags: 
 - VMware
 - troubleshooting

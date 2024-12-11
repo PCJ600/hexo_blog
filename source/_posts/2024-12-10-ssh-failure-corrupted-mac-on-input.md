@@ -4,7 +4,6 @@ title: SSH连接报错, Corrupted MAC on input解决方法
 date: 2024-12-10 19:57:32
 categories:
 - SSH
-- troubleshooting
 tags:
 - SSH
 - troubleshooting

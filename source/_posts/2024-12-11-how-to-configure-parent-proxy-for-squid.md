@@ -2,7 +2,8 @@
 layout: next
 title: 如何给Squid配置父代理，访问外部网络
 date: 2024-12-11 21:10:31
-tags:
+categories: Squid
+tags: Squid
 ---
 
 ## 需求
