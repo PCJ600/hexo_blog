@@ -518,3 +518,11 @@ https://github.com/0voice/k8s_awesome_document/blob/main/91%E9%81%93%E5%B8%B8%E8
 * 容器和主机部署应用的区别
 * k8s 标签和标签选择器有什么用?
 * etcd特点和应用场景
+
+
+
+
+
+实践
+* service(nodeport, clusterIp)
+service和ingress(nodePort和ingress, iptables,网络是怎么走的)
