@@ -222,4 +222,4 @@ channel.start_consuming()
 
 ## 参考
 【1】 [RockyLinux 安装RabbitMQ](https://www.cnblogs.com/eagle6688/p/17437095.html)
-【2】 [使用python的pika库来操作rabbitmq](https://pengpengxp.github.io/archive/before-2018-11-10/2016-12-05-pika-and-rabbitmq.html) pus
+【2】 [使用python的pika库来操作rabbitmq](https://pengpengxp.github.io/archive/before-2018-11-10/2016-12-05-pika-and-rabbitmq.html) 
