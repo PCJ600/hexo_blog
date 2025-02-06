@@ -62,7 +62,7 @@ curl https://peter.backend.com/ui/appliances/image/
 curl -X DELETE https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/
 curl -X POST https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/upgrade/
 curl https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/settings/
-curl -X POST https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/settings/
+curl -H "x-customer-id: 77a1c9561c8d47fb8036c970a4f2ee73" -X POST https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/settings/
 curl https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/storage/
 curl -X POST https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/storage/
 curl -X POST https://peter.backend.com/ui/appliances/974bf535-7930-474e-8da6-780cafff284d/log/
@@ -89,6 +89,8 @@ curl -X POST https://peter.backend.com/va/974bf535-7930-474e-8da6-780cafff284d/s
 # backend Design
 
 ## Database Design
+
+### Customer 
 Customer表
 ```
 desc app_customer;
@@ -101,9 +103,11 @@ desc app_customer;
 | updated_at     | datetime(6) | NO   |     | NULL    |       |
 +----------------+-------------+------+-----+---------+-------+
 ```
+
+### Appliance
 ApplianceInfo表
 ```
-desc app_applianceinfo;
+mysql> desc app_applianceinfo;
 +--------------------+-------------+------+-----+----------------+-------------------+
 | Field              | Type        | Null | Key | Default        | Extra             |
 +--------------------+-------------+------+-----+----------------+-------------------+
@@ -115,11 +119,55 @@ desc app_applianceinfo;
 | status             | varchar(16) | NO   |     | NULL           |                   |
 | appliance_settings | json        | NO   |     | NULL           |                   |
 | capacity           | json        | NO   |     | _utf8mb3\'{}\' | DEFAULT_GENERATED |
+| connect_time       | bigint      | NO   | MUL | NULL           |                   |
+| expected_status    | varchar(16) | NO   |     | NULL           |                   |
 +--------------------+-------------+------+-----+----------------+-------------------+
 ```
+
+ApplianceVersion表
+```
+mysql> desc app_applianceversion;
++------------------+-------------+------+-----+----------------+-------------------+
+| Field            | Type        | Null | Key | Default        | Extra             |
++------------------+-------------+------+-----+----------------+-------------------+
+| version          | varchar(32) | NO   | PRI | NULL           |                   |
+| created_at       | datetime(6) | NO   |     | NULL           |                   |
+| updated_at       | datetime(6) | NO   |     | NULL           |                   |
+| version_major    | int         | NO   | MUL | NULL           |                   |
+| version_minor    | int         | NO   | MUL | NULL           |                   |
+| version_revision | int         | NO   | MUL | NULL           |                   |
+| version_build    | int         | NO   | MUL | NULL           |                   |
+| display_version  | varchar(32) | NO   |     | NULL           |                   |
+| firmware_info    | json        | NO   |     | NULL           |                   |
+| enable           | tinyint(1)  | NO   |     | NULL           |                   |
+| ova_info         | json        | NO   |     | _utf8mb3\'{}\' | DEFAULT_GENERATED |
+| published        | tinyint(1)  | NO   |     | NULL           |                   |
++------------------+-------------+------+-----+----------------+-------------------+
+```
+
+```
+mysql> desc app_appliancemetrics;
++-------------------------+----------+------+-----+---------+----------------+
+| Field                   | Type     | Null | Key | Default | Extra          |
++-------------------------+----------+------+-----+---------+----------------+
+| id                      | bigint   | NO   | PRI | NULL    | auto_increment |
+| appliance_id            | char(32) | NO   | MUL | NULL    |                |
+| record_time             | bigint   | NO   |     | NULL    |                |
+| cpu_used                | double   | NO   |     | NULL    |                |
+| memory_total            | bigint   | NO   |     | NULL    |                |
+| memory_used             | bigint   | NO   |     | NULL    |                |
+| storage_total           | bigint   | NO   |     | NULL    |                |
+| storage_used            | bigint   | NO   |     | NULL    |                |
+| storage_unallocated     | bigint   | NO   |     | NULL    |                |
+| storage_capacity_detail | json     | NO   |     | NULL    |                |
+| storage_usage_detail    | json     | NO   |     | NULL    |                |
++-------------------------+----------+------+-----+---------+----------------+
+```
+
+### IOT Task
 IotTask表
 ```
-> desc app_iottask;
+mysql> desc app_iottask;
 +---------------+-------------+------+-----+---------+-------+
 | Field         | Type        | Null | Key | Default | Extra |
 +---------------+-------------+------+-----+---------+-------+
@@ -130,28 +178,11 @@ IotTask表
 | appliance_id  | char(32)    | NO   | MUL | NULL    |       |
 | customer_id   | char(32)    | NO   |     | NULL    |       |
 | message       | json        | NO   |     | NULL    |       |
-| status        | varchar(16) | NO   | MUL | NULL    |       |
+| status        | varchar(16) | NO   |     | NULL    |       |
 | retry_count   | int         | NO   |     | NULL    |       |
 | result        | json        | NO   |     | NULL    |       |
 | error_message | longtext    | NO   |     | NULL    |       |
 +---------------+-------------+------+-----+---------+-------+
-```
-ApplianceVersion表
-```
-mysql> desc app_applianceversion;
-+------------------+-------------+------+-----+---------+-------+
-| Field            | Type        | Null | Key | Default | Extra |
-+------------------+-------------+------+-----+---------+-------+
-| version          | varchar(32) | NO   | PRI | NULL    |       |
-| created_at       | datetime(6) | NO   |     | NULL    |       |
-| updated_at       | datetime(6) | NO   |     | NULL    |       |
-| version_major    | int         | NO   |     | NULL    |       |
-| version_minor    | int         | NO   |     | NULL    |       |
-| version_revision | int         | NO   |     | NULL    |       |
-| version_build    | int         | NO   |     | NULL    |       |
-| display_version  | varchar(32) | NO   |     | NULL    |       |
-| firmware_info    | json        | NO   |     | NULL    |       |
-+------------------+-------------+------+-----+---------+-------+
 ```
 
 HeartbeatIotTask表
@@ -171,6 +202,9 @@ desc app_heartbeatiottask;
 | error_message | longtext    | NO   |     | NULL    |                |
 +---------------+-------------+------+-----+---------+----------------+
 ```
+
+### Service
+
 
 ## IotTask Design
 * install/uninstall/enable/disable/configure services
@@ -211,11 +245,25 @@ use applianceId as taskId to avoid database overwhelm
 }
 ```
 
-### Install services
+### Install Services
 ```
 {
 	"taskId": "uuid",
-	"taskType": "unregister"
+	"taskType": "installService",
+	"serviceCode": "va-squid",
+	"targetVersion": "1.0.0.10000",
+	"branch": "main",
+	"imagePath": "download_url",
+	"imageSha256": "sha256sum"
+}
+```
+
+### Uninstall Services
+```
+{
+	"taskId": "uuid",
+	"taskType": "installService",
+	"serviceCode": "va-squid"
 }
 ```
 
@@ -229,7 +277,11 @@ use applianceId as taskId to avoid database overwhelm
 ```
 
 ### Collect Appliance Metrics
+```
+{
 
+}
+```
 
 ### Unregister VA
 ```
@@ -563,7 +615,7 @@ POST /ui/appliances/<appliance_id>/metrics
 POST /ui/appliances/<appliance_id>/log
 
 **Procedure**
-* check customer_id in request header, customer can only collect their own appliance's storage
+* parse customer_id in request header, check DB if customer is valid.
 * get upload url(aws s3), 支持收某段时间的LOG(7天，2周，1个月)
 * notify VA to collect logs
 * wait log collected (30 minutes)
@@ -583,21 +635,25 @@ curl -X POST -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" -H "Conten
 ```
 
 <font color='red'>**Service Management**</font>
+
 #### List Service
 GET /ui/appliances/<appliance_id>/services
-**Procedure**
 
+**Procedure**
+* parse customer_id in request header, check if customer is valid, va belongs to this customer.
+* query applianceServiceSettings DB table, find all services of this appliance. 
+* response a list of services to frontend.
 
 **Response**
 ```
 {
 	"data": [
 		{
-			"fullName": "Forwarded Proxy"
-			"description": "",
 			"serviceCode": "va-squid",
 			"version": "1.0.0.10000",
 			"displayVersion": "1.0.0",
+			"latestVersion": "A.B.C.DDDDD",		# latest avaliable service version 
+			"latestDisplayVersion": "A.B.C",
 			"status": "uninstalled | installing | running | disabled",
 			"healthStatus": "healthy | unhealthy",
 			"requestCPU": 1
@@ -616,36 +672,140 @@ curl -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" \
 #### Install/Uninstall/Upgrade Service
 POST /ui/services/<service_code>/install
 
+##### Install Service
 **Procedure**
-* check customer_id in request header
-* parse appliance_id and service action(install/uninstall/upgrade) 
-* find latest service version from DB
-* If current settings(ApplianceServiceSettings) version equals to latest, -> service already installed
-* create or update ApplianceServiceSettings
-* notify VA to install service
-* resp 200 OK
+* parse customer_id in request header, check DB if customer is valid.
+* find latest service version
+* if service already installed, return OK, else: 
+	* check if reach resources limit
+	* get service package download url
+	* create or update related dbentry, change expected status to running	
+    * notify VA
+* resp 200 OK 
+
 
 **Install Service Request**
 ```
 {
-	"applianceId": "",
+	"applianceId": "974bf535-7930-474e-8da6-780cafff284d",
 	"action": "install | uninstall | upgrade"
 }
 ```
 
+**IOT Command**
+```
+{
+	"serviceCode": "serviceCode",
+    "taskType": "installService"
+    "targetVersion": latest_version.version,
+    "branch": latest_version.branch,
+    "imagePath": download_url,
+    "imageSha256": latest_version.package_sha256
+}
+```
+
+**Test**
+install service
+```
+insert into app_serviceinfo(service_code, created_at, updated_at, default_setting) values('va-squid', now(), now(), '{}'); 
+insert into app_serviceversion(service_code, version, display_version, package_path, package_sha256, request_cpu, request_memory, disable, created_at, updated_at, branch, appliance_dependency, package_size) values \
+('va-squid', '1.0.0.10000', '1.0.0', 'https://va-squid.tar.gz', '125a100301e72f3fe3a59cdab01a563ca239c7ea2728b4f39a44a3b6064d4286', 1, 1024*1024, 0, now(), now(), 'main', '', 0);
+
+curl -X POST -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" -d '{"applianceId": "974bf535-7930-474e-8da6-780cafff284d", "action": "install"}' -H "Content-Type:application/json"  \
+"https://peter.backend.com/ui/services/va-squid/install/"
+```
+uninstall service
+```
+curl -X POST -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" -d '{"applianceId": "974bf535-7930-474e-8da6-780cafff284d", "action": "uninstall"}' -H "Content-Type:application/json"  \
+"https://peter.backend.com/ui/services/va-squid/install/"
+```
+
+
 #### Enable/Disable Service
 POST /ui/services/<service_code>/<appliance_id>/toggle
+
+**Procedure**
+* parse customer_id from header, parse appliance_id, service_code from uri
+* query service settings from DB
+* change service status
+* notify to VA
+
+**Request**
+```
+{
+	"action": "enable | disable"
+}
+```
+
+**Response**
+```
+{
+	"message": "success"
+}
+```
+**Test**
+```
+curl -X POST -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" -d '{"action": "enable"}' -H "Content-Type:application/json"  \
+"https://peter.backend.com/ui/services/va-squid/974bf535-7930-474e-8da6-780cafff284d/toggle/"
+```
+
 
 #### Get Service Settings
 GET /ui/services/<service_code>/<appliance_id>/settings
 
+**Procedure**
+* query service settings from DB based on appliance_id, service_code
+* response to frontend
+
+**Response**
+```
+{
+	"settings": {}
+}
+```
+**TEST**
+```
+curl -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" "https://peter.backend.com/ui/services/va-squid/974bf535-7930-474e-8da6-780cafff284d/settings/"
+```
+
 #### Configure Service Settings
 POST /ui/services/<service_code>/<appliance_id>/settings
+
+**Procedure**
+* parse settings from req body
+* parse appliance_id, service_code from uri
+* query current service settings from DB
+* notify VA to configure service 
+
+**Test**
+```
+curl -X POST -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" -H "Content-Type:application/json" -d '{"setting": {"settings101": "value101"}, "setting_version": 101}' \
+"https://peter.backend.com/ui/services/va-squid/974bf535-7930-474e-8da6-780cafff284d/settings/"
+```
 
 #### Query Task result
 GET /ui/tasks/<task_id>
 
+**Procedure**
+* parse customer_id from header, parse appliance_id, task_id from uri
+* query task result from DB
+* resp task result
 
+**Response**
+```
+{
+	"delivered": False, # if received from va, return True.
+	"status": task.status,
+	"result": task.result,
+	"error_message": task.error_message
+}
+```
+
+**Test**
+```
+curl -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" \
+"https://peter.backend.com/ui/tasks/0c5b000b68ad4d3faedded836e92f24b/"
+```
 
 
 # IOT(RabbitMQ)
@@ -668,3 +828,17 @@ rabbitmqadmin --username=admin --password=V2SG@xdr delete queue name=va_task_123
 ```
 rabbitmqadmin --username=admin --password=V2SG@xdr delete exchange name=va_task --vhost=/
 ```
+
+
+HeartbeatIotTask(不删除), 每个va只有一个
+IotTask要删除 (不能立刻删除, frontend需要查询task得到执行结果)
+
+定时任务:
+
+token过期怎么办?
+定时任务检查30天内到期的token
+请求SP拿到新的tokn
+通过upgradeApplianceConfig iotTask通知到va
+va更新token
+
+MySQL root:password@123
