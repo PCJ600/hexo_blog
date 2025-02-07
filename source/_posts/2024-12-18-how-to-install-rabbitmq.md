@@ -17,10 +17,10 @@ rpm --import https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabb
 rpm --import https://dl.cloudsmith.io/public/rabbitmq/rabbitmq-erlang/gpg.E495BB49CC4BBE5B.key
 rpm --import https://dl.cloudsmith.io/public/rabbitmq/rabbitmq-server/gpg.9F4587F226208342.key
 ```
-<!-- more -->
 
 ## 创建repo文件
 在/etc/yum.repos.d/目录下创建一个名为rabbitmq.repo的文件，并添加以下内容：
+<!-- more -->
 ```
 # In /etc/yum.repos.d/rabbitmq.repo
 

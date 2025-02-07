@@ -32,8 +32,8 @@ channel.queue_declare(queue='hello')
 ```py
 channel.basic_publish(exchange='', routing_key='hello', body='Hello World!')
 ```
-完整的生产者代码(send.py)如下:
 <!-- more -->
+完整的生产者代码(send.py)如下:
 ```py
 import pika
 

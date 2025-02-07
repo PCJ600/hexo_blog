@@ -6,19 +6,6 @@ categories: LeetCode
 tags: LeetCode
 ---
 
-https://zhuanlan.zhihu.com/p/349940945
-692 done
-
-# 排序
-
-## 自定义排序
-```c++
-static bool compare(vector<int> &a, vector<int> &b) {
-    return a[0] < b[0];
-}
-sort(intervals.begin(), intervals.end(), compare);
-```
-<!-- more -->
 
 # 数组(vector)
 
@@ -26,7 +13,9 @@ sort(intervals.begin(), intervals.end(), compare);
 ```
 vector<int> v(size);
 vector<int> v(size, init_value);
+v.emplace_back(a.begin(), a.begin() + 3); # 用另一个vector的某一区间初始化vector
 ```
+
 
 ## 遍历数组
 ```
@@ -34,7 +23,6 @@ for (int i = 0; i < vec.size(); ++i) {
 	vec[i] = i;
 }
 ```
-
 
 ## 数组追加到另一个数组
 ```
@@ -56,144 +44,7 @@ sort(nums.begin(), nums.end(), greater<int>());
 ```
 vector<vector<bool>> visited(rows, vector<bool>(cols, false));
 ```
-
-
-# 优先级队列/堆(priority_queue)
-
-## 求第k大的数
-* 大根堆: 建大小为n的堆, 弹出k-1次，堆顶为第k大的数
-* 小根堆: 维护大小为k的堆，取堆顶元素
-
-大根堆(默认)
-```c++
-int findKthLargest(vector<int> &nums, int k) {
-	priority_queue<int, vector<int>, less<int>> pq;
-	for (int i = 0; i < nums.size(); ++i) {
-		pq.push(nums[i]);
-	}
-	for (int i = 0; i < k - 1; ++i) {
-		pq.pop();
-	}
-	return pq.top();
-}
-```
-
-小根堆
-```c++
-    int findKthLargest(vector<int> &nums, int k) {
-        priority_queue<int, vector<int>, greater<int>> pq;
-        for (int i = 0; i < k; ++i) {
-            pq.push(nums[i]);
-        }
-        for (int i = k; i < nums.size(); ++i) {
-            pq.push(nums[i]);
-            pq.pop();
-        }
-        return pq.top();
-    }
-```
-
-## 自定义优先级(仿函数)
-求k个最小距离的点
-```
-class Solution {
-public:
-    struct cmp{
-        bool operator() (vector<int> &a, vector<int> &b) {
-            int dis1 = a[0] * a[0] + a[1] * a[1];
-            int dis2 = b[0] * b[0] + b[1] * b[1];
-            return dis1 > dis2;
-        }
-    };
-    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {
-        vector<vector<int>> ans;
-        priority_queue<vector<int>, vector<vector<int>>, cmp> pq;
-        for (auto &vec: points) {
-            pq.push(vec);
-        }
-        for (int i = 0; i < k; ++i) {
-            ans.push_back(pq.top());
-            pq.pop();
-        }
-        return ans;
-    }
-};
-```
-
-# 集合(unordered_set)
-
-基本操作
-```
-s.insert(key);
-s.erase(key);
-```
-
-寻找两个链表相交的节点
-```
-    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
-        unordered_set<ListNode *> s;
-        for(ListNode *h = headA; h != nullptr; h = h->next) {
-            s.insert(h);
-        }
-        for (ListNode *h = headB; h != nullptr; h = h->next) {
-            if (s.find(h) != s.end()) {
-                return h;
-            }
-        }
-        return nullptr;
-    }
-```
-
-# 哈希表(unordered_map)
-删除
-```
-unordered_map<int, DLinkedNode*> ht;
-ht.erase(key);
-```
-
-# 队列(Queue)
-```
-queue<int> q;
-q.front() #队首
-q.push()
-q.pop()
-q.size()
-q.empty()
-```
-
-# 双端队列(Deque)
-```
-deque<int> dq;
-push_back
-pop_back
-pop_front
-front
-back
-for (auto iter = dq.begin(); iter != dq.end(); ++iter) {
-	*iter
-}
-```
-
-# 字符串(String)
-
-## 比较两个字符串的字典序
-```
-s1.compare(s2) < 0
-```
-
-## 整数转字符串
-```
-string s = to_string(10);
-```
-
-## 去除所有空格
-
-
-## 末尾添加字符
-```
-string s;
-s.push_back('c');
-```
+<!-- more -->
 
 # 链表
 
@@ -235,7 +86,7 @@ public:
 };
 ```
 
-## 双向链表节点
+## 双向链表节点定义
 ```c++
 struct DLinkedNode {
     DLinkedNode *prev;
@@ -247,29 +98,219 @@ struct DLinkedNode {
 };
 ```
 
-# 枚举类型
-```c++
-enum Direction {RIGHT, DOWN, LEFT, UP};
+# 队列(Queue)
+```
+queue<int> q;
+q.front() #队首
+q.push()
+q.pop()
+q.size()
+q.empty()
 ```
 
+# 双端队列(Deque)
+```
+deque<int> dq;
+dq.push_back(x);
+dq.pop_back();
+dq.pop_front();
+dq.front();
+dq.back();
+for (auto iter = dq.begin(); iter != dq.end(); ++iter) {
+	*iter
+}
+```
+
+# 优先级队列/堆(priority_queue)
+
+## 求第k大的数
+* 大根堆: 建大小为n的堆, 弹出k-1次，堆顶为第k大的数
+* 小根堆: 维护大小为k的堆，取堆顶元素
+
+大根堆(默认)
+```c++
+int findKthLargest(vector<int> &nums, int k) {
+	priority_queue<int, vector<int>, less<int>> pq;
+	for (int i = 0; i < nums.size(); ++i) {
+		pq.push(nums[i]);
+	}
+	for (int i = 0; i < k - 1; ++i) {
+		pq.pop();
+	}
+	return pq.top();
+}
+```
+
+小根堆
+```c++
+    int findKthLargest(vector<int> &nums, int k) {
+        priority_queue<int, vector<int>, greater<int>> pq;
+        for (int i = 0; i < k; ++i) {
+            pq.push(nums[i]);
+        }
+        for (int i = k; i < nums.size(); ++i) {
+            pq.push(nums[i]);
+            pq.pop();
+        }
+        return pq.top();
+    }
+```
+
+## 自定义优先级
+求k个最小距离的点
+```
+class Solution {
+public:
+    struct cmp{
+        bool operator() (vector<int> &a, vector<int> &b) {
+            int dis1 = a[0] * a[0] + a[1] * a[1];
+            int dis2 = b[0] * b[0] + b[1] * b[1];
+            return dis1 > dis2;
+        }
+    };
+    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {
+        vector<vector<int>> ans;
+        priority_queue<vector<int>, vector<vector<int>>, cmp> pq;
+        for (auto &vec: points) {
+            pq.push(vec);
+        }
+        for (int i = 0; i < k; ++i) {
+            ans.push_back(pq.top());
+            pq.pop();
+        }
+        return ans;
+    }
+};
+```
+
+# 集合(unordered_set)
+```
+unordered_set<int> s;
+s.insert(key);
+s.erase(key);
+if (s.find(key) != s.end())
+```
+
+# 哈希表(unordered_map)
+```
+unordered_map<int, DLinkedNode*> ht;
+ht.erase(key);
+```
+
+# TreeMap
+## 自定义优先级
+```
+class Cmp {
+    private:
+        const std::vector<int>& data;
+    public:
+        explicit Cmp(const std::vector<int> &vec) : data(vec) {}
+        bool operator()(const int a, const int b) const {
+            if (data[a] != data[b]) return data[a] > data[b];
+            return a > b;
+        }        
+};
+vector<int>& nums;
+set<int, Cmp> s((Cmp(nums)));
+```
+
+# 字符串(String)
+
+## 比较两个字符串的字典序
+```
+s1 < s2
+s1.compare(s2) < 0
+```
+
+## 整数转字符串
+```
+string s = to_string(10);
+```
+
+## 去除所有空格
+```
+
+```
+
+## 末尾添加字符
+```
+string s;
+s.push_back('c');
+```
+
+# 排序
+
+## 自定义排序
+```c++
+static bool compare(vector<int> &a, vector<int> &b) {
+    return a[0] < b[0];
+}
+sort(intervals.begin(), intervals.end(), compare);
+```
+
+## 拓扑排序
+BFS, 每次把入度为0的点入队列)
+```
+vector<int> degree(size, 0);
+vector<vector<int>> graph(size);
+queue<int> q;
+```
+
+# 并查集
+```
+vector<int> parents;
+for (int i = 0; i < parents.size(); ++i) parents[i] = i;
+void Union(int x, int y) {
+	int px = Find(x);
+	int py = Find(y);
+	if (px == py) return;
+	parents[px] = py;
+}
+int Find(int x) {
+	if (x == parents[x]) return x;
+	parents[x] = Find(parents[x]);
+	return parents[x];
+}
+```
+
+# 字典树
+```
+struct TrieNode {
+    vector<TrieNode *> children;
+	bool isWordEnd;
+    TrieNode() {
+        children.resize(26, nullptr);
+    }
+};
+
+void insert(string word) {
+    TrieNode *cur = root;
+    for (char ch: word) {
+        int idx = ch - 'a';
+        if (cur->children[idx] == nullptr) {
+            cur->children[idx] = new TrieNode(ch);
+        }
+        cur = cur->children[idx];
+    }
+}
+
+bool startsWith(string prefix) {
+    TrieNode *cur = root;
+    for (char ch: prefix) {
+        int idx = ch - 'a';
+        if (cur->children[idx] == nullptr) {
+            return false;
+        }
+        cur = cur->children[idx];
+    }
+    return true;
+}
+```
+
+# 单调栈、树状数组
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# LeetCode py
+# LeetCode python CheetSheet
 
 # 自定义排序
 Python匿名函数
@@ -336,5 +377,3 @@ d[0]
 d[-1]
 d.remove(2)
 ```
-
-https://leetcode.cn/problems/first-unique-number/
