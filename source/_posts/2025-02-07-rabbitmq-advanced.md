@@ -1,6 +1,6 @@
 ---
 layout: next
-title: 2025-02-07-rabbitmq-advanced.md
+title: RabbitMQ学习记录
 date: 2025-02-07 22:48:07
 categories: RabbitMQ
 tags: RabbitMQ

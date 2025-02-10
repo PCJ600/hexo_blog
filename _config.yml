@@ -158,3 +158,6 @@ nofollow:
   field: site
   exclude:
     - 'exclude1.com'
+
+toc:
+  maxdepth: 3
