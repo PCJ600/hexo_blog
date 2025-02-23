@@ -86,9 +86,9 @@ I believe my skills and experience can align well with your company.
 And I hope to join Microsoft and realize my personal value.
 同时，我也期待在贵公司这样一个充满机遇的环境中不断成长，实现个人价值
 
-## 你如何保持对行业趋势和发展动态关注/你对我们行业怎么看
+## 你如何保持对行业趋势关注/你对我们行业怎么看
 
-## Where do you see yourself in five years (你未来的规划)
+## Where do you see yourself in five years (你未来几年的规划)
 In the short term, I will learn business, work closely with my colleagure, then do feature development quickly.
 短期内, 入职后快速熟悉公司的业务流程, 积极融入团队, 参与项目开发
 
@@ -180,7 +180,7 @@ I came up with a workaround until my leader approached me. Let customer install 
 I realized that it's important to communicate with my leader or colleague in time when facing problems,
 avoid getting stuck in a dead end, and learn to find solution flexibly.
 
-## Would you briefly describe your company to me(请你简单介绍下前公司)
+## Would you briefly describe your company to me (请你简单介绍下前公司)
 OK, Trend Micro was founded in 1988 in the US. Our company is a global leader in cybersecurity solutions.
 趋势科技1988年在美国硅谷成立, 是全球网络安全解决方案的领导
 
@@ -270,7 +270,7 @@ Finally, I'm glad to help colleagues. I am willing to provide answers when my co
 In addition, I wrote some documents and blogs to share knowledge and support the team. 
 乐于帮助同事. 平时同事遇到技术问题, 我乐于解答; 此外, 在公司写文档和博客, 分享知识, 帮助团队.
 
-## 作为一名公司员工, 你觉得自己有什么缺点
+## What are your strengths as an employee (你觉得自己有什么缺点)
 在过去的工作中, 存在过于扣技术细节，忽略了从用户角度出发思考问题.
 
 比如华为的Matrix仿真项目，我建议使用k8s管理容器, 被架构师反对. 他们指出项目的核心需求是, 让用户在自己开发机上快速地搭建环境
@@ -281,21 +281,21 @@ In addition, I wrote some documents and blogs to share knowledge and support the
 
 这些经验让我认识到, 技术选型需要以解决问题为核心，考虑用户体验、 开发效率、 维护成本，而不是盲目依赖已知技术或追逐新技术
 
-# 请提问
-* 能分享一下您平时的工作内容, 会用到哪些技术栈?
-* 问下你们团队人员组成，如何分配任务的?
+# 请你提问
 
-* 您觉得在这个职位表现出色的员工有哪些特点?
-* 部门未来一年的重点项目和发展方向是什么?
-* 您认为团队目前最大的挑战是什么, 如何规划解决这些问题?
+## 能分享一下您平时的工作内容, 会用到哪些技术栈?
+## 问下你们团队人员组成，如何分配任务的?
 
-* 能说明下贵公司的晋升机制吗?
-* 贵公司如何进行绩效考核的, 是否有具体的量化指标?
-* 为什么要招这个职位，是补缺还是扩张?
-* 贵公司最看重员工的哪些品质?
+## 您觉得在这个职位表现出色的员工有哪些特点?
+## 部门未来一年的重点项目和发展方向是什么?
+## 您认为团队目前最大的挑战是什么, 如何规划解决这些问题?
+
+## 能说明下贵公司的晋升机制吗?
+## 贵公司如何进行绩效考核的, 是否有具体的量化指标?
+## 为什么要招这个职位，是补缺还是扩张?
+## 贵公司最看重员工的哪些品质?
 
 # 其他问题
-
 
 ## 如果没有被录用，你咋办?
 I will accept the reality, keep learning to enhance my skills, and try harder next time.

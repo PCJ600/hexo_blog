@@ -7,8 +7,9 @@ tags: investment
 ---
 
 同花顺做了一张2024年度资产收益图，大家可以看看
-![](image1.png)
 <!-- more -->
+![](image1.png)
+
 
 
 

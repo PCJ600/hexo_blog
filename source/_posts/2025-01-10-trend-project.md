@@ -34,9 +34,10 @@ dispatchAutoUpgradeInOneHourForAll
 * receive response from Appliance
 	* write task to db
 
+<!-- more -->
 ![](va_auto_upgrade.png)
 
-<!-- more -->
+
 
 ## Heartbeat
 appliance断连一小段时间后，连接又恢复正常
