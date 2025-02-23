@@ -1,7 +1,7 @@
 ---
 layout: next
 title: VA backend Design
-date: 2025-01-10 20:19:17
+date: 2020-01-03 20:19:17
 categories: interview
 tags: interview
 ---
@@ -836,10 +836,9 @@ IotTask要删除 (不能立刻删除, frontend需要查询task得到执行结果
 
 定时任务:
 
+##
 token过期怎么办?
-定时任务检查30天内到期的token
-请求SP拿到新的tokn
-通过upgradeApplianceConfig iotTask通知到va
-va更新token
-
-MySQL root:password@123
+* 定时任务检查30天内到期的token
+* 请求SP拿到新的tokn
+* 通过upgradeApplianceConfig iotTask通知到va
+* va更新token

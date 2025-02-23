@@ -1,6 +1,6 @@
 ---
 layout: next
-title: RabbitMQ入门
+title: RabbitMQ入门教程
 date: 2025-02-05 20:18:12
 categories: RabbitMQ
 tags: RabbitMQ
