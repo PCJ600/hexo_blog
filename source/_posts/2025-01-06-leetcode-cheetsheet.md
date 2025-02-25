@@ -216,6 +216,12 @@ set<int, Cmp> s((Cmp(nums)));
 
 # 字符串(String)
 
+## 是否包含子串
+```
+s2是否包含s1
+s2.find(s1) != string::npos;
+```
+
 ## 比较两个字符串的字典序
 ```
 s1 < s2

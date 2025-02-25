@@ -10,30 +10,36 @@ tags: interview
 
 <!-- more -->
 
+https://www.soeasyedu.com.tw/blog/business-english/four-english-interview-preparation-tips
+
 # 关于个人信息的问题
 
 ## Could you give a brief introduction of yourself (自我介绍)
-Good Morning/Good Afternoon! I'm very glad to join this interview.
+Good Morning/Good Afternoon! I'm very glad to join this interview today.
 面试官您好, 首先感谢贵公司给我参加这次面试的机会
 
 My name is Chuang Pan and you can call me Peter. I graduated from NanJing University in 2019 with a degree in Computer Science.
 I have 5 years of experience in Linux software development.
 我叫潘闯, 2019年毕业于南京大学计算机专业, 有5年的Linux平台软件开发经验
 
-Currently, I work as a Senior Engineer at Trend Micro. I am responsible for our Service Gateway project.
-The Service Gateway is deployed in corporate network to help customers reduce their bandwidth consumption.
+I've been working as a Senior Engineer in Trend Micro for 3 years. 
+I am responsible for Service Gateway project to help customers reduce their bandwidth consumption.
+// I handled _____ and helped _____
 目前，我在趋势科技公司担任软件开发工程师，主要负责服务网关项目的设计与开发工作。
 这个服务网关部署在企业客户的本地网络中，用于帮助客户减少网络带宽消耗。
 
 I designed an upgrade solution for Service Gateway, This greatly improved customer satisfaction and development efficiency.
-我主导优化并实现了一套服务网关的升级方案, 显著提升了客户体验和开发效率
+主要贡献是: 我主导优化并实现了一套服务网关的升级方案, 显著提升了客户体验和开发效率
 
 In terms of technical skills, I am proficent in multiple programming languages like C, C++ and Python.
-I also have hands-on experience with Kubernetes, and I am familar with common databases, as well as Message Brokers.  
+I have hands-on experience with Kubernetes, and I am familar with common databases, as well as Message Brokers.  
 技术方面, 我熟悉多种编程语言, 具备Kubernetes项目经验, 熟悉常见数据库和消息中间件，擅长解决问题
 
-I believe my skills and experience can align well with your team's needs. And I hope to join your company. That's all, thank you!
-我相信我的技能和经验能够为团队带来价值, 希望有机会加入贵公司，与团队一起成长, 谢谢
+I believe my skills and experience can align well with your team's needs. And I hope to join your company. 
+我相信我的技能和经验能够为团队带来价值, 希望有机会加入贵公司，与团队一起成长\
+
+That's all, Thank you for giving me the opportunity to this interview today!
+谢谢
 
 
 ## What's your favourite hobby (你的业余爱好是什么)
