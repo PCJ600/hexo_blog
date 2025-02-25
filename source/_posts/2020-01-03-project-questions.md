@@ -291,7 +291,7 @@ total 12000$
 * 要实现仿真环境的验证，需要对驱动接口进行打桩的工作
 * 测试人员需要构造故障, 比如通过改变驱动行为的方式。 如果每次都修改C代码再重新编译, 这种测试体验会很差
 
-## 为什么用Redis不用MySQL?
+## 为什么用Redis不用MySQL
 * Redis是基于内存的，性能很高。 我这个项目中的数据规模在2w个key左右，QPS最高在1w左右，因此我们直接使用Redis做数据库
 * Redis的key-value模型很适合模拟驱动接口行为，灵活方便, 因为我们的驱动接口就是get/set; MySQL是关系型的，还要先建表, 不灵活
 * Redis数据类型丰富（string, list, set, zset, hash)，mamcached只支持string, mongodb是文档型数据库，更适合文档存储

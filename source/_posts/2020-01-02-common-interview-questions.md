@@ -14,108 +14,104 @@ https://www.soeasyedu.com.tw/blog/business-english/four-english-interview-prepar
 
 # 关于个人信息的问题
 
-## Could you give a brief introduction of yourself (自我介绍)
+## **Could you give a brief introduction of yourself (自我介绍)**
 Good Morning/Good Afternoon! I'm very glad to join this interview today.
-面试官您好, 首先感谢贵公司给我参加这次面试的机会
+面试官您好, 很高兴今天有机会参加贵公司的面试
 
-My name is Chuang Pan and you can call me Peter. I graduated from NanJing University in 2019 with a degree in Computer Science.
-I have 5 years of experience in Linux software development.
-我叫潘闯, 2019年毕业于南京大学计算机专业, 有5年的Linux平台软件开发经验
+My name is Chuang Pan. I graduated from NanJing University in 2019 with a degree in Computer Science.
+and I have 5 years of experience in Linux software development.
+我叫潘闯, 2019年毕业于南京大学计算机专业, 目前已有5年的Linux平台软件开发经验
 
-I've been working as a Senior Engineer in Trend Micro for 3 years. 
-I am responsible for Service Gateway project to help customers reduce their bandwidth consumption.
-// I handled _____ and helped _____
-目前，我在趋势科技公司担任软件开发工程师，主要负责服务网关项目的设计与开发工作。
-这个服务网关部署在企业客户的本地网络中，用于帮助客户减少网络带宽消耗。
+I have worked as a Senior Engineer at Trend Micro for 3 years. 
+目前，我在趋势科技公司担任软件开发工程师，已工作3年
+In my last project, I was responsible for the feature development of a Service Gateway, which helped our customers reduce their bandwidth consumption.
+在最近的一个项目中, 我负责了一个服务网关的特性开发工作, 这个服务网关帮助客户减少他们的带宽消耗
+I designed and implemented an upgrade solution for our Service Gateway, this greatly improved customer satisfaction and development efficiency.
+我设计并实现了一个服务网关的升级方案, 这个方案显著提升了客户体验, 同时节省了开发维护成本
 
-I designed an upgrade solution for Service Gateway, This greatly improved customer satisfaction and development efficiency.
-主要贡献是: 我主导优化并实现了一套服务网关的升级方案, 显著提升了客户体验和开发效率
+I am proficent in multiple programming languages like C and Python, and I have hands-on experience with Kubernetes and Docker.
+技能方面, 我熟悉C, Python等编程语言, 具备Kubernetes和Docker的项目经验
+I am also familar with common databases and message brokers.
+我熟悉Redis, MySQL数据库, 以及RabbitMQ等消息中间件
 
-In terms of technical skills, I am proficent in multiple programming languages like C, C++ and Python.
-I have hands-on experience with Kubernetes, and I am familar with common databases, as well as Message Brokers.  
-技术方面, 我熟悉多种编程语言, 具备Kubernetes项目经验, 熟悉常见数据库和消息中间件，擅长解决问题
+I hope to join Microsoft because you are a global leader in technology innovation.
+我希望有机会加入微软, 因为贵公司作为全球技术创新的领导者, 
+Microsoft provides a broad platform for personal development, and countless opportunities to join cutting-edge projects. 
+不仅为个人职业发展提供了广阔的平台, 同时赋予了员工参与前沿技术项目的机会
 
-I believe my skills and experience can align well with your team's needs. And I hope to join your company. 
-我相信我的技能和经验能够为团队带来价值, 希望有机会加入贵公司，与团队一起成长\
+I believe my skills and experience can align well with your team's needs. And I hope to join such an exceptional company and grow with a talented team.  
+我相信我的技能和经验能够为团队创造价值, 同时也期待能在微软这样一个卓越的公司, 与团队一起成长
 
-That's all, Thank you for giving me the opportunity to this interview today!
-谢谢
+That's all about me, Thank you for giving me the opportunity to this interview today!
+最后, 感谢贵公司给我参加今天这次面试的机会
 
+## **Tell me something about your hobbies. (你的业余爱好是什么)**
+My favourite hobby is reading, especially reading Blogs, such as collShell, findyi, Program-think and so on.
+我的业余爱好是阅读, 尤其是喜欢阅读博客, 比如Findyi, coolShell, 编程随想等
 
-## What's your favourite hobby (你的业余爱好是什么)
-我的业余爱好是喜欢打球, 平时通过运动放松自己
-I enjoy playinh ping-pong in my free time. It's a good way for me to relax
+These bloggers not only share technical knowledge, but also offer insights into life and career development. It's quite inspiring.
+这些博主不仅分享技术知识，还会谈人生感悟和职业思考, 这对我很有启发
 
-## What kind of books do you like (你喜欢看什么书或电影)
-To tell you the truth, I don't read books recently. Instead, I perfer reading Blogs, or WeChat official accounts.
-我现在不怎么看纸质书了, 更喜欢看博客, 公众号
-When I encounter technical issues, I will refer to online document directly.
-遇到技术问题我直接查在线文档
-
-I enjoy reading Blogs, such as coolShell, FindYi, Programming thinking and so on.
-我喜欢看博客，比如Findyi, coolShell, 编程随想等等
-These bloggers not only share technical knowledge, but also offer insights into life and career development. It's very inspiring to me.
-这些博主不仅分享技术，还会结合实际经验谈人生感悟和职业思考, 对我有很大启发
-
-## Can you describe how you manage pressue or stressful situations (工作之后你如何放松)
-I will listen to music, go out with my friends for meals or sports or play computer games together.
-听音乐, 约朋友出来吃饭, 打球, 或者和朋友开黑打游戏
-
-## What's the meaning of your English Name (你的名字有什么意义)
-I chose the name Peter Pan because it means a spirit of eternal youth and vitality. 
-我选择彼得潘这个名字，是因为它代表了永恒的青春和活力
-
-As an engineer, my Job requires me to keep learning and adapting to new technologies, This is just like Peter Pan, who is always young and ready to explore the unknown.
-作为程序员，我们需要不断学习新东西，这个就像彼得潘的故事一样，永远年轻，并且随时准备探索未知的领域
-
-Also, Peter Pan's story is full of creativity and imagination, these are the qualities I strive for when I face challenges at work.
-彼得潘的故事充满了创造力和想象力，这些也是我在工作中追求的品质
+我另一个业余爱好是打乒乓球, 通过运动放松自己
+I also enjoy playing table tennis in my free time. I think it's a good way to relax myself.
 
 # 关于申请公司和职位的问题
 
-## Why do you choose our company (你为什么加入我们公司)
-I choose Microsoft because it's a global leader in technology and always at the forefront of technological innovation.
-我选择贵公司，是因为微软是全球领先的科技公司, 始终位于技术创新的前沿
+## **Why do you choose our company (你为什么加入我们公司)**
+I hope to join Microsoft because you are a global leader in technology innovation.
+我希望有机会加入微软, 因为贵公司作为全球技术创新的领导者
 
-Your company developed many famous products, including Windows, Office, Azure, Bing, XBox and so on. These products show strong R&D abilities and technical innovation.
-无论是早期的Windows系统和Office软件，还是现在的Azure、Bing 、Edge、 VsCode, XBox等等; 体现了贵公司强大的研发能力和技术创新
+Microsoft provides a broad platform for personal development, and countless opportunities to join cutting-edge projects. 
+不仅为个人职业发展提供了广阔的平台, 同时赋予了员工参与前沿技术项目的机会
 
-I also highly appreciate your values of respect, integrity, responsibility, and support for diversity and inclusion.
-我认同微软的价值观——尊重、诚信、责任，以及对多样性和包容性的支持。
+Your company developed many famous products, such as Windows, Office, Azure, VSCode and so on. These products show your strong capability in technology innovation.
+从早期的windows, Office软件, 到如今的Azure, VSCode, XBox, 微软始终展现出强大的技术创新能力
 
-Your corporate culture and working environment are very attractive to me.
-微软的企业文化和工作环境非常吸引我
+I believe my skills and experience can align well with your team's needs. And I hope to join such an exceptional company and grow with a talented team.  
+我相信我的技能和经验能够为团队创造价值, 同时也期待能在微软这样一个卓越的公司, 与团队一起成长
 
-I believe my skills and experience can align well with your company.
-我相信我的技能和经验能够为团队带来价值
-
-And I hope to join Microsoft and realize my personal value.
-同时，我也期待在贵公司这样一个充满机遇的环境中不断成长，实现个人价值
-
-## 你如何保持对行业趋势关注/你对我们行业怎么看
-
-## Where do you see yourself in five years (你未来几年的规划)
-In the short term, I will learn business, work closely with my colleagure, then do feature development quickly.
-短期内, 入职后快速熟悉公司的业务流程, 积极融入团队, 参与项目开发
-
-I will be an active learner and adapt to new technologies quickly.
-工作中遇到不熟悉的领域, 主动去学习, 向同事请教, 完善自己的知识体系
+## **Where do you see yourself in five years (你未来五年的规划)**
+Firstly, I will work closely with my colleague and learn business quickly.
+首先, 入职后快速熟悉业务流程, 积极融入团队
 
 In the long term, I will follow your company's career development and choose a suitable direction. 
 长期的话，我会根据公司的职业发展路径, 选择合适的方向
 
-I will maintain an open mindset, grow together with your company.
-无论是做技术还是管理，我都将保持开放心态，与公司一起成长和发展
+After 5 years, I hope that I have a deep understanding of a certain field and become an expert.
+到时, 我希望自己能够对某一个领域有比较深入理解, 成为某一领域的专家
 
-## What is your expected salary (对薪资的要求)
-I am expecting a salary in the range of 27k to 30k per month. 
-我对这个职位的期望月薪是27k-30k每月
+## **When choosing companies, which factors do you consider about** (在找工作时，你会考虑哪些因素)**
+When choosing a company, I will first consider the industry and its potential for development
+我会首先考虑行业，看这个行业的发展潜力
 
-It's based on my experience, my current salary and my research of market.
-这是我综合考虑了当前市场情况, 我的工作经验，我目前的薪水, 给出的结果
+Then I will evaluate the company's position in that industry
+然后考虑公司，看这家公司在行业中所处的地位
+
+Finally, I will examine if this position aligns with my professional skills. 
+再考虑职位，看这个职位跟自己专业技能的匹配度。 
+
+But I think the most important factor is opportunity. Whether this position can give me chance to use my talents and grow with the company 
+这些因素里，我认为最重要的还是机会，这个职位能否给我带来发展机会，让我的才能得到充分的发挥，和公司一起成长
+
+## **How do you feel about working overtime (你怎么看待加班)**
+In my opinion, I must be responsible since I come to work. 
+我的看法是, 既然来工作, 就必须要有责任心
+
+If My job requires it, such as urgent projects or handling customer cases, I am willing to work overtime.
+如果是因为工作需要加班, 当然没有问题
+
+But at the same time, We need to improve our work efficiency. 
+但同时要注重工作效率, 如果因为工作拖沓加班, 这个是不可取的
+
+## **What is your expected salary (对薪资的要求)**
+I am expecting a salary in the range of 25k to 28k per month. 
+我对这个职位的期望月薪是25k-28k每月
+
+It's based on my experience and my research of market.
+这是我综合考虑了当前市场情况, 我的工作经验给出的结果
 
 But I am willing to negotiate, and discuss additional benefits such as stock options or bouns.
-不过我认为薪资是可以协商的, 因为贵公司还有其他的福利, 比如股票，奖金，带薪休假
+不过我认为薪资是可以商量的, 因为贵公司有其他的薪酬福利, 比如股票，奖金，带薪休假
 
 ## When can you start (何时可以到职)
 I can start on April 10th, immediately after my resignation
@@ -127,8 +123,8 @@ I can start on April 10th, immediately after my resignation
 I leave my position at Trend Micro because our R&D center is being relocated out of China.
 我离职的原因是公司的研发中心正在撤离中国
 
-This relocation is caused by geopolitical factors, such as tensions in China-US relations, national security regulations and customer concerns about data security.
-公司撤离中国的主要原因是地缘政治因素，比如这几年中美关系紧张，国内安全法规的管制，客户对数据安全的担忧
+This relocation is caused by geopolitical factors, such as tensions in China-US relations and customer concerns about their data security.
+公司撤离中国的主要原因是地缘政治因素，比如这几年中美关系紧张，客户对数据安全的担忧
 
 I had to leave my job due to these external changes, and it's not related to my personal performance.
 离职的原因是这些外部环境的变化
@@ -138,7 +134,7 @@ I chose to leave my first job at Huawei for two reasons. Firstly, at Huawei, I f
 选择离开华为有两个原因。 第一个原因是，在华为工作我觉得自己就像一个螺丝钉
 
 I had limited opportunities to engage with customer needs or participate in design work. This made me concerned about my technical growth and career future.
-在华为做开发的时候, 很难接触到客户需求, 参与设计工作, 这些都是前线或者SE维护的。 如果我继续留在华为，自己的技术视野会变得非常窄, 对于今后职业发展不利
+在华为做开发的时候, 很难接触到客户需求, 参与设计工作。 如果我继续留在华为，自己的技术视野会变得非常窄, 对于今后职业发展不利
 
 Secondly, there was a lot of overtime. During peak project times, I often had to work until 1 AM. It's difficult to achieve a good work-life balance.
 第二个原因就是加班太多。 项目紧张的时候每天需要在公司干到凌晨1点钟，很难实现工作生活的平衡
@@ -146,20 +142,10 @@ Secondly, there was a lot of overtime. During peak project times, I often had to
 So, even though I received a promotion at Huawei, I still decided to leave and seek new opportunities. 
 所以，尽管我在华为有过升职和加薪，我当时还是决定跳槽换工作
 
-## How do you feel about working overtime (你怎么看待加班)
-If My job requires it, such as urgent projects or handling customer cases, I am willing to work overtime.
-如果是工作需要，比如项目紧急或者解决客户问题, 我愿意加班
-
-But, I am against meaningless performative overtime.
-但是我反对无意义的表演式加班
-
-I think it's important to complete work rather than performative overtime. It's harmful to both employees and the company.
-我认为重要的是高效完成工作, 而不是搞形式主义, 这样对员工对团队都不利
-
 ## How do you look at job-hopping (你对跳槽的看法)
 I think people change job just to seek better development, and it's not a problem.
 正常的跳槽是为了寻求更好的个人发展机会, 没有什么不妥
-　　
+
 But,I am against frequent job-hopping. It's harmful to both employees and the company.
 但频繁跳槽对个人和企业都不利，这种跳槽我反对
 
@@ -288,18 +274,17 @@ In addition, I wrote some documents and blogs to share knowledge and support the
 这些经验让我认识到, 技术选型需要以解决问题为核心，考虑用户体验、 开发效率、 维护成本，而不是盲目依赖已知技术或追逐新技术
 
 # 请你提问
+问开发
+* 能分享一下您平时的工作内容, 会用到哪些技术栈
+* 您觉得在这个职位表现出色的员工有哪些特点
+* 像我们做技术的，是应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉猎不同领域的技术知识？很多时候这两个目标是矛盾的。
 
-## 能分享一下您平时的工作内容, 会用到哪些技术栈?
-## 问下你们团队人员组成，如何分配任务的?
+* 目前团队正在处理哪些重点项目？这些项目中遇到的主要挑战是什么
 
-## 您觉得在这个职位表现出色的员工有哪些特点?
-## 部门未来一年的重点项目和发展方向是什么?
-## 您认为团队目前最大的挑战是什么, 如何规划解决这些问题?
-
-## 能说明下贵公司的晋升机制吗?
-## 贵公司如何进行绩效考核的, 是否有具体的量化指标?
-## 为什么要招这个职位，是补缺还是扩张?
-## 贵公司最看重员工的哪些品质?
+问HR
+* 能说明下贵公司的晋升机制吗
+* 贵公司如何进行绩效考核的
+* 贵公司最看重员工的哪些品质
 
 # 其他问题
 
