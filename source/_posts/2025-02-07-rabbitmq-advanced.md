@@ -6,8 +6,6 @@ categories: RabbitMQ
 tags: RabbitMQ
 ---
 
-https://cloud.tencent.com/developer/article/2113802
-
 # 什么是消息队列
 
 消息队列是在消息传输过程中保存消息的容器。 通常有生产者和消费者两个角色:
