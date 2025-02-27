@@ -54,7 +54,7 @@ Finally complete the system upgrade.
 
 ## 说下OS迁移怎么做的
 早期客户的虚拟设备OS是CentOS7, 但是CentOS7在2024年停止维护, 为了保证系统安全性, 我们需要将客户虚拟设备迁移到新的OS
-OS迁移的难点在于, 如何在重新分区过程中保存并同步客户的配置, 实现一键式迁移, 从而提高用户体验
+OS迁移的难点在于, 如何在重新分区过程中保存并同步客户的配置, 实现自动迁移, 从而提高用户体验
 我们通过定制了一个initrd镜像解决这个问题, 在initrd环境中执行以下步骤:
 * 把升级包和客户配置从硬盘复制到临时内存, 确保客户配置不会丢失
 * 对整个硬盘重新分区, 划分两个系统分区
@@ -63,53 +63,117 @@ OS迁移的难点在于, 如何在重新分区过程中保存并同步客户的�
 
 In early time, customers' virtual appliances were based on CentOS7. However, CentOS reached end of lie on 2024.
 To ensure the security of the system, we need to migrate customers' virtual appliances to a new operation systems.
-
+The challenge is how to sync customer's configurations during disk re-partitioning process and implement automatic OS migration,  then improve customer experience.
+We solved this problem by customizing an initrd image, which consists of following steps
+* Copy upgrade package and customer configurations from disk to temporary file system to ensure customer's configuration are not lost
+* Repartition the entire disk and create two system partitions, then install upgrade package on primary partition and recover customer's configuration,
+* Finally, use GRUB to set default boot option to new OS, then reboot virtual appliance to complete migration.
 
 ## 回滚是怎么做的
-回滚是基于我们设计的双份去升级方案实现的, 由于采用了双分区方案, 回滚过程实现相对简单。
-客户在CLI上执行rollback命令时, 调用我们写的脚本。 这个脚本使用grubby工具, 把GRUB引导程序的默认启动项设置为前一个系统分区
+回滚是基于双分区升级方案实现的, 实现比较容易。
+客户在CLI上执行rollback命令时, 调用我们写的脚本。 这个脚本使用grubby工具把默认启动项设置为前一个系统分区
 设置完启动项后, 再执行reboot, 这样设备重启后就回滚到了上一个分区
 
+The rollback feature is implemented based on our dual-system upgrade solution, so it's easy to implement.
+Customer execute rollback command in CLI, and it calls a Shell script we developed. This script used grubby tool to set default boot option to previous system partition. 
+Then reboot the virtual appliance, it will rollback to previous partition successfully.
 
 ## 说下微服务的集成方案怎么做的
 早期版本中, 微服务是集成在固件中的, 这导致虚拟设备ISO镜像体积很大, 有5G左右, 客户安装和升级速度慢, 体验较差
 我们的优化方案是, 把微服务的镜像和配置从固件中解耦, 支持客户灵活的在线安装或卸载某个微服务
 难点在于:
-* 如何实现微服务间的资源隔离
-* 微服务如何感知用户的配置变更, 怎么获取全局的配置
-* 多个微服务部署可能存在端口冲突问题 
+* 如何避免微服务间的资源竞争
+* 如何避免端口冲突
+* 微服务如何感知用户的配置变更
 
-做法:
+做法是:
 * 给每个微服务分配一个独一无二的serviceCode, 服务网关根据serviceCode创建同名的namespace, 实现了不同微服务之间的资源隔离
-* 定义统一的部署标准, 每个微服务需提供一个tar.gz部署包, 包括容器镜像和部署yaml文件两部分, 微服务团队负责把部署包发布到AWS S3 
-* 每个微服务创建一个configMap, 用户修改配置后, 后端发送配置变更任务到MQ, 虚拟设备上的升级模块负责把配置写入configMap 
-* 对于微服务依赖的全局配置, 我们创建了一个appliance的configmap, 定时把这个configmap同步给各个微服务, 各微服务监控configMap配置变化, 读取最新配置到内存
+* 每个微服务需提供一个tar.gz部署包, 包括容器镜像和部署yaml文件两部分, 微服务团队负责把部署包发布到AWS S3 
+* 每个微服务创建一个configMap, 用户修改配置后, 后端通过消息队列通知虚拟设备, 虚拟设备上的升级模块负责把配置写入configMap 
+* 对于微服务依赖的全局配置, 我们创建了一个appliance-configmap, 定时把这个configmap同步给各个微服务, 各微服务监控configMap配置, 获得最新配置
 * 对于端口冲突问题, 启用了Microk8s自带的Ingress插件, 所有http请求从宿主机的80或443端口进入。微服务的提供者需要在部署包中定义ingress yaml, 指定path和backend
 
-## 最大的难点是什么, 你是如何解决的
-项目中最大的挑战在于虚拟设备固件升级方案的设计与实现, 难点体现在两个方面:
-* 一个是没有先例可循; 公司内部没有部门实现过类似的升级方案, 当时也没有chatgpt, 需要基于对技术原理的理解推导方案
-* 另一个是涉及的技术比较多; 比如Linux技术, 需要了解启动流程, 分区管理, initrd定制, ISO定制, GRUB引导程序, 比如K8S技术, HTTP, 消息队列, Python编程, Shell编程等
-不仅要求我对整个升级流程有深入了解，还需要整合多种技术实现了一个可靠的解决方案.
+In early versions, microservices were integrated directly into the firmware. This caused virtual appliance ISO image very large, 
+the installation speed is very slow for customers, which negatively impacted user experience.
 
-为了解决这些难点, 我做了几件事:
-* 首先在设计阶段，花了大量时间学习相关技术, 确保对升级流程有了清晰的认识; 和团队沟通, 明确升级方案的具体需求
-* 接着是模块化设计，把整个升级流程分为多个独立模块, 比如升级包制作模块, 在线升级模块, 每个模块专注于解决特定问题, 降低开发难度, 提高可维护性
-* 然后是技术选型, 选择最合适的工具满足需求, 例如: 使用AWS IoT实现云端到设备通信; 使用轻量化的Microk8s部署服务
+Our goal is to decouple the microservice image from the firmware, allowing customers to install or uninstall specific microservices flexibly.
+There are many challenges, for example, how to avoid resource competition and port conflicts between microservices. How microservices detect user configurations change.
 
-目前有6k+企业客户, 1w+台虚拟设备使用我的升级方案, 这套方案降低了开发维护成本, 同时显著改善了用户体验
+The approaches we took are as follows:
+* Assigned a unique serviceCode to each microservice. Service Gateway will create a namespace with the same name as the serviceCode, to avoid resource competition between different microservices.
+* Each microservice should provide a deployment package, which includes two parts: container images and deployment YAML files. The microservice team is responsible for publishing the deployment package to AWS S3.
+* Each microservice should create a ConfigMap. When customer modifies configuration, backend notifies virtual appliance via a message queue. 
+  The upgrade module on the virtual appliance is responsible for updating configuration into the ConfigMap.
+* For global configurations that all microservices share,  we created an appliance-configmap and sync it periodically to all microservices. Each microservice monitors its ConfigMap to get latest configuration.
+* To address port conflicts, we used Microk8s Ingress plugin. All microservices provide HTTP service use port 80 or 443 on the host machine. Each Microservice should provide an Ingress YAML in their deployment package, specify the path and backend.
 
-## 能举一个问题定位案例吗, 你如何解决的
-* 客户的NTP服务器问题，导致时间不正确, 和AWS IoT连接失败
-* 客户人为操作失误, 把网卡disconnect了, 导致k8s启动失败
-* k8s apiserver证书过期, 导致微服务有问题
-* 客户虚拟机配置问题，虚拟CPU不支持AVX指令集, 但物理CPU支持
+
+## 项目中最大难点时什么, 如何定位解决的
+项目最大难点在于问题的快速定位。 比如客户虚拟设备重启时，可能出现各种复杂的K8S问题或网络问题
+
+我举一个k8s问题定位案例
+有一个客户反馈, 他们的虚拟设备重启后无法正常工作了
+我通过日志发现Microk8s不工作, 由于apiserver证书有效时间不正确; 但是客户坚称他们的虚拟机时间是正确的, 这使得问题变得复杂
+
+好在项目设计的时候，我就考虑到了定位的问题。 我们记录了每次虚拟设备启动日志, 通过回溯日志, 我发现了一条关键线索: 某次启动中, 客户虚拟机的RTC时间比正确时间快了一个月.
+为了进一步验证, 我在本地环境中模拟了类似情况, 发现Microk8s的确在每次重启后, 根据当前虚拟机系统时间刷新apiserver证书。 此时, 我终于确认了问题的root cause.
+
+我和客户沟通, 把日志截图提供给客户, 说明了客户的环境问题，建议客户重启解决问题。 
+后面我们设计了一个workaround, 通过添加一个定时任务, 检测证书是否有效, 如果证书失效, 就直接刷新证书, 避免了因为客户环境问题导致的服务中断, 提升了用户体验 
+
+The biggest challenge in the project is trouble-shooting. We need to address various complex Kubernetes or network problems.
+
+Here is an example of a K8S issue.
+
+A customer reported that their virtual device failed to work after reboot.
+I found that Microk8s didn't work due to invalid cert time of apiserver, but customer insisted that their system time was right. This made the problem become more complex.
+
+Fortunately, I had already considered the trouble-shooting before. We recorded all startup logs. 
+By reviewing these logs, I found that during one particular startup, the system time on the customer's virtual appliance was one month ahead of the correct time.
+
+For further validation, I tested in my local machine, and discovered that Microk8s will refresh apiserver cert based on system time when reboot. Finally, I found the root cause.  
+
+I communicated with customer, provided them with logs and explained the root cause. I recommended our customer to reboot and solve the problem.
+Besides, I designed a workaround by adding a cronjob to check certificate continously. if cert time is invalid, it would be refreshed immediately.
+This workaround can improve user experience.
+
+
+我再举一个网络问题定位案例
+
+在本地测试过程中，我们遇到了一个问题: 如果虚拟设备配置了双网卡，在升级后有概率出现网络不通的情况。 然而，升级后的网卡IP和Gateway看上去是正确的。
+
+首先，我尝试通过ping网关来验证网络连通性, 这是基本排查步骤。 如果网关不可达, 说明问题可能出现网络接口或路由配置上。 结果发现ping失败
+接着, 我通过日志详细对比升级前后的网卡配置变化, 发现升级后网卡的MAC地址有问题, eth0和eth1的MAC地址反了
+我进一步搜索资料, 发现问题的根本原因在于, 现代Linux系统通常使用基于硬件信息(如PCI总线ID)的可预测网卡命名规则, 保证迁移后网卡顺序也是正确的
+然而我们的虚拟设备采用的还是传统的eth命名规则, 这种规则不能保证网卡顺序的正确性
+
+为了解决这个问题, 我写了一段脚本, 升级前使用ethtool获取两个网卡的businfo, 升级后根据businfo判断, 如果网卡顺序不正确，就通过modprobe重新加载网卡驱动, 最终解决了问题
+
+Here is an example of a Network issue.
+During local testing, I found a problem
+If a virtual appliance was configured with dual network interface, there may be a network failure after an upgrade. 
+However, the IP address and Gateway of two NICs seemed correct after the upgrade. This made the problem more complex.
+
+First, I attempted to ping gateway to test network. Because if the gateway is unreachable, it indicates problemes in NIC configs and routing table. 
+Next, I reviewed logs and compared the NIC configurations before and after the upgrade. I found that MAC address of eth0 and eth1 were swapped.
+
+After further research, I found the root cause. Modern Linux systems use predictable network interface naming rules to ensure consistent NIC ordering
+However, our virtual appliance still used the traditional ethX naming rule. This may caused wrong NIC order.
+
+To address this issue, I wrote a script. Before the upgrade, I used ethtool to record the businfo of both NICs.
+After the upgrade, the script checked the businfo to determine whether the NIC order was correct. 
+If the order was incorrect, the script used modprobe to reload the NIC drivers in the correct sequence.
+
+And this solution eventualy resolved the problem.
+
+# 常见项目问题
 
 ## 这个项目都做了哪些测试？
 黑盒测试, 针对功能点的测试 [TODO]
 
 ## 还有什么可以优化的
-* 压缩虚拟设备镜像大小, 精简微服务基础镜像
+* 压缩虚拟设备镜像大小
+* 精简微服务基础镜像
 
 ## 用什么技术开发的, 你做了哪些部分
 在服务网关项目中, 我负责虚拟设备的特性开发工作.
@@ -143,11 +207,146 @@ To ensure the security of the system, we need to migrate customers' virtual appl
 * 持续集成与交付, Github Actions作为CI/CD工具
 
 
+## FPS项目中最大的难题是什么? 如何解决的？**
+[TODO]
+最大难点就是解决客户网络不通问题。 因为客户网络是一个高度不确定的环境, 绝大多数的网络不通问题都是客户防火墙导致的
+
+防火墙配置错误, 导致FQDN不通过
+监听了HTTPS请求, 做中间人, 导致证书校验不通过
+
+HTTPS流程, HTTP代理+HTTPS流程, Squid+Stunnel流程
+
+HTTP CONNECT通道
+* 客户端和代理服务器进行三次握手, 建立TCP连接
+* 客户端发送HTTP CONNECT请求给代理, 告诉代理目标站点地址和端口号
+* 代理收到请求后, 和目标服务器也进行三次握手, 建立TCP连接
+* 连接建立后返回200 OK, 告诉客户端加密通道已生成
+* 之后代理只是来回转发客户端和服务器间的加密数据包 （TLS握手+HTTP数据)
+
+https://www.hawu.me/operation/886
+Stunnel加密通信原理
+Stunnel Client部署在防火墙内, Stunnel Server部署在云上(客户防火墙外)
+Squid把包发给Stunnel Client
+Stunnel Client将包加密, 发送给Stunnel Server
+Stunnel Server解密后转发请求
+由于通过客户防火墙的数据是被Stunnel加密的, 客户防火墙只能看到Stunnel Server:443的TCP包, 看不到具体的FQDN
+
+
+写一个KB，让客户先排查是否防火墙配置问题
+* 首先检查网络设置和网络连接: ip, netmask, gateway, dns, ping gateway
+* 让客户检查防火墙规则: 协议，方向, 行为, 规则顺序
+* 禁用防火墙的HTTPS证书替换, 某些防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新的SSL证书，冒充目标网站证书
+
+举例: 某些客户防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新证书，冒充目标网站证书, 因为虚拟设备不支持客户自定义CA，导致网络不通
+解决方法: CLI中实现诊断网络的命令，通过查看curl的结果, 看issuer是否为entrust, Amazon; 如果issuer是一个IP,hostname或防火墙产商名字，说明被替换了
+
+
+# 项目2: Forward Proxy Service
+
+## 介绍下Forward Proxy这个项目
+这是一个安装在Service Gateway上的微服务, 为本地的趋势终端产品接入云服务提供正向代理功能, 实现本地产品访问互联网的集中管理  
+
+早期, 各个本地产品从云端下载数据, 需要各自访问不同的后端, 只能各自实现一套认证，访问控制方案.
+通过引入Forward Proxy服务，所有本地产品连接到这个正向代理即可，实现了集中的认证, 访问控制, 降低了各产品开发和维护成本
+
+通过Microk8s部署, 基于hostNetwork模式, 直接使用宿主机网络栈，监听8080端口，提升性能
+核心组件有两部分, 一个是Squid软件, 另一个是Python进程, 感知网络设置和白名单变化, 更新Squid配置文件，重新加载Squid
+
+
+## 说一下Stunnel的加密通信方案
+Forward Proxy安装在客户本地网络中，客户网络是一个高度不确定的环境。 部分客户配置防火墙规则时会出现一些问题, 比如:
+* 不支持通配符FQDN
+* 配置错误, 或遗漏某个FQDN
+* 客户重新配置防火墙规则需要一定时间, 这段时间服务无法工作, 影响用户体验
+
+有两个问题:
+* 1. 减少客户的防火墙配置错误导致的网络不通问题 
+* 2. 某些特定的FQDN由于性能原因不适合加密, 需要直出或者走客户代理, 其余FQDN数据需要加密走别的代理出。 需要支持这种多代理转发场景
+
+我们参考了科学上网的方案, 基于Stunnel对Squid数据做TLS加密, 从而将终端到云端访问整合为一个FQDN, 简化客户防火墙配置
+
+Stunnel工作原理是:
+* 基于TLS加密隧道工具, 客户将未加密流量发到Squid, Squid发送到Stunnel
+* Stunnel client端使用TLS加密, 传到Stunnel Server, 防火墙只能看到TCP/443的包，只需要允许Stunnel Server的1个FQDN通过即可
+* Stunnel Server解密，把HTTP请求送给目标服务
+
+
+client -> server
+client -> Squid -> server
+client -> Squid -> Stunnel -> server 
+
+
+# 项目3: Matrix仿真平台
+
+## 驱动接口仿真是怎么回事
+* 在真实的交换机上，我们领域的业务代码依赖驱动提供的接口
+* 要实现仿真环境的验证，需要对驱动接口进行打桩的工作
+* 测试人员需要构造故障, 比如通过改变驱动行为的方式。 如果每次都修改C代码再重新编译, 这种测试体验会很差
+
+## 为什么用Redis不用MySQL
+* Redis是基于内存的，性能很高。 我这个项目中的数据规模在2w个key左右，QPS最高在1w左右，因此我们直接使用Redis做数据库
+* Redis的key-value模型很适合模拟驱动接口行为，灵活方便, 因为我们的驱动接口就是get/set; MySQL是关系型的，还要先建表, 不灵活
+* Redis数据类型丰富（string, list, set, zset, hash)，mamcached只支持string, mongodb是文档型数据库，更适合文档存储
+* Redis支持发布订阅和数据库通知 。我在项目中使用这两个特性，解决了仿真环境中单板插拔流程的验证问题
+
+## 读写Redis库怎么做的
+基于Hiredis这个C语言实现的开源库, 开了一组读写Redis key的API. 选用HiRedis是因为我们被测代码也是so库, 集成很方便 
+举例： 把1号单板设置成不在位，通过修改Redis key: "/board#1/present_status"的值实现，无需修改驱动代码
+
+## Redis挂了怎么办, 可靠性怎么考虑
+每个单板1个容器，作为redis client; 1个管理容器，安装redis数据库
+如果Redis挂了，管理容器会检测到异常，并依次重启管理容器和各个单板容器。
+由于这是仿真环境大部分驱动数据是易失性的，无需持久化或集群支持; 对于需要持久化数据, 通过写文件和Docker Volume方式存储
+
+## 利用Redis的键空间通知机制, 开发了一组发布订阅的API
+设备管理的业务依赖驱动接口注册一个回调, 从而感知单板插板事件
+我们需要仿真驱动接口，保证发生插拔事件可以触发这个回调, 实现单板插板特性在仿真环境的而测试
+如果是轮询的方式，定时检查Redis中单板在位状态, 这种方式浪费CPU.
+
+**如何解决的？成果：**
+利用Redis的键空间通知机制解决这个问题:
+在驱动函数中, 向Redis发起频道订阅, 频道的名称可以是"Board1/present_status", 订阅单板的在位状态
+然后模拟单板插入动作，更新Redis键, 触发Redis键空间通知机制。 Redis将消息发布到所有在线的消费者(也就是我们的上层业务)。 
+上层业务收到订阅消息后，触发一次业务回调，从而感知到了单板插板。
+
+## 3. 把Redis短连接优化为长连接怎么回事
+早期的仿真平台, 驱动接口是通过Redis短连接实现的，导致频繁地建立连接和关闭连接，性能低下。 
+设备管理有一段子卡初始化代码，需要查询很多属性, 用短连接耗时很长
+
+**怎么解决的**
+* 通过netstat发现TIME_WAIT过多，都是6379端口，判断使用Redis短连接
+* 把短连接改造为长连接。 每个进程分一个Redis长连接，各线程通过pthread互斥锁获取长连接
+* 将驱动接口平均一次读写时间缩短为原先的1/15，从平均2ms到0.1ms一次，获得显著性能提升。
+
+## 工具是你一个做的？还是合作的？怎么合作的？
+这个工具是合作完成的
+早期设计阶段, 有1个架构师, 1个SE, 我参与项目设计和方案讨论, 梳理业务做原型验证，和架构,SE讨论方案。
+连我在内, 有两个开发，另一个开发来自杭州。 我负责驱动接口仿真和Redis，另一个同事负责Docker镜像, 仿真设备包构建
+
+后期的性能优化也是合作的，连我在内有3名开发，在同一个部门的业务组。
+我做方案设计, 梳理流程拓扑, 把开发任务分解到2名开发同事去做。
+
+## 你觉得还有什么优化
+* 优化内存。比如对字符串键做压缩存储（因为Redis字符串键的三种编码: long, embstr,raw）
+* 优化请求速度，有些驱动函数会一次性读写多个key，用mset, mget命令代替get, set, 减少客户端和Redis的通信次数
+
+## 举一个问题定位案例
+当时遇到一个Redis key被意外删除的问题 
+
+我们通过常规的查看日志, tcpdump抓包方法, 没有找到原因.
+我当时看过REDIS的单机数据库实现, 想到既然Redis是基于内存的数据库，字符串键肯定在进程中的某个内存地址处，key丢失时这个地址的内容肯定被改写
+所以我只需要GDB打个断点，看下调用栈不就搞定了
+后来发现是REDIS配置项maxmemory过低, 只给了1M, 导致Redis认为空间不够就随机淘汰了一些key, 修改了这个配置项后问题得到了解决
 
 
 
 
-## 问题
+
+
+
+
+
+## 其他项目问题
 
 ### 如何压缩全量升级包
 * 使用Rocky官方minimal的镜像做定制, 这个镜像在1.7G左右
@@ -260,18 +459,6 @@ JWT用于身份认证, 通过签名确保数据完整性和真实性
 每天定时从服务平台同步Token, Token设置了两个月过期时间, 过期前10天，立刻请求服务平台刷新Token
 
 
-# 项目2: Forward Proxy Service
-
-## 介绍下Forward Proxy这个项目
-这是一个安装在Service Gateway上的微服务, 为本地的趋势终端产品接入云服务提供正向代理功能, 实现本地产品访问互联网的集中管理  
-
-早期, 各个本地产品从云端下载数据, 需要各自访问不同的后端, 只能各自实现一套认证，访问控制方案.
-通过引入Forward Proxy服务，所有本地产品连接到这个正向代理即可，实现了集中的认证, 访问控制, 降低了各产品开发和维护成本
-
-## Forward Proxy Service是如何部署的？
-通过Microk8s部署, 基于hostNetwork模式, 直接使用宿主机网络栈，监听8080端口，提升性能
-核心组件有两部分, 一个是Squid软件, 另一个是Python进程, 感知网络设置和白名单变化, 更新Squid配置文件，重新加载Squid
-
 ## 并发量有多少，怎么测试的
 8vCPU/12G/500G/1000Mbps
 1000台agent并发升级, 流量157M*1000, 30分钟下载完毕
@@ -311,94 +498,10 @@ Pod中把ConfigMap挂到文件, 如白名单发生变化，从ConfigMap读取新
 没有手动启动磁盘缓存. Squid默认会启动内存缓存, 根据响应头,请求方法决定是否缓存某个请求
 Cache-Control 强缓存, Etag 弱缓存; GET, HEAD可以缓存 
  
-## 说一下Stunnel的加密通信方案
-Forward Proxy安装在客户本地网络中，客户网络是一个高度不确定的环境。 部分客户配置防火墙规则时会出现一些问题, 比如:
-* 不支持通配符FQDN
-* 配置错误, 或遗漏某个FQDN
-* 客户重新配置防火墙规则需要一定时间, 这段时间服务无法工作, 影响用户体验
-
-有两个问题:
-* 1. 减少客户的防火墙配置错误导致的网络不通问题 
-* 2. 某些特定的FQDN由于性能原因不适合加密, 需要直出或者走客户代理, 其余FQDN数据需要加密走别的代理出。 需要支持这种多代理转发场景
-
-我们参考了科学上网的方案, 基于Stunnel对Squid数据做TLS加密, 从而将终端到云端访问整合为一个FQDN, 简化客户防火墙配置
-
-## Stunnel工作原理
-* 基于TLS加密隧道工具, 客户将未加密流量发到Squid, Squid发送到Stunnel
-* Stunnel client端使用TLS加密, 传到Stunnel Server, 防火墙只能看到TCP/443的包，只需要允许Stunnel Server的1个FQDN通过即可
-* Stunnel Server解密，把HTTP请求送给目标服务
-
-## 举一个定位案例
-写一个KB，让客户先排查是否防火墙配置问题
-* 首先检查网络设置和网络连接: ip, netmask, gateway, dns, ping gateway
-* 让客户检查防火墙规则: 协议，方向, 行为, 规则顺序
-* 禁用防火墙的HTTPS证书替换, 某些防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新的SSL证书，冒充目标网站证书
-
-举例: 某些客户防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新证书，冒充目标网站证书, 因为虚拟设备不支持客户自定义CA，导致网络不通
-解决方法: CLI中实现诊断网络的命令，通过查看curl的结果, 看issuer是否为entrust, Amazon; 如果issuer是一个IP,hostname或防火墙产商名字，说明被替换了
 
 
-# 项目3: Matrix仿真平台
 
-## 驱动接口仿真是怎么回事
-* 在真实的交换机上，我们领域的业务代码依赖驱动提供的接口
-* 要实现仿真环境的验证，需要对驱动接口进行打桩的工作
-* 测试人员需要构造故障, 比如通过改变驱动行为的方式。 如果每次都修改C代码再重新编译, 这种测试体验会很差
 
-## 为什么用Redis不用MySQL
-* Redis是基于内存的，性能很高。 我这个项目中的数据规模在2w个key左右，QPS最高在1w左右，因此我们直接使用Redis做数据库
-* Redis的key-value模型很适合模拟驱动接口行为，灵活方便, 因为我们的驱动接口就是get/set; MySQL是关系型的，还要先建表, 不灵活
-* Redis数据类型丰富（string, list, set, zset, hash)，mamcached只支持string, mongodb是文档型数据库，更适合文档存储
-* Redis支持发布订阅和数据库通知 。我在项目中使用这两个特性，解决了仿真环境中单板插拔流程的验证问题
-
-## 读写Redis库怎么做的
-基于Hiredis这个C语言实现的开源库, 开了一组读写Redis key的API. 选用HiRedis是因为我们被测代码也是so库, 集成很方便 
-举例： 把1号单板设置成不在位，通过修改Redis key: "/board#1/present_status"的值实现，无需修改驱动代码
-
-## Redis挂了怎么办, 可靠性怎么考虑
-每个单板1个容器，作为redis client; 1个管理容器，安装redis数据库
-如果Redis挂了，管理容器会检测到异常，并依次重启管理容器和各个单板容器。
-由于这是仿真环境大部分驱动数据是易失性的，无需持久化或集群支持; 对于需要持久化数据, 通过写文件和Docker Volume方式存储
-
-## 利用Redis的键空间通知机制, 开发了一组发布订阅的API
-设备管理的业务依赖驱动接口注册一个回调, 从而感知单板插板事件
-我们需要仿真驱动接口，保证发生插拔事件可以触发这个回调, 实现单板插板特性在仿真环境的而测试
-如果是轮询的方式，定时检查Redis中单板在位状态, 这种方式浪费CPU.
-
-**如何解决的？成果：**
-利用Redis的键空间通知机制解决这个问题:
-在驱动函数中, 向Redis发起频道订阅, 频道的名称可以是"Board1/present_status", 订阅单板的在位状态
-然后模拟单板插入动作，更新Redis键, 触发Redis键空间通知机制。 Redis将消息发布到所有在线的消费者(也就是我们的上层业务)。 
-上层业务收到订阅消息后，触发一次业务回调，从而感知到了单板插板。
-
-## 3. 把Redis短连接优化为长连接怎么回事
-早期的仿真平台, 驱动接口是通过Redis短连接实现的，导致频繁地建立连接和关闭连接，性能低下。 
-设备管理有一段子卡初始化代码，需要查询很多属性, 用短连接耗时很长
-
-**怎么解决的**
-* 通过netstat发现TIME_WAIT过多，都是6379端口，判断使用Redis短连接
-* 把短连接改造为长连接。 每个进程分一个Redis长连接，各线程通过pthread互斥锁获取长连接
-* 将驱动接口平均一次读写时间缩短为原先的1/15，从平均2ms到0.1ms一次，获得显著性能提升。
-
-## 工具是你一个做的？还是合作的？怎么合作的？
-这个工具是合作完成的
-早期设计阶段, 有1个架构师, 1个SE, 我参与项目设计和方案讨论, 梳理业务做原型验证，和架构,SE讨论方案。
-连我在内, 有两个开发，另一个开发来自杭州。 我负责驱动接口仿真和Redis，另一个同事负责Docker镜像, 仿真设备包构建
-
-后期的性能优化也是合作的，连我在内有3名开发，在同一个部门的业务组。
-我做方案设计, 梳理流程拓扑, 把开发任务分解到2名开发同事去做。
-
-## 你觉得还有什么优化
-* 优化内存。比如对字符串键做压缩存储（因为Redis字符串键的三种编码: long, embstr,raw）
-* 优化请求速度，有些驱动函数会一次性读写多个key，用mset, mget命令代替get, set, 减少客户端和Redis的通信次数
-
-## 举一个问题定位案例
-当时遇到一个Redis key被意外删除的问题 
-
-我们通过常规的查看日志, tcpdump抓包方法, 没有找到原因.
-我当时看过REDIS的单机数据库实现, 想到既然Redis是基于内存的数据库，字符串键肯定在进程中的某个内存地址处，key丢失时这个地址的内容肯定被改写
-所以我只需要GDB打个断点，看下调用栈不就搞定了
-后来发现是REDIS配置项maxmemory过低, 只给了1M, 导致Redis认为空间不够就随机淘汰了一些key, 修改了这个配置项后问题得到了解决
 
 
 **DeployMent**
@@ -435,9 +538,16 @@ total 12000$
 * 502 Gateway 问题
 * 分析流量
 
-问题:
-客户虚拟机时间不对, 导致k8s证书无效 —— 重启, systemd服务刷新时间 
-iptables一条链不超过15个端口
-containerd grpc随机端口, 与Ingress controller冲突
-OS切换后, 双网卡问题
-SSH
+##
+## 最大的难点是什么, 你是如何解决的
+项目中最大的挑战在于虚拟设备固件升级方案的设计与实现, 难点体现在两个方面:
+* 一个是没有先例可循; 公司内部没有部门实现过类似的升级方案, 当时也没有chatgpt, 需要基于对技术原理的理解推导方案
+* 另一个是涉及的技术比较多; 比如Linux技术, 需要了解启动流程, 分区管理, initrd定制, ISO定制, GRUB引导程序, 比如K8S, Docker, HTTP, 消息队列, Python等
+不仅要求我对整个升级流程有深入了解，还需要整合多种技术实现了一个可靠的解决方案.
+
+为了解决这些难点, 我做了几件事:
+* 首先在设计阶段，花了大量时间学习相关技术, 确保对升级流程有了清晰的认识; 和团队沟通, 明确升级方案的具体需求
+* 接着是模块化设计，把整个升级流程分为多个独立模块, 比如升级包制作模块, 在线升级模块, 每个模块专注于解决特定问题, 降低开发难度, 提高可维护性
+* 然后是技术选型, 选择最合适的工具满足需求, 例如: 使用AWS IoT实现云端到设备通信; 使用轻量化的Microk8s部署服务
+
+目前有6k+企业客户, 1w+台虚拟设备使用我的升级方案, 这套方案降低了开发维护成本, 同时显著改善了用户体验
