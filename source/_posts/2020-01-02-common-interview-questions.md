@@ -16,23 +16,24 @@ tags: interview
 Good Morning/Good Afternoon! I'm very glad to join this interview today.
 面试官您好, 很高兴今天有机会参加贵公司的面试
 
-My name is Chuang Pan. I graduated from NanJing University in 2019 with a degree in Computer Science.
+My name is Chuang Pan. I graduated from NanJing University in 2019 with a degree in Computer Science,
+我叫潘闯, 2019年毕业于南京大学计算机专业,
 and I have 5 years of experience in Linux software development.
-我叫潘闯, 2019年毕业于南京大学计算机专业, 目前已有5年的Linux平台软件开发经验
+目前已有5年的Linux平台软件开发经验
 
 I have worked as a Senior Engineer at Trend Micro for 3 years. 
 目前，我在趋势科技公司担任软件开发工程师，已工作3年
 In my last project, I was responsible for the feature development of a Service Gateway, which helped our customers reduce their bandwidth consumption.
 在最近的一个项目中, 我负责了一个服务网关的特性开发工作, 这个服务网关帮助客户减少他们的带宽消耗
 And My biggest contribution was designing an upgrade solution for Service Gateway, which greatly improved user experience.
-我在项目中的主要共享是, 设计并实现了一个服务网关的升级方案, 这个方案显著提升了客户体验
+我在项目中的主要贡献是, 设计并实现了一个服务网关的升级方案, 这个方案显著提升了客户体验
 
 In terms of my skills, I am proficent in multiple programming languages like C, C++ and Python,
 技能方面, 我熟悉多种编程语言, 例如C, C++, Python
 and I have hands-on experience with Kubernetes and Docker.
 我具备Kubernetes和Docker的项目经验
-I am also familar with common databases like Redis and MySQL, as well as Message Brokers like RabbitMQ.
-同时, 我熟悉常用数据库和消息中间件
+I am also familar with common databases like Redis and MySQL, as well as Message Brokers like RabbitMQ and AWS IoT.
+同时, 我熟悉常用数据库例如Redis, MySQL, 以及消息中间件例如RabbitMQ, AWS IoT
 
 I hope to join Microsoft because you are a global leader in technology innovation. And your company provides a vast platform for personal growth. 
 我希望有机会加入微软, 因为贵公司作为全球技术创新的领导者, 为个人成长提供了广阔的平台
@@ -43,7 +44,7 @@ I believe my skills and experience can align well with your team's needs. And I 
 That's all about me, Thank you very much.
 谢谢
 
-## **Tell me something about your hobbies. (你的业余爱好是什么)**
+## **Tell me something about your hobbies (你的业余爱好是什么)**
 My favourite hobby is reading, especially reading personal blogs.
 我的业余爱好是阅读, 尤其是喜欢阅读个人博客
 
@@ -62,7 +63,7 @@ My another hobby is playing table tennis. I think it's a good way to relax mysel
 I hope to join Microsoft because you are a global leader in technology innovation. And your company provides a vast platform for personal growth.
 我希望有机会加入微软, 因为贵公司作为全球技术创新的领导者, 为个人成长提供了广阔的平台
 
-You have many famous products, such as Windows, Office, Azure, VSCode and so on, which demonstrate your exceptional strength in technology innovation.
+You have many famous products, such as Windows, Office, Azure, VSCode and so on, which demonstrate your strength in technology innovation.
 从早期的windows, Office软件, 到如今的Azure, VSCode, 贵公司始终展现出强大的技术创新能力
 
 I believe my skills and experience can align well with your team's needs. And I hope to join such an exceptional company and grow with your team.  
@@ -78,7 +79,7 @@ In the long term, I will choose the appropriate direction based on your career d
 After 5 years, I hope that I have a deep understanding of a certain field and become an expert.
 5年之后, 我希望自己能够对某一个领域有比较深入的理解, 成为某一领域的专家
 
-## **When choosing companies, which factors do you consider about** (在找工作时，你会考虑哪些因素)**
+## **When choosing companies, which factors do you consider about (在找工作时，你会考虑哪些因素)**
 When choosing a company, I will first consider the industry and its potential for development
 我会首先考虑行业，看这个行业的发展潜力
 
@@ -117,7 +118,7 @@ I can start on April 10th, immediately after my resignation
 
 # 关于离职动机的问题
 
-**## Why do you want to leave your current job (你为什么离职)**
+## **Why do you want to leave your current job (你为什么离职)**
 I leave my position at Trend Micro because our R&D center is relocating out of China.
 我离职的原因是公司的研发中心正在撤离中国
 
@@ -127,7 +128,7 @@ This relocation is caused by geopolitical factors, such as strained relation bet
 I had to leave my job because of these external factors. It's not related to my personal performance, That's all.
 离职的原因是这些外部因素
 
-**## Why do you want to leave your first job (为什么第一份工作离职)**
+## **Why do you want to leave your first job (为什么第一份工作离职)**
 I chose to leave my first job for two reasons. Firstly, at Huawei, I felt like I was more of a cog in a machine.
 选择离开华为有两个原因。 第一个原因是，在华为工作我觉得自己就像一个螺丝钉
 
@@ -140,7 +141,7 @@ Secondly, there was a lot of overtime. During peak project times, I often had to
 Although I received a promotion at Huawei, I still decided to leave and seek new opportunities. 
 所以，尽管我在华为有过升职和加薪，我当时还是决定跳槽换工作
 
-**## What do you think of the current layoffs (你怎么看待当下的裁员)**
+## **What do you think of the current layoffs (你怎么看待当下的裁员)**
 Layoff is a common phenomenon today. First of all, we need to be optimistic and face challenges with courage.
 裁员是一个很普遍的现象。 作为员工, 我们首先需要保持乐观的精神，勇于面对挑战
 
@@ -150,7 +151,7 @@ We need to realize that layoff is not a negative thing, and every change may bri
 And I think it's very important to learn new technologies continously and keep up with the times.
 最重要的是不断提升自己的核心竞争力, 持续学习新技能, 跟上这个飞速变化的时代，努力让自己成为不可替代的人
 
-**## How do you look at job-hopping (你对跳槽的看法)**
+## **How do you look at job-hopping (你对跳槽的看法)**
 I think people change job just to seek better development, and it's not a problem.
 正常的跳槽是为了寻求更好的个人发展机会, 没有什么不妥
 
@@ -160,20 +161,24 @@ But, I am against frequent job-hopping because it's harmful to both employees an
 
 # 关于工作经历的问题
 
-**## What's your greatest achievement in your past work (过去工作中最大的成就是什么)**
-我过去工作中最大的成就是: 在服务网关项目中, 设计并实现了一个虚拟设备固件的升级方案. 
-这个方案有很多难点, 
-一个是没有先例可循; 公司内部没有部门实现过类似的升级方案, 当时也没有chatgpt, 需要基于对技术原理的理解推导方案
-另一个是涉及的技术非常多; 比如Linux技术, 需要了解启动流程, 分区管理, initrd定制, ISO定制, GRUB引导程序, 比如K8S, Docker, HTTP, 消息队列, Python等
-需要对整个升级流程有深入理解，同时需要整合多种技术才能实现了一个可靠的解决方案.
+## **What's your greatest achievement in your past work (过去工作中最大的成就是什么)**
+[TODO]
+我过去工作中最大的成就是, 在服务网关项目中, 设计并实现了一个虚拟设备固件的升级方案. 这个方案有两大挑战:
+ 
+一个是没有先例可循; 公司内部没有部门实现过类似的方案, 当时也没有ChatGPT, 需要基于对技术原理的理解推导一个可行方案
 
-在设计阶段, 我积极和团队沟通, 明确升级方案的具体需求, 同时花了大量时间学习相关技术, 确保对升级流程有了清晰的认识
-然后是模块化设计，把整个升级流程分为多个独立模块, 比如升级包制作模块, 在线升级模块, 定时任务模块, 每个模块专注于解决特定问题, 降低开发难度, 提高可维护性
-除了开发任务, 可以独立负责设备启动问题定位,和网络问题定位, 快速处理客户case. 解决问题能力也得到了锻炼
+另一个挑战是涉及技术复杂多样, 比如Linux知识, 包括启动流程, 分区管理, initrd定制, ISO定制, GRUB引导程序, 
+以及K8S, Docker, HTTP, 消息队列, Python等, 需要整合这些技术实现了一个可靠的解决方案.
 
-目前有6k+企业客户, 1w+台虚拟设备使用我的升级方案。 我写的代码可以稳定地跑在世界各地的XX上, 这是很有成就感的一件事
+为了解决这些问题, 在设计阶段, 我积极和团队沟通, 明确升级方案的具体需求, 同时投入大量时间学习相关技术, 确保对升级流程有了清晰的认识
 
-**## Talk about the most frustrating experience in your past work (谈谈你过去的工作经验中，最令你挫折的事情)**
+然后是模块化设计，把整个升级流程分为多个模块, 比如升级包制作模块, 在线升级模块, 定时任务模块, 每个模块专注于解决特定问题, 降低了开发难度, 提高可维护性
+
+除了开发任务, 我还负责设备启动问题定位和网络问题定位, 能够快速响应并处理客户case. 解决问题能力也得到了提升
+
+目前这套升级方案应用于6000多企业客户, 超过1万台虚拟设备运行。 我写的代码可以运行在世界各地的设备上, 这是一件有成就感的事
+
+## **Talk about the most frustrating experience in your past work (谈谈你过去的工作经验中，最令你挫折的事情)**
 OK, let me tell you a challenge I encountered in my project.
 我举一个项目中遇到的挑战
 
@@ -191,7 +196,7 @@ I came up with a workaround until my leader approached me. Let customer install 
 This experience taught me that when facing problems, it's important to seek help from my team to avoid getting stuck in a dead end.
 这次经历让我意识到, 面对问题要及时求助团队, 集思广益. 避免钻到死胡同里
 
-**## What are the differences between working at Trend Micro and Huawei (你觉得在趋势科技和华为公司工作有什么不同)**
+## **What are the differences between working at Trend Micro and Huawei (你觉得在趋势科技和华为公司工作有什么不同)**
 At Huawei, the work is highly specialized. Each developer only need to focus on his specific task, such as coding and testing.
 在华为做研发工作, 分工非常细致。 每个人只需关注自己负责的一块就能把工作完成。
 
@@ -265,7 +270,8 @@ I work closely with my team every day to ensure that the work is completed corre
 
 
 # 关于团队合作的问题
-**## Could you please provide an overview of your R&D team (介绍你的研发团队情况)**
+
+## **Could you please provide an overview of your R&D team (介绍你的研发团队情况)**
 Our team consists of 10 members.
 我们团队约有10名成员组成
 
@@ -286,18 +292,23 @@ The remaining members develop other features.
 其余成员负责别的项目特性开发
 
 
-**## 你在项目中怎么合作的 **
-[TODO]
-以服务网关项目为例, 1名项目经理, 1名资深开发, 3名核心开发, 1-2个QA, OPS
-我负责虚拟设备的特性开发, 项目中涉及到很多合作
-* 和团队资深开发的合作, 讨论方案设计
-* 和后端同事的合作, 比如虚拟设备和后端通信, 和后端开发确认消息格式和REST API格式
-* 和前端同事的合作, 比如FPS项目中, 和前端讨论白名单配置的格式 
-* 和QA的合作, 实现一个feature或者修复一个bug, 告诉QA修改了什么, 影响有哪些, 如何测试
-* 和TS的合作, 处理客户case的时候, 和TS沟通客户问题, 给出解决方案 
-* 跨部门的合作, 比如微服务集成方案, 指导同事如何部署微服务.
+## **How do you collaborate with your team (你在项目中怎么合作的)**
+In the service gateway project, I am responsible for feature development of virtual appliance. Here are some examples of how I collaborate with my team.
+我在项目中负责虚拟设备的特性开发, 这个过程中涉及到很多合作, 比如:
 
-**## How did you react to disagreements between you and your boss (与老板意见不一致，你怎么办)**
+I work closely with a Senior Staff Engineer to discuss design.
+和团队资深开发讨论设计方案
+
+I work with my backend colleague to design communication schemes between virtual appliance and the backend. such as message format and REST API.
+和后端同事讨论虚拟设备和云端的通信方案, 比如消息格式, REST API
+
+When a new feature is implemented or a bug is fixed,  I provide detailed explanations to QA. This helps improve their testing efficiency.
+和QA合作, 每次实现一个新功能或修复BUG时, 向QA详细说明修改内容和测试方法, 从而提高测试效率
+
+I also work with TS when handling customer cases and provide solution to customers.
+和TS合作,处理客户案例时, 积极和TS沟通客户的问题, 提供解决方案
+
+## **How did you react to disagreements between you and your boss (与老板意见不一致，你怎么办)**
 First of all, I would respect my boss. Try to understand the problem from his perspective. 
 首先我会尊重老板的观点，尝试从老板的角度看问题。 因为老板拥有更丰富的经验
 
@@ -310,7 +321,7 @@ If disagreements still exist, I would seek out senior colleagues or experts to e
 Finally, I will support my team's decision even if my suggestion is not adopted.
 即使最后没有采用我的方案，我也会全力支持团队和领导的决定
 
-**## How did you react to disagreements between you and your colleague (与同事意见不一致，你怎么办)**
+## **How did you react to disagreements between you and your colleague (与同事意见不一致，你怎么办)**
 First of all, I would listen to my colleague and try to understand his perspective. 
 当我和同事意见不同时，我会先倾听同事的观点, 去理解同事的思路
 
@@ -324,8 +335,7 @@ Finally, I will support my team's decision even if my suggestion is not adopted.
 即使最后没有采用我的方案，我也会全力支持团队的决定
 
 # 关于自我评价的问题
-
-**## What are your strengths as an employee (作为一名公司员工, 你觉得自己有什么优点)**
+## **What are your strengths as an employee (作为一名公司员工, 你觉得自己有什么优点)**
 I think my strength is the ability to learn quickly. For example, when I first took over the project, I wasn't familar with Kubernetes.
 But I learned it very quickly and contributed to the project in a very short time.
 快速学习能力. 比如我刚接手项目时, 不了解K8S; 但我在很短时间内, 通过自学快速上手项目.
@@ -338,7 +348,7 @@ Thirdly, I'm good at trouble-shooting. In the FPS project, I solved many network
 This also enhanced my unstanding of the HTTP protocol.
 还有问题定位的能力. 比如FPS项目中定位了一些客户网络不通的问题, 通过抓包分析, 加深了对HTTP协议的理解
 
-## What are your strengths as an employee (作为一名公司员工, 你觉得自己有什么缺点)
+## **What are your strengths as an employee (作为一名公司员工, 你觉得自己有什么缺点)**
 [TODO]
 在过去的工作中, 存在过于扣技术细节，忽略了从用户角度出发思考问题.
 
@@ -356,9 +366,10 @@ This also enhanced my unstanding of the HTTP protocol.
 ## 能分享一下您平时的工作内容吗? 在工作中会用到哪些技术栈
 Could you tell me about your typical work? And what technologies do you work with ?
 
-## 您觉得做技术开发，应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉及不同领域的技术知识？ 很多时候这两者是矛盾的。
+## 您觉得做技术开发，应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉及不同领域的技术知识？ 很多时候这两者是矛盾的
 
-## 您觉得在这个职位表现出色的员工有哪些特点 (What qualities do you think make employees stand out in this position)
+## 您觉得在这个职位表现出色的员工有哪些特点 
+What qualities do you think make employees stand out in this position ?
 
 ## 想问下目前团队正在处理哪些重点项目？这些项目中遇到的主要挑战是什么
 What are the team's important projects, and what challenges are involved ?
