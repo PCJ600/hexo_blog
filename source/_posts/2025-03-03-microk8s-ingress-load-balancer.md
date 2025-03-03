@@ -41,7 +41,7 @@ nginx-ingress-microk8s-controller-nrftt   1/1     Running   0          15m
 # 实践: 使用Microk8s Ingress配置HTTP/TCP负载均衡
 首先安装并启动Microk8s和Ingress插件, 参考: [在RockyLinux9.4上安装Microk8s](https://blog.csdn.net/pcj_888/article/details/144169716)
 演示案例如下图:
-![请添加图片描述](https://i-blog.csdnimg.cn/direct/919464e103974a4db823a6c87abeddb4.png)
+![](image1.png)
 ## 支持HTTP负载均衡
 
 用Flask写两个简单的HTTP服务
