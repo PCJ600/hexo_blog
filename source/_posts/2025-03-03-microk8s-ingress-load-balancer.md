@@ -2,8 +2,8 @@
 layout: next
 title: Microk8s Ingress实现七层负载均衡
 date: 2025-03-03 20:11:00
-categories: kubernetes
-tags: kubernetes
+categories: k8s
+tags: k8s
 ---
 
 # Microk8s Ingress是什么
