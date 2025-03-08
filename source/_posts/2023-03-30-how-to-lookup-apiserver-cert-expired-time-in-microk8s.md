@@ -2,106 +2,27 @@
 layout: next
 title: 如何查看Microk8s的apiserver证书过期时间
 date: 2023-03-30 21:19:39
-categories: k8s
-tags: k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
-## 在线安装Microk8s
-1. 安装snap
+使用以下命令检查当前 MicroK8s 控制平面运行状态：
 ```
-yum install -y epel-release
-yum install -y snapd
-systemctl enable --now snapd.socket
-systemctl start snapd
-ln -s /var/lib/snapd/snap /snap
+microk8s status
 ```
-<!-- more -->
-
-2. 安装microk8s
-
-```bash
-snap install microk8s --classic --channel=1.23/stable
-snap alias microk8s.kubectl kubectl
+确认 MicroK8s 控制平面运行正常后，使用以下命令获取 Kubernetes 集群的配置信息：
 ```
-
-3. 安装microk8s插件(addons)
-```bash
-microk8s enable dns ingress metrics-server
+microk8s config view
 ```
-
-成功安装后，通过kubectl查看Pod和Image
-```bash
-# kubectl get pods -A
-kube-system   calico-node-srvfr                         1/1     Running   0          11m
-kube-system   calico-kube-controllers-5b577d865-xwqjh   1/1     Running   0          11m
-kube-system   coredns-64c6478b6c-fcvkk                  1/1     Running   0          23s
-ingress       nginx-ingress-microk8s-controller-rqtj2   1/1     Running   0          32s
-kube-system   metrics-server-679c5f986d-vb6z7           1/1     Running   0          53m
-
-microk8s.ctr i list | grep -vw DIGEST | grep -v ^sha256 | grep -v @sha256 | awk '{print $1}'
-docker.io/calico/cni:v3.19.1
-docker.io/calico/kube-controllers:v3.17.3
-docker.io/calico/node:v3.19.1
-docker.io/calico/pod2daemon-flexvol:v3.19.1
-docker.io/coredns/coredns:1.8.0
-k8s.gcr.io/ingress-nginx/controller:v1.5.1
-k8s.gcr.io/metrics-server/metrics-server:v0.5.2
-k8s.gcr.io/pause:3.1
+找到以下行，其中包含 API Server 的证书:
 ```
-
-## 离线安装Microk8s
-1. 在可联网的环境下载Microk8s的snap安装包
-```bash
-snap download microk8s --channel=1.23/stable # 下载指定版本1.23
+certificate-authority-data: ***
+certificate-authority-data 给出了证书的 Base64 编码数据。
 ```
-
-2. 将下载好的snap包传输到目标机器上，安装microk8s
-```bash
-snap ack microk8s_<版本号>.assert
-snap install microk8s_<版本号>.snap --classic
+在终端中解码证书数据并输出详细信息：
 ```
-
-3. 启动Microk8s服务
-```bash
-microk8s start
+openssl x509 -in <(echo "<cert-data>") -text -noout | grep "Not After"
 ```
+将 <cert-data> 替换为第三步输出的证书编码数据，该命令将解码证书并输出其详细信息，包括过期时间, 在输出信息中找到 “Not After” 字段，它包含证书的过期日期。
 
-4. 启动microk8s插件(可选)
-
-在可联网的环境下载Microk8s插件的Image并导出
-```bash
-microk8s.ctr i list | grep -vw DIGEST | grep -v ^sha256 | grep -v @sha256 | awk '{print $1}'
-docker.io/calico/cni:v3.19.1
-docker.io/calico/kube-controllers:v3.17.3
-docker.io/calico/node:v3.19.1
-docker.io/calico/pod2daemon-flexvol:v3.19.1
-docker.io/coredns/coredns:1.8.0
-k8s.gcr.io/ingress-nginx/controller:v1.5.1
-k8s.gcr.io/metrics-server/metrics-server:v0.5.2
-k8s.gcr.io/pause:3.1
-
-microk8s.ctr i export cni.tar docker.io/calico/cni:v3.19.1
-microk8s.ctr i export kube-controllers.tar docker.io/calico/kube-controllers:v3.17.3
-microk8s.ctr i export .....
-```
-将image传到目标机器上并导入
-```bash
-microk8s.ctr image import *.tar
-```
-启动microk8s插件
-```bash
-microk8s enable dns ingress metrics-server
-microk8s status --wait-ready
-```
-
-配置kubectl访问Microk8s
-```bash
-microk8s.kubectl config view --raw > $HOME/.kube/config
-```
-
-## 卸载microk8s
-```bash
-microk8s stop 
-snap remove microk8s
-rm -rf /root/.kube
-```
+microk8s证书默认路径：/var/snap/microk8s/current/certs/

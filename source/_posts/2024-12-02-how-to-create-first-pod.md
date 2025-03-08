@@ -1,9 +1,9 @@
 ---
 layout: next
-title: 在k8s上创建第一个Pod
+title: 在Microk8s上创建Pod
 date: 2024-12-02 22:05:20
-categories: k8s
-tags: k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
 # 环境

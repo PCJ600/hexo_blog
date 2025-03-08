@@ -2,8 +2,8 @@
 layout: next
 title: 使用kubeadm搭建kubernetes集群
 date: 2024-12-02 22:23:52
-categories: k8s
-tags: k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
 # 环境要求

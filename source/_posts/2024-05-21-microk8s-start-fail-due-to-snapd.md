@@ -2,10 +2,10 @@
 layout: next
 title: Microk8s启动失败，Failed to start Service for snap application microk8s.daemon-containerd 问题定位
 date: 2024-05-21 20:43:20
-categories: k8s
+categories: kubernetes
 tags:
 - troubleshooting
-- k8s
+- kubernetes
 ---
 
 ## 测试环境

@@ -2,10 +2,8 @@
 layout: next
 title: kubernetes的三种探针ReadinessProbe、LivenessProbe和StartupProbe,以及使用示例
 date: 2024-12-14 14:39:23
-categories: k8s
-tags: 
-- k8s
-- Squid
+categories: kubernetes
+tags: kubernetes
 ---
 
 ## 前言

@@ -1,9 +1,9 @@
 ---
 layout: next
 title: k8s删除namespace失败, 陷入Terminating状态解决方法
-date: 2022-11-16 20:58:28
-categories: k8s
-tags: k8s
+date: 2022-11-06 20:58:28
+categories: kubernetes
+tags: kubernetes
 ---
 
 ## 先尝试强制删除deployment和pod等资源

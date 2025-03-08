@@ -1,9 +1,9 @@
 ---
 layout: next
-title: k8s学习笔记
+title: kubernetes学习笔记
 date: 2024-11-27 21:37:52
-categories: k8s
-tags: k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
 目标:

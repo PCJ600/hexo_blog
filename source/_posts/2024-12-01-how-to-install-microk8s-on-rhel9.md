@@ -1,9 +1,9 @@
 ---
 layout: next
-title: 在RockyLinux9.4上安装Microk8s
+title: 如何在RockyLinux9.4上安装Microk8s
 date: 2024-12-01 14:26:26
-categories: k8s
-tags: k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
 ## 在线安装Microk8s
@@ -92,6 +92,14 @@ systemctl disable firewalld --now
 setenforce 0
 vim /etc/selinux/config
 SELINX=enforcing这行改成SELINUX=permissive
+```
+
+开启ip_forward
+```
+/etc/sysctl.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
 ```
 
 ## 离线安装Microk8s

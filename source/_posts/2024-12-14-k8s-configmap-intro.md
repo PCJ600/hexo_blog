@@ -2,19 +2,17 @@
 layout: next
 title: k8s的ConfigMap是什么, 为什么设计ConfigMap, 如何使用ConfigMap
 date: 2024-12-14 16:11:18
-categories: k8s
-tags:
-- k8s
-- Squid
+categories: kubernetes
+tags: kubernetes
 --- 
 
 ## ConfigMap简介, 为什么设计ConfigMap
 在k8s中, ConfigMap是一种API对象, 用于将非机密的配置数据存储到键值对中。 
 Configmap作用是, 把配置数据从应用代码中分隔开, 让镜像和配置文件解耦，实现了镜像的可移植性。
 
-举个例子:
+举例:
 我有一个Squid(正向代理)的Pod, 需要获取用户配置的白名单做访问控制。 每个用户设置的白名单都不一样, 而且用户可以随时对白名单做增、删、改，所以这个白名单的配置不能写死在代码里。
-我们可以把白名单配置存储到k8s的ConfigMap, 这样配置数据和镜像就实现了解耦，Pod中可以动态地获取白名单的配置。 
+可以把白名单配置存储到k8s的ConfigMap, 这样配置数据和镜像就实现了解耦，Pod中可以动态地获取白名单的配置。 
 
 ## 如何使用ConfigMap
 使用ConfigMap时, Pod可以将其用作环境变量、命令行参数或存储卷中的配置文件。 

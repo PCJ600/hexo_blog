@@ -2,9 +2,9 @@
 layout: next
 title: Microk8s calico-kube-controller not running, Failed to initialize Calico datastore error... 解决方法
 date: 2023-05-08 21:28:59
-categories: k8s
+categories: kubernetes
 tags: 
-- k8s
+- kubernetes
 - troubleshooting
 ---
 

@@ -2,11 +2,8 @@
 layout: next
 title: kubectl执行失败后等待一段时间重试(Shell实现)
 date: 2024-03-28 20:16:59
-categories:
-- k8s
-tags:
-- Shell
-- k8s
+categories: kubernetes
+tags: kubernetes
 ---
 
 使用Shell脚本实现功能： `kubectl`执行失败后，等待30秒后再重试，一共重试3次，代码如下：
