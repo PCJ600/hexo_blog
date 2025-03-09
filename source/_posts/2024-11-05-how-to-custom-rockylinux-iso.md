@@ -3,7 +3,9 @@ layout: next
 title: 如何定制RockyLinux ISO
 date: 2024-11-05 20:28:02
 categories: Linux
-tags: Linux
+tags:
+- Linux
+- Project
 ---
 
 # 目标
