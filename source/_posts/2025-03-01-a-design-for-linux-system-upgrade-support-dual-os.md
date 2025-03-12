@@ -54,7 +54,8 @@ sda            8:0    0   10G  0 disk
 实现细节:
 * 分区方案采用BIOS/GPT, BIOS是为了兼容老客户, GPT可以支持2T以上磁盘, 可扩展性和性能更好
 * tar备份目标系统时, 需要`--numeric-owner`保留文件的UID/GID, 以及文件扩展属性xattr(有snap的应用运行状态）
-* 
+
+代码参考: [https://github.com/PCJ600/os_migrate](https://github.com/PCJ600/os_migrate)
 
 # 难点
 initramfs空间有限, 需要尽可能压缩升级包

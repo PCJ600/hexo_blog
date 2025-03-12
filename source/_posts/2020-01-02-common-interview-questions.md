@@ -369,18 +369,32 @@ This also enhanced my unstanding of the HTTP protocol.
 
 
 # 请你提问
-
+员工
 ## 能分享一下您平时的工作内容吗? 在工作中会用到哪些技术栈
 Could you tell me about your typical work? And what technologies do you work with ?
 
-## 您觉得做技术开发，应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉及不同领域的技术知识？ 很多时候这两者是矛盾的
+## 部门的主要人员分配以及对应的主要工作能简单介绍一下吗？
 
-## 您觉得在这个职位表现出色的员工有哪些特点 
-What qualities do you think make employees stand out in this position ?
+## 能不能问一下，你当时因为什么原因选择加入这家公司的呢或者说这家公司有哪些地方吸引你？有什么地方你觉得还不太好或者可以继续完善吗？ 
 
 ## 想问下目前团队正在处理哪些重点项目？这些项目中遇到的主要挑战是什么
 What are the team's important projects, and what challenges are involved ?
 
+## 您觉得做技术开发，应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉及不同领域的技术知识？ 很多时候这两者是矛盾的
+
+领导
+## 以您来看，这个岗位未来在公司内部的发展如何？ (在我看来，问这个问题也是对你自己的负责吧，谁不想发展前景更好的岗位呢？)
+
+## 您觉得在这个职位表现出色的员工有哪些特点 
+What qualities do you think make employees stand out in this position ?
+
+## 贵公司的发展目标和方向是什么？ （看下公司的发展是否满足自己的期望）
+
+## 与同行业的竞争者相比，贵公司的核心竞争优势在什么地方？ （充分了解自己的优势和劣势）
+
+## 公司现在面临的最大挑战是什么
+
+HR
 ## 可以说明一下贵公司的晋升机制或发展路径吗
 Could you tell me the promotion or career development path at your company ?
 
