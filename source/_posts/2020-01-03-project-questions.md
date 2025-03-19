@@ -11,107 +11,287 @@ tags: interview
 
 # 项目: Trend Micro - Service Gateway
 
-## 简单介绍下你的项目
-我参与的项目是一个服务网关, 这个服务网关由两部分组成
-一个部署在客户网络的虚拟设备, 给趋势本地的安全产品提供微服务, 减少了客户的带宽消耗 
-一个云端的APP, 包括一个前后端, 用于管理连接的虚拟设备
-我负责虚拟设备的特性开发工作, 主要贡献是设计了一个虚拟设备固件的一键式升级方案, 解决了旧方案中存在的开发维护难, OS迁移困难, 缺乏回滚机制的3个问题
-目前有6k+企业客户, 1w+台虚拟设备使用我的升级方案
+## 简单介绍项目
+[TODO]
+Service Gateway是一个部署在企业网络的服务网关, 采用混合云架构, 将云端服务转移到客户本地环境, 从而减少客户的带宽消耗. 服务网关由一个云端的管理平台和一组Rocky Linux的虚拟设备组成, 支持VMware, AWS, Azure等多平台部署; 采用Microk8s集群方式部署虚拟设备, 提供了包括ActiveUpdate, WebReputation, ForwardProxy在内的十几种XDR关键服务, 支持5万个企业客户, 覆盖1亿台终端
 
-This project is called Service Gateway. A Service Gateway consists of two parts.
-A virtual appliance deployed in corporate network, provide service for Trend On-premises products, reducing customers' bandwidth consumption.
-A cloud-based APP, including a frontend and a backend, used to manage connected virtual appliances.
-I was responsible for feature development of the virtual appliance. My contribution is to design an online upgrade solution for virtual appliance,
-which greatly improved customer experience and development efficiency.
-Currently, there are over 6k customers and 10k virtual appliances using my upgrade solution.
+例如, 早期的虚拟设备使用单系统分区增量升级方案, 存在三个问题。 
+第一, 如果升级出现故障, 客户只能重装虚拟机, 无法回滚系统, 导致客户体验很差。
+第二, 增量升级需要在代码仓库维护所有(代码差异??), 我接手项目时升级代码已经达到1G, 开发维护负担非常重;
+第三, 早期虚拟设备的OS是CentOS7, 而CentOS7在2024年已停止维护, 需要迁移到新的OS。 如何实现一键式的, 客户无感知的OS迁移是一个难点。
 
-## 说下升级方案怎么做的
-设计这个方案的目的是, 解决旧的增量升级方案中存在的开发维护难的问题. 因为增量升级需要维护两个版本间差异, 随着时间推移, 历史代码逐渐累积, 我接手项目时, 增量升级的代码有800M, 几乎处于失控状态
-为了解决这个问题, 我设计了一个双系统分区的全量升级方案, 分为两个关键步骤:
-第一步是做一个全量升级包, 具体方法是: 
-* 基于Rocky最小发行版定制虚拟设备的ISO, 需要重新分区, 通过LVM划出两个系统分区.
-* 用ISO安装虚拟机, 导出虚拟机的OVA文件。 把所有磁盘文件打包, 得到全量升级包
+为了解决这个问题, 我设计了一个基于双系统分区的全量升级方案。 分为两个步骤：
+第一步是制作全量升级包, 涉及Linux启动,分区,bootloader配置,ISO定制等技术, 
+第二步是从网络下载升级包, 解压升级包完成系统升级。 我开发了一个运行在虚拟设备上的升级模块, 升级模块包含一个Python进程和一个Cronjob脚本。 Python进程负责和云端通信, 通过订阅消息队列接收升级消息, 通知Cronjob执行升级任务
+进一步的, 为了节省客户的安装时间, 我优化了微服务在虚拟设备上的集成方案。 把微服务镜像从虚拟设备中解耦, 将基础镜像从4.5G压缩到2.7G, 客户安装时间缩短了40%, 显著改善了用户体验。
 
-第二步是实现在线升级。 我开发了一个升级模块, 运行在虚拟设备上。 升级模块包含一个Python的后台进程和一个Cronjob脚本
-* Python进程负责和云端通信, 通过订阅AWS IoT消息队列, 接收后端发送的升级消息, 写一个task_file到磁盘, 通知Cronjob脚本处理
-* Cronjob脚本读取这个task_file, 执行真正的升级任务, 包括:
-	* 下载升级包, 解压升级包到备用分区
-	* 把当前的用户配置同步到备用分区
-	* 通过grubby添加启动项, 把备用分区设为默认启动项
-	* 整机重启, 恢复配置
+## 1. 为On-premises网关产品设计了基于Linux双系统分区的升级方案, 涵盖了设计分区, 构建升级包, 同步系统配置, 以及配置GRUb启动项等关键环节。 该方案解决了系统故障后无法回滚的问题, 并通过删除超过1GB的冗余增量升级代码，显著降低了维护成本和系统复杂度。
 
-I designed this solution to solve problems in old incremental upgrade solution. Since incremental upgrade requires maintaining differences between two versions,
-the accumulation of historical code made the system complex and difficult to manage. 
-When I took over this project, the codebase for incremental upgrade had grown to 800 MB, it's becoming unmanagable.
-So, I designed a full-upgrade solution with dual system, which consists of two steps:
-Firstly, we need to build a full upgrade package.
-Customize an ISO image for virtual appliance based on minimal Rocky Linux. We need to re-partition the disk and use LVM to create two system partitions.
-Use ISO to install a VM, then export VM to OVA. Pack all disk files of OVA and we'll get the full upgrade package
-Secondly, we need to upgrade online. I developed an upgrade module. The upgrade module contains a Python daemon and a Cronjob.
-The Python daemon communicate with backend by subscribing AWS IoT, and receive upgrade message from backend, then notify Cronjob to process.
-The Cronjob is responsible for performing upgrade task. Download and extract upgrade package to hidden partition, sync current configuration, add GRUB menuentry and reboot.
-Finally complete the system upgrade.
+早期，客户的On-premises网关设备（基于CentOS 7）采用增量升级方案进行固件更新。 这种方案存在两个主要问题
+一旦升级过程中出现问题，客户只能重新安装系统，严重影响用户体验。
+部分客户未开启自动升级功能，为了支持所有客户的升级需求，升级包必须保存从初始版本到最新版本的所有增量文件。随着版本迭代，升级包变得越来越大，难以维护。
 
-## 说下OS迁移怎么做的
-早期客户的虚拟设备OS是CentOS7, 但是CentOS7在2024年停止维护, 为了保证系统安全性, 我们需要将客户虚拟设备迁移到新的OS
-OS迁移的难点在于, 如何在重新分区过程中保存并同步客户的配置, 实现自动迁移, 从而提高用户体验
-我们通过定制了一个initrd镜像解决这个问题, 在initrd环境中执行以下步骤:
-* 把升级包和客户配置从硬盘复制到临时内存, 确保客户配置不会丢失
-* 对整个硬盘重新分区, 划分两个系统分区
-* 把升级包安装到主分区, 恢复客户配置
-* 最后, 通过GRUB设置默认启动项为新的OS, 重启设备完成迁移
+**方案**
+针对这些问题，我设计并实现了一个基于Linux双系统分区的全量升级方案, 像Android系统、 Chrome OS及许多嵌入式和IoT设备都采用双分区系统升级方法, 做到无缝更新和故障恢复.
+全量升级方案中包含一些关键技术环节: 设计分区, 构建升级包, 同步系统配置, 配置GRUB启动项。 
 
-In early time, customers' virtual appliances were based on CentOS7. However, CentOS reached end of lie on 2024.
-To ensure the security of the system, we need to migrate customers' virtual appliances to a new operation systems.
-The challenge is how to sync customer's configurations during disk re-partitioning process and implement automatic OS migration,  then improve customer experience.
-We solved this problem by customizing an initrd image, which consists of following steps
-* Copy upgrade package and customer configurations from disk to temporary file system to ensure customer's configuration are not lost
-* Repartition the entire disk and create two system partitions, then install upgrade package on primary partition and recover customer's configuration,
-* Finally, use GRUB to set default boot option to new OS, then reboot virtual appliance to complete migration.
+设计分区： 使用BIOS+GPT分区格式，兼容现有客户。分区方案包括：BIOS Boot分区、Boot分区和LVM分区, 在LVM分区上创建名为VA的逻辑卷组，并进一步创建四个逻辑卷：VA-root和VA-back作为两个系统分区，VA-data存储公共数据，VA-image存储镜像文件。
+构建升级包： 通过ISO安装虚拟机, 导出虚拟机OVA文件, 解压OVA文件得到VMDK磁盘文件, 使用guestmount挂载VMDK文件，对整个根文件系统进行打包，注意打包时需保留UID（numeric-owner）和文件扩展属性（xattr），解包时同样需要声明UID和xattr。
 
-## 回滚是怎么做的
-回滚是基于双分区升级方案实现的, 实现比较容易。
-客户在CLI上执行rollback命令时, 调用我们写的脚本。 这个脚本使用grubby工具把默认启动项设置为前一个系统分区
-设置完启动项后, 再执行reboot, 这样设备重启后就回滚到了上一个分区
+**难点**
+目标系统的GRUB版本(OS版本)可能比当前系统更高, 如果用当前系统GRUB引导两个系统分区, 会存在兼容性问题. 针对这种情况，我采取了以下做法
+* 使用目标系统的/boot引导两个系统的内核。
+* 通过chroot方式配置并重装GRUB。
+* 如果GRUB配置失败，回滚到升级前的状态。
 
-The rollback feature is implemented based on our dual-system upgrade solution, so it's easy to implement.
-Customer execute rollback command in CLI, and it calls a Shell script we developed. This script used grubby tool to set default boot option to previous system partition. 
-Then reboot the virtual appliance, it will rollback to previous partition successfully.
+为什么不直接把目标系统的/boot放在LVM系统分区？
+*兼容性问题, 传统BIOS和某些UEFI固件不支持直接从LVM卷启动
+* 复杂性增加, 故障恢复困难
 
-## 说下微服务的集成方案怎么做的
+为什么不划两个/boot分区？
+* 手动修改风险：客户需要手动调整磁盘分区，这不仅增加了操作难度，还可能导致数据丢失或分区表损坏。
+* 实现复杂性：理论上划分两个/boot分区是可行的，但实现起来较为复杂。实际上，GRUB的一个/boot分区就可以引导多个版本的内核，支持向前兼容。
+
+**效果**
+成功解决了系统故障后无法回滚的问题, 极大提升了客户体验. 基于双分区方案实现系统回滚非常容易, 只需配置GRUB默认启动项为上一个系统分区，再重启即可
+同时移除了1G多的增量升级代码, 显著降低了维护成本
+
+**遇到的问题**
+问题1: 升级后文件权限不对, admin用户无法登录
+定位过程：后台查看发现admin用户的文件UID不正确，升级前后两个系统的用户配置不一致。同样的admin用户在两个系统上的UID不同。由于升级包是通过tar备份的，而tar解压文件的默认行为是根据当前系统用户名进行映射，而不是UID，因此升级后文件的UID不正确。
+解决方法：在tar解压时添加–numeric-owner参数，保留文件的UID，解决了问题。
+
+问题2: 升级到Rocky Linux 9.4后, 客户设备启动故障, 报错: 虚拟机CPU不支持x86_64_v2
+定位过程：查看/proc/cpuinfo，发现客户虚拟机不支持x86_64_v2指令集，但物理服务器支持该指令集。
+解决方法：指导客户开启CPU虚拟化扩展，并在升级前验证虚拟机CPU是否支持所需指令集。如果不支持，则直接上报失败。
+
+问题3: 配置了双网卡的客户, 在升级到Rocky Linux 9.4后有概率出现网络不通, 网卡的IP,Gateway配置看上去是正确的
+定位过程: 首先ping网关, 发现网关不可达, 通过ethtool查看网卡信息, 发现升级后eth0和eth1顺序反了, 导致网络不通
+原因分析: 现代Linux系统通常使用基于硬件信息（如PCI总线ID）的可预测网卡命名规则，保证OS升级后网卡顺序也是正确的。 但是我们的网关设备采用的还是传统的eth命名规则，这种规则不能保证网卡顺序的正确性。
+解决方法: 升级后用ethtool判断网卡顺序是否正确, 如果不正确, 用modprobe按正确顺序加载网卡驱动; (如果两个网卡驱动相同, 还需要修改udev规则)
+
+
+**其他问题**
+讲下GRUB工作原理
+GRUB（GRand Unified Bootloader), Linux系统中广泛使用的引导加载程序, 负责加载操作系统内核到内存并启动
+划分3阶段, Stage 1, Stage 1.5, Stage 2, 其中Stage 2是GRUB的核心部分，包含用户界面、配置文件解析器以及加载内核和initrd的工具。
+当选择了启动菜单中的某个条目后, GRUB会将指定的kernel和initrd加载到内存中, 内核被加载到内存后, 控制权转移给内核, 继续启动流程
+
+讲下Linux启动流程
+* 系统加电, BIOS开机自检
+* 按照BIOS设定启动的顺序, 查找可启动设备, 通常是硬盘, 把控制权交给GRUB
+* GRUB把内核加载到内存，挂载initrd, 通过initrd加载真正的根文件系统
+* 内核启动完成后, 执行第一个用户空间进程init, init负责启动其他服务
+ 
+
+## 2. 通过定制initramfs进入紧急模式, 预先将升级包备份到内存后再重建磁盘分区, 实现了从单系统分区到双系统的无缝迁移, 大幅提升了用户体验
+**背景**
+我们设计了一个Linux双系统分区的升级方案, 用于解决单分区方案中, 升级后出现故障无法回滚的问题。 但是早期客户的虚拟设备只有一个系统分区, 我们需要设计一种方案, 让客户的网关设备从分区无缝迁移到双分区
+难点在于实现无感知的升级, 无需客户手动操作(比如添加磁盘, 创建机器, 配置设备).
+
+**方案**
+通过定制initrd进入紧急模式，在initrd阶段把升级包和配置文件从磁盘读到内存，重新建立LVM磁盘分区,
+再解压升级包到主系统分区, 同步客户配置和口令,
+最后重新安装GRUB, 重启后迁移到新系统
+
+**难点**
+方案中涉及到一个难点: initrd内存空间是有限的, 客户标准内存配置12G, 最低内存只有8G, 需要尽可能压缩升级包, 使得升级包+解压后文件远小于8G, 否则会因为内存不足迁移失败. 我设计的对策是:
+* 使用CentOS 7官方miminal ISO做镜像, 这个镜像只有900M
+* 只分配必要磁盘空间, 比如导出虚拟机时, 磁盘只分了8G, 等客户机器迁移成功后再自动分配剩余空间到LVM磁盘
+* 导出虚拟机前, 清理临时文件, 日志文件, 禁用交换分区
+* 使用压缩比率高的算法, 我们选的xz
+最终我们的升级包大小是1.7G, 解压磁盘文件大小是3G左右, 实测运行内存在4-5G左右, 没有出现客户因内存不足导致的迁移失败
+
+**效果**
+实现了从单系统分区到双系统的无缝迁移, 避免了客户重装机器, 扩容磁盘, 配置设备, 极大地提升了用户体验
+
+**遇到的问题**
+仍然有少量客户(几十个）迁移失败, 比如:
+* 磁盘有坏道, 这种只能建议重装
+* 客户网络问题, 升级后因为网络原因没有注册, 让客户手动注册解决问题
+
+
+## 3. 开发了一个控制模块，利用消息队列实现在线升级功能, 并通过心跳检测机制解决微服务同步的问题
+
+**背景**
+
+**方案**
+
+**1. 通过消息队列实现在线升级流程**
+一个Python后台进程, 作为控制模块, 订阅AWS IoT消息队列; 后端发送升级的消息到AWS IoT,
+控制模块根据消息中taskType, 把消息丢掉对应的队列，交给对应线程处理
+先从过期字典里判读taskId ?, 重复任务不处理, 
+install, heartbeart, collect, 
+
+**2. 设计了心跳检测机制, 解决了升级后自动恢复微服务和同步配置的难点** (DOING)
+心跳检测具体实现，频率, 如果没有按时响应怎么样
+
+后端每5分钟发一次心跳到消息队列, 消息中携带(设备ID, TaskType), 连续3次没有恢复心跳, 下线
+
+
+写数据库, 发upgradeApplinace Task, 标识状态UPGRADING 
+delivered(收到taskResult, 更新为true), retry没有delivered的task
+
+
+
+## 解决问题：（预下载, 灰度发布)
+
+
+
+如何判断回滚
+心跳里带上版本, 和DB中的比较, 如果心跳中版本低于DB中, 说明发生了回滚 ?
+
+升级时，用upgradeTaskId标识, status=UPGRADING
+
+## 心跳检测
+
+升级后怎么安装service?
+通过心跳, 虚拟设备带上自己的版本号, 后端比较如果upgradeTaskId存在, 且版本一致，把任务设置为success
+再查DB中的Service设置, 逐个安装Service.
+
+
+
+心跳()
+
+如何检测虚拟设备是否下线
+后端通过cronjob定时校验, 每5分钟发心跳到消息队列, 如果15分钟内没收到心跳, 状态置为disconnect
+
+
+如何维持连接
+
+注册流程
+
+
+**任务失败怎么办，SG故障, IOT故障, HTTP请求故障? 有没有补偿机制**
+定时任务(5分钟一次), 查所有Ongoing task按创建时间倒序? retry次数超过3次, task设置为failed, (每个任务设置不同时间, 15分钟+3*5分钟)
+* 升级任务(半小时内不处理)
+* 某些不重要任务(不重试)
+* 如果某个task成功了, 更早的task不应该retry 
+(字典 key:applianceId-taskType, value: createTime), 如果当前的任务比字典中的早, 置为ignore 
+
+
+定时升级
+
+case:
+Appliance Unhealthy (检查心跳, 最近一次iot task, 收集LOG)
+Heartbeat假故障(断连后迅速重连)
+Service安装失败
+
+
+长时间任务怎么做到异步?
+
+
+
+**难点**
+
+**效果**
+
+**遇到问题**
+
+**其他问题**
+Topic subscription model, no device registration involved
+Use aws iot sdk as client
+
+
+网络配置变更怎么重连
+一个线程读取配置，更新到内存
+另一个线程读到配置变化, 做重连
+
+为什么引入消息队列
+通过采用消息队列，实现本地设备与后端的解耦, 方便开发
+有很多需要长时间执行任务(比如固件升级, 服务安装), 直接用HTTP交互可能会超时, 同时导致服务器负载较大; 用消息队列异步处理任务, 无需等待, 确保可靠性
+
+怎么保证消息可靠传输
+首先从生产者角度, 要有重试机制; 在业务代码中判断超时后重试发送多次
+另外有补偿机制, 发送消息前会将任务记录到数据库, 如果当时发送失败, 把任务状态记录到数据库, 通过cronjob定时检查未发送任务进行补偿(3次, 每次5分钟) 
+中间件角度, 开启持久会话(cleanSession=false), 设置Qos 1(确保至少一次传递), 消息会被保留直到确认或超时
+消费端角度, 收到消息后发送ACK给消息队列, 让消息队列及时清除消息
+
+怎么确保消息可靠传输
+* 我们在消费端做了幂等设计, 无论消息被处理多少次, 结果都是相同的
+* 在消费端使用过期字典, 每次消费时先检查taskID是否在过期字典中; 如果ID存在说明重复消息; 否则消费消息, 把taskID添加到过期字典
+
+为什么选择AWS IoT, 有没有考虑其他MQ解决方案
+稳定性和可靠性, AWS IoT由Amazon提供的成服务案, 经过了企业生产环境验证, 考虑到我们后端也是基于AWS EKS部署的, 使用AWS IoT实现无缝集成, 简化系统架构
+带宽消耗低, AWS IoT支持MQTT协议，适合资源受限的设备间进行轻量级消息传输
+易于部署, AWS IoT是完全托管服务, 不需要部署实例
+成本低, 费用就是消息传输费(每百万条价格1美元), 所有site每月300美金
+* 不选择RabbitMQ: 费用较高, 按照实例和存储收费, 实现高可用需要部署多个实例, 使用更高; 有额外维护成本
+* 不选择Kafka: 对我们场景而言, 没有优势, 我们项目并发量不大, 采用Kafka导致资源过度配置, 花钱, 增加系统复杂性
+
+为什么说MQTT带宽消耗低
+相比HTTP报文, MQTT报文更小, 头部只有2字节
+
+消息格式怎么设计
+使用一对一模型, 为每个设备分配一个独一无二的topic, 消息是JSON格式, 设计taskId字段, 让后段可以跟踪某个任务的状态, 设计taskType字段区分消息类型, body存放消息内容
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 4. 设计了一套微服务部署标准, 将微服务从虚拟设备固件中解耦.  虚拟设备镜像从4.5G压缩至2.7G, 客户安装时间缩短了40%
+/*
+第二个问题是, 在早期, 微服务镜像是集成在虚拟设备固件中, 导致虚拟设备镜像非常大, 有4.5G左右, 客户下载和安装很慢, 用户体验很差。
+为了解决这个问题, 我重新设计了微服务的集成方案, 将微服务从固件中解耦, 使用Microk8s Ingress解决XX服务发现和端口冲突问题。 最终将基础镜像从4.5G压缩到2.7G 
+*/
+
+
 早期版本中, 微服务是集成在固件中的, 这导致虚拟设备ISO镜像体积很大, 有5G左右, 客户安装和升级速度慢, 体验较差
 我们的优化方案是, 把微服务的镜像和配置从固件中解耦, 支持客户灵活的在线安装或卸载某个微服务
-难点在于:
-* 如何避免微服务间的资源竞争
-* 如何避免端口冲突
-* 微服务如何感知用户的配置变更
+难点:
+* 如何避免微服务间的资源冲突
 
 做法是:
 * 给每个微服务分配一个独一无二的serviceCode, 服务网关根据serviceCode创建同名的namespace, 实现了不同微服务之间的资源隔离
 * 每个微服务需提供一个tar.gz部署包, 包括容器镜像和部署yaml文件两部分, 微服务团队负责把部署包发布到AWS S3 
-* 每个微服务创建一个configMap, 用户修改配置后, 后端通过消息队列通知虚拟设备, 虚拟设备上的升级模块负责把配置写入configMap 
-* 对于微服务依赖的全局配置, 我们创建了一个appliance-configmap, 定时把这个configmap同步给各个微服务, 各微服务监控configMap配置, 获得最新配置
-* 对于端口冲突问题, 启用了Microk8s自带的Ingress插件, 所有http请求从宿主机的80或443端口进入。微服务的提供者需要在部署包中定义ingress yaml, 指定path和backend
-
-In early versions, microservices were integrated directly into the firmware. This caused virtual appliance ISO image very large, 
-the installation speed is very slow for customers, which negatively impacted user experience.
-
-Our goal is to decouple the microservice image from the firmware, allowing customers to install or uninstall specific microservices flexibly.
-There are many challenges, for example, how to avoid resource competition and port conflicts between microservices. How microservices detect user configurations change.
-
-The approaches we took are as follows:
-* Assigned a unique serviceCode to each microservice. Service Gateway will create a namespace with the same name as the serviceCode, to avoid resource competition between different microservices.
-* Each microservice should provide a deployment package, which includes two parts: container images and deployment YAML files. The microservice team is responsible for publishing the deployment package to AWS S3.
-* Each microservice should create a ConfigMap. When customer modifies configuration, backend notifies virtual appliance via a message queue. 
-  The upgrade module on the virtual appliance is responsible for updating configuration into the ConfigMap.
-* For global configurations that all microservices share,  we created an appliance-configmap and sync it periodically to all microservices. Each microservice monitors its ConfigMap to get latest configuration.
-* To address port conflicts, we used Microk8s Ingress plugin. All microservices provide HTTP service use port 80 or 443 on the host machine. Each Microservice should provide an Ingress YAML in their deployment package, specify the path and backend.
+* 对于端口冲突问题, 启用了Microk8s Ingress插件, 所有请求从宿主机的443端口进入。
 
 
-## 项目中最大难点时什么, 如何定位解决的
-项目最大难点在于问题的快速定位。 比如客户虚拟设备重启时，可能出现各种复杂的K8S问题或网络问题
+## 5. 使用Microk8s Ingress提供统一的访问入口, 简化微服务的管理
+Ingress是k8s的一种资源对象，用于管理外部对集群内服务的访问, 它通过提供一个统一的入口点，将外部流量路由到集群内部的不同服务。
 
-我举一个k8s问题定位案例
+k8s集群中服务默认只能在集群内访问。 如果需要从外部访问服务，需要使用NodePort或LoadBalancer类型服务, 这两种方式都存在一些问题,
+NodePort方式会占用端口，可能导致端口冲突, 而LoadBalancer不适合跑在本地环境, 所以我们用了Ingress
+
+Ingress的原理是, 在Microk8s里运行了一个Nginx Ingress Controller, 负责监听k8s中的Ingress资源，当检测到Ingress资源更新时, 动态更新Nginx配置文件
+外部流量先到达Nginx, 再基于域名和URL将请求转发到Service, Service再将流量分发到Pod 
+
+
+
+## 项目还有什么可以优化的
+
+**优化**
+当目标系统GRUB版本与当前系统不一致时，直接覆盖/boot分区可能导致旧系统的引导文件丢失，进而导致启动故障。
+实际测试中，没有遇到客户出现此类问题。如果要避免覆盖问题，可以使用EFI系统分区，为每个系统创建独立目录存放引导文件
+
+* 精简微服务基础镜像, 减少服务安装时间
+* 微服务滚动更新
+* 进一步压缩虚拟设备固件, 减少服务网关部署时间
+
+
+## 
+
+### 项目是如何测试的(找文档)
+黑盒测试, 针对功能点的测试
+
+
+## 问题定位
+
+k8s问题定位
 有一个客户反馈, 他们的虚拟设备重启后无法正常工作了
 我通过日志发现Microk8s不工作, 由于apiserver证书有效时间不正确; 但是客户坚称他们的虚拟机时间是正确的, 这使得问题变得复杂
 
@@ -121,61 +301,11 @@ The approaches we took are as follows:
 我和客户沟通, 把日志截图提供给客户, 说明了客户的环境问题，建议客户重启解决问题。 
 后面我们设计了一个workaround, 通过添加一个定时任务, 检测证书是否有效, 如果证书失效, 就直接刷新证书, 避免了因为客户环境问题导致的服务中断, 提升了用户体验 
 
-The biggest challenge in the project is trouble-shooting. We need to address various complex Kubernetes or network problems.
-
-Here is an example of a K8S issue.
-
-A customer reported that their virtual device failed to work after reboot.
-I found that Microk8s didn't work due to invalid cert time of apiserver, but customer insisted that their system time was right. This made the problem become more complex.
-
-Fortunately, I had already considered the trouble-shooting before. We recorded all startup logs. 
-By reviewing these logs, I found that during one particular startup, the system time on the customer's virtual appliance was one month ahead of the correct time.
-
-For further validation, I tested in my local machine, and discovered that Microk8s will refresh apiserver cert based on system time when reboot. Finally, I found the root cause.  
-
-I communicated with customer, provided them with logs and explained the root cause. I recommended our customer to reboot and solve the problem.
-Besides, I designed a workaround by adding a cronjob to check certificate continously. if cert time is invalid, it would be refreshed immediately.
-This workaround can improve user experience.
 
 
-我再举一个网络问题定位案例
+## 技术问题
 
-在本地测试过程中，我们遇到了一个问题: 如果虚拟设备配置了双网卡，在升级后有概率出现网络不通的情况。 然而，升级后的网卡IP和Gateway看上去是正确的。
-
-首先，我尝试通过ping网关来验证网络连通性, 这是基本排查步骤。 如果网关不可达, 说明问题可能出现网络接口或路由配置上。 结果发现ping失败
-接着, 我通过日志详细对比升级前后的网卡配置变化, 发现升级后网卡的MAC地址有问题, eth0和eth1的MAC地址反了
-我进一步搜索资料, 发现问题的根本原因在于, 现代Linux系统通常使用基于硬件信息(如PCI总线ID)的可预测网卡命名规则, 保证迁移后网卡顺序也是正确的
-然而我们的虚拟设备采用的还是传统的eth命名规则, 这种规则不能保证网卡顺序的正确性
-
-为了解决这个问题, 我写了一段脚本, 升级前使用ethtool获取两个网卡的businfo, 升级后根据businfo判断, 如果网卡顺序不正确，就通过modprobe重新加载网卡驱动, 最终解决了问题
-
-Here is an example of a Network issue.
-During local testing, I found a problem
-If a virtual appliance was configured with dual network interface, there may be a network failure after an upgrade. 
-However, the IP address and Gateway of two NICs seemed correct after the upgrade. This made the problem more complex.
-
-First, I attempted to ping gateway to test network. Because if the gateway is unreachable, it indicates problemes in NIC configs and routing table. 
-Next, I reviewed logs and compared the NIC configurations before and after the upgrade. I found that MAC address of eth0 and eth1 were swapped.
-
-After further research, I found the root cause. Modern Linux systems use predictable network interface naming rules to ensure consistent NIC ordering
-However, our virtual appliance still used the traditional ethX naming rule. This may caused wrong NIC order.
-
-To address this issue, I wrote a script. Before the upgrade, I used ethtool to record the businfo of both NICs.
-After the upgrade, the script checked the businfo to determine whether the NIC order was correct. 
-If the order was incorrect, the script used modprobe to reload the NIC drivers in the correct sequence.
-
-And this solution eventualy resolved the problem.
-
-# 常见项目问题
-
-## 这个项目都做了哪些测试？
-黑盒测试, 针对功能点的测试 [TODO]
-
-## 还有什么可以优化的
-* 压缩虚拟设备镜像大小
-* 精简微服务基础镜像
-
-## 用什么技术开发的, 你做了哪些部分
+### 用什么技术开发的, 你做了哪些部分(TODO)
 在服务网关项目中, 我负责虚拟设备的特性开发工作.
 * 定制了一个ISO镜像, 镜像包括一个最小的Rocky, Microk8s, 升级模块, 一个CLI命令行
 * 开发了一个升级模块, 用于实现虚拟设备固件的升级. 
@@ -183,152 +313,110 @@ And this solution eventualy resolved the problem.
 	* 以及一个cronjob脚本, 实现固件的双系统分区升级和回滚. 
 * 设计了微服务在虚拟设备上的集成方案, 给本地趋势产品提供服务, 减少客户带宽消耗. 使用k8s, nginx ingress技术
 
-## 几个人开发的, 你怎么合作的
-服务网关这个项目有3个核心开发人员, 1-2个QA, OPS
-我负责虚拟设备的特性开发工作; 1名开发负责后端(NodeJS); 另1个开发负责前端(React) 
-项目中涉及到很多合作
-* 和后端的合作, 比如设计后端给虚拟设备提供的AWS IoT消息和Restful API
-* 和前端的合作, 比如Forward Proxy微服务中, 如何配置白名单
-* 和QA的合作, 实现一个feature或者修复一个bug, 告诉QA修改了什么, 影响有哪些, 如何测试
-* 和TS的合作, 处理客户case, 和TS沟通客户问题, 给出解决方案 
-* 跨部门的合作, 比方说有的部门部署微服务失败, 帮忙到环境定位.
-
-## 这个项目用了什么第三方软件/插件？
-虚拟设备开发用到了一些三方软件, 比如:
-* Python升级模块使用了AWS SDK实现MQ消费端, 使用kubernetes库操作k8s
-* 使用Microk8s部署微服务, Nginx Ingress插件简化微服务的集成
-* 命令行是基于Cisco的开源CLI框架做的
-* 正向代理用了Squid, Stunnel开源软件
-* 后端APP用了NodeJS Express, ORM库用了Sequelize, 前端用了React
-
-## 这个项目采用了什么样的软件开发流程？
+### 这个项目采用了什么样的软件开发流程？
 * 两周为一个Sprint版本迭代, 明确交付需求. 每周例行团队会议, 同步进度
 * Jira和GitHub issues管理任务, 代码review
 * 持续集成与交付, Github Actions作为CI/CD工具
 
 
-## FPS项目中最大的难题是什么? 如何解决的？**
-[TODO]
-最大难点就是解决客户网络不通问题。 因为客户网络是一个高度不确定的环境, 绝大多数的网络不通问题都是客户防火墙导致的
-
-防火墙配置错误, 导致FQDN不通过
-监听了HTTPS请求, 做中间人, 导致证书校验不通过
-
-HTTPS流程, HTTP代理+HTTPS流程, Squid+Stunnel流程
-
-HTTP CONNECT通道
-* 客户端和代理服务器进行三次握手, 建立TCP连接
-* 客户端发送HTTP CONNECT请求给代理, 告诉代理目标站点地址和端口号
-* 代理收到请求后, 和目标服务器也进行三次握手, 建立TCP连接
-* 连接建立后返回200 OK, 告诉客户端加密通道已生成
-* 之后代理只是来回转发客户端和服务器间的加密数据包 （TLS握手+HTTP数据)
-
-https://www.hawu.me/operation/886
-Stunnel加密通信原理
-Stunnel Client部署在防火墙内, Stunnel Server部署在云上(客户防火墙外)
-Squid把包发给Stunnel Client
-Stunnel Client将包加密, 发送给Stunnel Server
-Stunnel Server解密后转发请求
-由于通过客户防火墙的数据是被Stunnel加密的, 客户防火墙只能看到Stunnel Server:443的TCP包, 看不到具体的FQDN
-
-
-写一个KB，让客户先排查是否防火墙配置问题
-* 首先检查网络设置和网络连接: ip, netmask, gateway, dns, ping gateway
-* 让客户检查防火墙规则: 协议，方向, 行为, 规则顺序
-* 禁用防火墙的HTTPS证书替换, 某些防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新的SSL证书，冒充目标网站证书
-
-举例: 某些客户防火墙为了检测HTTPS流量, 会做中间人拦截HTTPS流量。 防火墙生成一个新证书，冒充目标网站证书, 因为虚拟设备不支持客户自定义CA，导致网络不通
-解决方法: CLI中实现诊断网络的命令，通过查看curl的结果, 看issuer是否为entrust, Amazon; 如果issuer是一个IP,hostname或防火墙产商名字，说明被替换了
-
-
 # 项目2: Forward Proxy Service
 
-## 介绍下Forward Proxy这个项目
-这是一个安装在Service Gateway上的微服务, 为本地的趋势终端产品接入云服务提供正向代理功能, 实现本地产品访问互联网的集中管理  
+## 项目介绍
+FPS是一个部署在服务网关上的微服务, 基于开源软件Squid实现, 为本地的趋势终端产品访问云端服务提供正向代理功能;
+同时支持客户配置白名单, 实现了本地产品访问云端的集中管理。
 
-早期, 各个本地产品从云端下载数据, 需要各自访问不同的后端, 只能各自实现一套认证，访问控制方案.
-通过引入Forward Proxy服务，所有本地产品连接到这个正向代理即可，实现了集中的认证, 访问控制, 降低了各产品开发和维护成本
+* 实现需求
+* 问题定位
+* 优化
 
-通过Microk8s部署, 基于hostNetwork模式, 直接使用宿主机网络栈，监听8080端口，提升性能
-核心组件有两部分, 一个是Squid软件, 另一个是Python进程, 感知网络设置和白名单变化, 更新Squid配置文件，重新加载Squid
+除了功能开发, 我还负责定位解决客户网络不通的问题。 比如客户防火墙问题导致的网络不通
 
+## 说一下支持白名单怎么做的
+我们利用Squid的ACL(Access Control List)实现了访问控制功能
+我们预设了一个FQDN白名单, 如果客户开启了白名单功能，就只有白名单中的FQDN能通过
+同时, 我们允许客户在UI上添加白名单, 把白名单存储在ConfigMap, 在微服务中把ConfigMap挂载到文件
+我们写了一个进程定期监控白名单配置变化, 检测到白名单更新时, 重新加载Squid
+
+## 说一下HTTP隧道的原理
+HTTP隧道常用于两台网络受限的机器之间建立网络连接。 客户端通过HTTP CONNECT请求与代理建立隧道, 从而访问HTTPS, 流程:
+* 客户端和代理服务器三次握手, 建立TCP连接
+* 客户端发送HTTP CONNECT请求给代理, 告诉代理自己需要连接的目标服务器
+* 代理收到请求后, 和目标服务器建立TCP连接
+* 代理返回200 Connection Established给客户端, 告诉客户端整个隧道已经建立
+* 隧道建立后, 代理服务器只负责在客户端和服务间之间转发数据，不解析或修改数据。这保证了 HTTPS 数据的安全性，即使代理也无法解密 TLS 加密的内容（因为代理不知道密钥, 没有服务器的私钥)
+
+## 说一下HTTPS的原理
+HTTPS是基于HTTP的安全协议, 通过在HTTP和TCP层加入了TLS协议实现数据加密, TLS握手步骤:
+* 客户端发送ClientHello，包含支持的TLS版本, 加密套件, 客户端随机数
+* 服务器返回serverHello，选择双方都支持的TLS版本和加密套件，并附带自己的随机数和证书
+* 客户端校验服务器证书, 如果校验失败终止连接
+* 否则根据选定的加密算法(RSA或DH算法)，客户端和服务端协商一个共享的对称密钥
+* 最后双方使用协商出的对称密钥进行加密通信
+
+补充: RSA使用加密的Pre-Master Secret, DH动态协商密钥
 
 ## 说一下Stunnel的加密通信方案
-Forward Proxy安装在客户本地网络中，客户网络是一个高度不确定的环境。 部分客户配置防火墙规则时会出现一些问题, 比如:
-* 不支持通配符FQDN
-* 配置错误, 或遗漏某个FQDN
-* 客户重新配置防火墙规则需要一定时间, 这段时间服务无法工作, 影响用户体验
+首先交待下背景。 FPS安装在客户本地网络中，而客户网络环境是一个高度不确定的环境。 有些客户的防火墙规则会存在一些问题, 导致网络不通, 比如说
+* 不支持通配符, 手动配置具体的FQDN会出现配置错误或遗漏
+* 客户重新调整防火墙规则可能需要较长时间，在此期间服务中断会影响用户体验
 
-有两个问题:
-* 1. 减少客户的防火墙配置错误导致的网络不通问题 
-* 2. 某些特定的FQDN由于性能原因不适合加密, 需要直出或者走客户代理, 其余FQDN数据需要加密走别的代理出。 需要支持这种多代理转发场景
+我采用了Stunnel解决这个问题。Stunnel是一个开源的加密隧道工具，可以把明文的HTTP数据封装到TLS隧道中，从而实现加密通信。 整体流程是:
+* 客户端请求发送到Squid代理, Squid转发到本地的Stunnel Client.
+* 我们让其他部门同事在云上搭建了一个Cloud Proxy, 这个Cloud Proxy由一个Stunnel Server和一个Squid代理组成
+* Stunnel Client对数据做TLS加密, 发送给云端的Cloud Proxy, 由云端负责解密数据得到原始请求, 再转发给目标服务器
+* 这样防火墙只能看到Stunnel的目标地址, 客户只需在防火墙上配置Stunnel Server的FQDN即可, 大幅简化了防火墙配置, 提升了用户体验
 
-我们参考了科学上网的方案, 基于Stunnel对Squid数据做TLS加密, 从而将终端到云端访问整合为一个FQDN, 简化客户防火墙配置
+**问题和解决方法**
+Stunnel加密有性能影响, 延迟增加. 解决方法是水平扩展, 让用户多装几台SG
 
-Stunnel工作原理是:
-* 基于TLS加密隧道工具, 客户将未加密流量发到Squid, Squid发送到Stunnel
-* Stunnel client端使用TLS加密, 传到Stunnel Server, 防火墙只能看到TCP/443的包，只需要允许Stunnel Server的1个FQDN通过即可
-* Stunnel Server解密，把HTTP请求送给目标服务
+## 举一个问题定位案例
+举一个TLS握手失败的案例定位过程:
+某个客户终端通过Forward Proxy代理访问云端时出现了网络不通, 我查看了Squid日志发现, 虽然请求码都是200 OK, 但大小仅为40多个字节，远小于正常的请求
+为了进一步排查, 我在客户环境中抓包, 同时让终端同事配合复现问题。
+我通过对抓包分析, 发现虽然HTTP隧道建立成功了, 但TLS握手Server Hello失败了，这表明问题可能出在加密协商阶段
+最终找到了root cause, 问题是由于客户端和目标服务器的TLS加密套件不匹配导致的
 
-
-client -> server
-client -> Squid -> server
-client -> Squid -> Stunnel -> server 
+还有其他的问题, 比如超时, 或返回502错误, 原因是客户防火墙没有放行某个FQDN, 如果丢弃就是超时，拒绝就会返回500错误
+或者有的客户防火墙开启了HTTPS监控, 做了中间人, 这会导致证书校验不通过, 网络不通
+我们写了一个KB，让客户先排查是否防火墙配置问题.
 
 
 # 项目3: Matrix仿真平台
 
-## 驱动接口仿真是怎么回事
-* 在真实的交换机上，我们领域的业务代码依赖驱动提供的接口
-* 要实现仿真环境的验证，需要对驱动接口进行打桩的工作
-* 测试人员需要构造故障, 比如通过改变驱动行为的方式。 如果每次都修改C代码再重新编译, 这种测试体验会很差
+## 项目介绍
+Matrix是一个单板仿真平台, 用于开发人员在物理设备短缺时进行软件测试
+在真实设备上，设备管理的业务代码依赖底层的驱动; 如果要实现仿真环境的验证，必须先在仿真环境上对底层驱动接口打桩
+我们使用Docker模拟单板运行环境, 用Redis实现底层驱动的打桩, 实现不依赖实物设备的独立验证, 提高测试效率, 节省物料成本。
 
-## 为什么用Redis不用MySQL
-* Redis是基于内存的，性能很高。 我这个项目中的数据规模在2w个key左右，QPS最高在1w左右，因此我们直接使用Redis做数据库
-* Redis的key-value模型很适合模拟驱动接口行为，灵活方便, 因为我们的驱动接口就是get/set; MySQL是关系型的，还要先建表, 不灵活
-* Redis数据类型丰富（string, list, set, zset, hash)，mamcached只支持string, mongodb是文档型数据库，更适合文档存储
-* Redis支持发布订阅和数据库通知 。我在项目中使用这两个特性，解决了仿真环境中单板插拔流程的验证问题
+## 设计了基于Redis的驱动仿真API, 支持动态故障注入, 避免了传统插桩方案BUG, 优化了测试流程
+测试人员需要一种简单的方式, 改变驱动接口行为, 实现软件的故障注入
+当时其他部门采用的动态插桩方案, 设备管理领域代码复杂, 动态插桩方案存在BUG, 无法满足测试需要
+为了解决问题, 我们引入了Redis, 通过读写string类型的key, 实现驱动打桩。 测试人员只需在脚本中修改Redis, 可以动态改变驱动行为，实现各种故障注入, 优化了测试流程
+基于Hiredis, 一个C语言的开源库, 开发了一组读写Redis key的API. 选用这个库是因为我们被测组件也是so库, 集成很方便 
+举例： 把1号单板设置成不在位，通过修改Redis key: "/board#1/present_status"的值实现，无需修改驱动代码重新编译
 
-## 读写Redis库怎么做的
-基于Hiredis这个C语言实现的开源库, 开了一组读写Redis key的API. 选用HiRedis是因为我们被测代码也是so库, 集成很方便 
-举例： 把1号单板设置成不在位，通过修改Redis key: "/board#1/present_status"的值实现，无需修改驱动代码
+## 利用Redis的键空间通知机制, 实现单板插拔仿真
+目的是在仿真环境也能模拟单板插板场景，不依赖实物设备测试
+真实设备上, 设备管理业务向底层驱动注册一个回调, 发生单板插板事件时, 驱动会通过回调通知设备管理。 仿真环境上需要模拟这个驱动行为, 插拔单板时可以触发这个回调
+轮询方式可以解决问题，但是需要定时检查Redis中单板在位状态, 这种方式浪费CPU
 
-## Redis挂了怎么办, 可靠性怎么考虑
-每个单板1个容器，作为redis client; 1个管理容器，安装redis数据库
-如果Redis挂了，管理容器会检测到异常，并依次重启管理容器和各个单板容器。
-由于这是仿真环境大部分驱动数据是易失性的，无需持久化或集群支持; 对于需要持久化数据, 通过写文件和Docker Volume方式存储
+我们利用Redis的键空间通知机制解决这个问题, 没有引入额外中间件增加系统复杂性，流程:
+* 订阅Redis的键空间, 比如订阅1号板是否在位, 订阅的频道可以是"Board1/present_status"
+* 然后模拟单板插入, 通过写Redis Key, 触发Redis键空间通知, Redis将消息发布给所有在线的消费者(也就是设备管理进程)。 
+* 业务进程收到订阅消息后，触发一次业务回调，从而感知到了单板插板。
 
-## 利用Redis的键空间通知机制, 开发了一组发布订阅的API
-设备管理的业务依赖驱动接口注册一个回调, 从而感知单板插板事件
-我们需要仿真驱动接口，保证发生插拔事件可以触发这个回调, 实现单板插板特性在仿真环境的而测试
-如果是轮询的方式，定时检查Redis中单板在位状态, 这种方式浪费CPU.
 
-**如何解决的？成果：**
-利用Redis的键空间通知机制解决这个问题:
-在驱动函数中, 向Redis发起频道订阅, 频道的名称可以是"Board1/present_status", 订阅单板的在位状态
-然后模拟单板插入动作，更新Redis键, 触发Redis键空间通知机制。 Redis将消息发布到所有在线的消费者(也就是我们的上层业务)。 
-上层业务收到订阅消息后，触发一次业务回调，从而感知到了单板插板。
+## 通过创建Docker网桥支持多形态产品仿真
+框式设备上, 板间通信IP为172.16, 但是docker0默认是172.17
 
-## 3. 把Redis短连接优化为长连接怎么回事
-早期的仿真平台, 驱动接口是通过Redis短连接实现的，导致频繁地建立连接和关闭连接，性能低下。 
-设备管理有一段子卡初始化代码，需要查询很多属性, 用短连接耗时很长
 
-**怎么解决的**
-* 通过netstat发现TIME_WAIT过多，都是6379端口，判断使用Redis短连接
-* 把短连接改造为长连接。 每个进程分一个Redis长连接，各线程通过pthread互斥锁获取长连接
-* 将驱动接口平均一次读写时间缩短为原先的1/15，从平均2ms到0.1ms一次，获得显著性能提升。
+## 将Redis驱动接口从短连接优化为长连接, 接口平均读写时间从2ms缩短为0.1ms, 显著提升了测试效率
+项目初期, 仿真环境实现比较粗糙, 驱动接口是通过Redis短连接实现的，导致频繁地建立连接和关闭连接. 
+设备管理有一段子卡初始化代码，接口要查询很多属性, 用短连接API耗时很长, 导致测试效率低, 体验差 
 
-## 工具是你一个做的？还是合作的？怎么合作的？
-这个工具是合作完成的
-早期设计阶段, 有1个架构师, 1个SE, 我参与项目设计和方案讨论, 梳理业务做原型验证，和架构,SE讨论方案。
-连我在内, 有两个开发，另一个开发来自杭州。 我负责驱动接口仿真和Redis，另一个同事负责Docker镜像, 仿真设备包构建
-
-后期的性能优化也是合作的，连我在内有3名开发，在同一个部门的业务组。
-我做方案设计, 梳理流程拓扑, 把开发任务分解到2名开发同事去做。
-
-## 你觉得还有什么优化
-* 优化内存。比如对字符串键做压缩存储（因为Redis字符串键的三种编码: long, embstr,raw）
-* 优化请求速度，有些驱动函数会一次性读写多个key，用mset, mget命令代替get, set, 减少客户端和Redis的通信次数
+通过netstat发现TIME_WAIT很多，都是6379端口，说明有大量的短连接。
+解决方法是把短连接改为长连接。 每个进程共用分一个长连接，各线程通过互斥锁获取长连接。
+最后把驱动接口平均一次读写时间从2ms缩短到0.1ms一次，获得了显著性能提升。
 
 ## 举一个问题定位案例
 当时遇到一个Redis key被意外删除的问题 
@@ -339,22 +427,30 @@ client -> Squid -> Stunnel -> server
 后来发现是REDIS配置项maxmemory过低, 只给了1M, 导致Redis认为空间不够就随机淘汰了一些key, 修改了这个配置项后问题得到了解决
 
 
+## 其他问题
 
+### 工具是你一个做的？还是合作的？怎么合作的？
+这个工具是合作完成的
+早期设计阶段, 有1个架构师, 1个SE, 我参与项目设计和方案讨论, 梳理业务做原型验证，和架构,SE讨论方案。
+连我在内, 有两个开发，另一个开发来自杭州。 我负责驱动接口仿真和Redis，另一个同事负责Docker镜像, 仿真设备包构建
 
+后期的性能优化也是合作的，连我在内有3名开发，在同一个部门的业务组。 我做方案设计, 梳理流程拓扑, 把开发任务分解到2名开发同事去做。
 
-
-
+### 你觉得还有什么优化
+* 优化内存。比如对字符串键做压缩存储（因为Redis字符串键的三种编码: long, embstr,raw）
+* 优化请求速度，有些驱动函数会一次性读写多个key，用mset, mget命令代替get, set, 减少客户端和Redis的通信次数
 
 
 ## 其他项目问题
 
 ### 如何压缩全量升级包
 * 使用Rocky官方minimal的镜像做定制, 这个镜像在1.7G左右
-* 只分配必要空间给构建镜像的虚拟机, 等客户安装成功后再分配剩余磁盘空间. 进一步压缩OVA大小
-* 导出OVA前, 清理临时文件，日志文件, 临时关闭swap分区
-* 选择Microk8s, 一个轻量化的K8s发行版, 且支持按需加载k8s插件, 进一步节省空间
-* 使用XZ压缩算法减小包的体积
-最终导出的OVA在2.5G左右
+* 只分配必要空间给镜像, 等客户安装成功后再动态分配剩余空间
+* 导出OVA前, 清理临时文件，日志文件, 禁用交换分区
+* 使用精简置备（thin provisioning）的虚拟磁盘格式，这仅分配实际使用的存储空间，而非预先分配整个磁盘容量。
+* 使用XZ压缩算法
+效果: 最终导出的OVA在2.5G左右
+
 
 ### 在线升级遇到网络不稳定怎么处理的
 * 升级时, 虚拟设备从云端获取升级包下载链接和sha256sum校验值。 使用wget -c下载, 支持断点续传。
@@ -363,48 +459,10 @@ client -> Squid -> Stunnel -> server
 ## 你提到多线程来处理不同类型的任务，但如何保证线程间的同步和数据一致性
 使用Python的Queue处理不同类型任务, 利用Queue的线程安全特性, 保证多个线程同时访问队列不会出现数据竞争问题
 
-## 为什么引入消息队列
-因为升级任务耗时较长, HTTP交互不适合等待长时间任务. 引入消息队列将后端与虚拟设备解耦，后端只需关注和MQ通信
 
-## 你如何保证消息传输可靠性?
-
-## 你如何防止重复消费
-* 首先每个消息都有一个UUID类型的taskID
-* 在Python daemon中, 利用Python过期字典，每次消费时, 先获取锁, 检查taskID是否在过期字典中; 如果ID存在说明重复消息; 否则消费消息, 把taskID添加到过期字典
-* 第二个是消费消息做到幂等性, 比如升级场景, 如果判断当前版本和目标版本一致, 就不做处理. 保证同一个task执行多次，结果也是一致的。  
-
-## 如何保证消息传递可靠性, 是否有重试机制或消息确认机制 ?
-* Aws IoT协议的Qos(服务质量)机制, 支持QOS 1, 至少一次消息传递, 重复发送直到收到PUBACK
-* 发送端发送失败后重试3次
-
-## 为什么选择AWS IoT, 有没有考虑其他MQ解决方案 ?
-* AWS IoT支持基于Topic的主题分发, 每个虚拟设备通过订阅topic执行升级任务, 功能上可以满足要求
-* AWS IoT支持MQTT协议，轻量高效，资源消耗低, 适合本地设备的通信
-* AWS IoT是Amazon提供的服务, 经过了企业生产环境验证, 具有稳定性和可靠性, 且我们公司在普遍使用AWS的服务, 选择AWS IoT可以简化开发流程
-* 不选择Kafka，是因为我们的并发需求不高, 6k客户,1w+虚拟设备, 主要是低频但关键的任务。 使用Kafka没有明显优势，反而增加复杂性
-* 不选择RabbitMQ, 因为这需要自行搭建，维护集群. 增加开发维护成本
-
-## 为什么设计Cronjob，不直接在Python服务里处理升级
-这样设计是考虑到职责分离; Python Daemon专注于消息消费和记录任务, Cronjob负责具体任务执行, 这样便于维护和扩展。
 
 ## 如何检测微服务运行状态
 后端通过消息队列定时发送心跳给虚拟设备, 虚拟设备订阅消息后, 通过kubenetes API查询某个service的Pod是否Running, 再通过POST请求响应给后端
-
-## 启动项切换到备用分区的具体实现方式是什么？
-使用grubby管理启动项, grubby是一个专门用于管理GRUB的工具，比手动编辑GRUB配置文件更安全高效
-实现步骤概括: 划分独立的boot分区, 禁用os_prober, 使用grubby添加启动项, 设置默认启动项, 重装GRUB
-理解GRUB工作原理, Linux启动流程, 完成开发和调试工作。 
-
-## 说下Linux启动流程
-https://handerfly.github.io/linux/2019/04/02/Linux%E5%BC%80%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3/
-* 系统加电, BIOS开机自检
-* 按照BIOS设定启动的顺序, 查找可启动设备, 通常是硬盘, 把控制权交给GRUB
-* GRUB把内核加载到内存，挂载initrd, 通过initrd加载真正的根文件系统
-* 内核启动完成后, 执行第一个用户空间进程init, init负责启动其他服务
-
-## 说下GRUB工作原理
-GRUB是Linux的引导加载程序，负责将内核加载到内存中启动，两阶段运行
-一阶段位于磁盘的主引导记录(MBR)中，加载二阶段的core.img; core.img读取grub.cfg, 生成启动菜单, 加载指定的内核和initrd
 
 ## 为什么选Microk8s, 不选k3s, minukube ?
 * 除了Microk8s, 还有minukube, k3s. Minikube只适合本地开发和学习，不是为企业生产环境设计的，缺乏高可用性，排除
@@ -447,17 +505,19 @@ JWT用于身份认证, 通过签名确保数据完整性和真实性
 * 用户登录成功后，服务器生成一个JWT返回给客户端
 * 后续请求中, 客户端将JWT附加到HTTP请求头中, 发送给服务器
 * 服务器接收到JWT后, 验证其签名和有效性
-
 优点: 
 * 无状态, 服务器无需存储会话, 适合分布式系统
 * 跨平台, JWT基于JSON格式, 易于解析使用, 支持多种编程语言
-
 局限性:
 * 无法主动失效
 
 ## JWT过期时间如何设置的，怎么同步的
 每天定时从服务平台同步Token, Token设置了两个月过期时间, 过期前10天，立刻请求服务平台刷新Token
 
+## 为什么选Squid
+Squid是一个专门为代理服务设计的开源软件，在企业级代理场景中经过了长期验证, 稳定可靠, 且社区成熟
+Squid支持强大的访问控制功能, 配置方法很简单, 这和我们项目需求匹配.
+虽然Nginx也可以通过配置实现正向代理, 但是其核心定位主要是高性能web和负载均衡。 Nginx需要三方模块才能支持正向代理，这增加了实现的复杂性
 
 ## 并发量有多少，怎么测试的
 8vCPU/12G/500G/1000Mbps
@@ -465,89 +525,79 @@ JWT用于身份认证, 通过签名确保数据完整性和真实性
 CPU 8%, Mem 58%, Disk 1%，峰值内存7G，瓶颈在带宽
 157*8/(30*60) = 700Mbps, 相当于1Gpbs网卡
 
-## 为什么选Squid, 是否有其他替代方案(Nginx, HAProxy)?
-* Squid作为老牌正向代理, 在生产环境经过验证，稳定可靠.
-结合我们的项目需求，正向代理需要支持认证功能, 基于IP,URL的访问控制, 配置用户代理, 以及多代理转发场景(不同的FQDN走不同的代理)
-Squid功能丰富，配置简单, 可以容易实现这些功能
-Nginx也能支持这些功能, 但是需要通过三方模块, 配置维护复杂一些. 
+## 为什么用Redis不用MySQL
+* Redis是基于内存的，性能很高。 我这个项目中的数据规模在2w个key左右，QPS最高在1w左右，因此我们直接使用Redis做数据库
+* Redis的key-value模型很适合模拟驱动接口行为，灵活方便, 因为我们的驱动接口就是get/set; MySQL是关系型的，还要先建表, 不灵活
+* Redis数据类型丰富（string, list, set, zset, hash)，mamcached只支持string, mongodb是文档型数据库，更适合文档存储
+* Redis支持发布订阅和数据库通知 。我在项目中使用这两个特性，解决了仿真环境中单板插拔流程的验证问题
 
-## Squid正向代理的原理
-默认监听3128端口接收客户端连接
-Squid使用多进程模型, 主进程不直接处理客户请求, 而是请求分发给worker进程，每个worker进程处理客户端请求 
-
-## Squid的安全认证是如何实现的？ 为什么选择Basic认证, 还有哪些认证方式?
-我们使用Basic认证, 请求头中Authorization: 提供用户名和密码
-用户名是本地产品名称+guid, 方便密码, 密码设计(用户名+apikey)做SHA1, apikey只有客户知道, 30天过期
-代理是HTTP的, 由于虚拟设备在内部网络环境, 就采用了Basic认证方式, 简单快速
-
-## 为什么Squid代理使用HTTP, 不是HTTPS
-如果使用HTTPS, 就需要为每个代理服务器生成SSL证书
-虚拟设备安装在内网环境， 内网环境使用HTTP代理即可, 证书管理存在维护复杂性
-HTTPS涉及加密, 对性能有影响
-
-## 访问控制的具体实现方式是什么？例如是否基于IP地址、或URL 白名单/黑名单？
-通过Squid配置文件中定义ACL, 实现访问控制。 
-基于FQDN的访问控制, 预设一个白名单, 只允许白名单中的FQDN通过
-允许客户在UI上添加白名单, 白名单信息由后端下发到虚拟设备，保存到ConfigMap
-Pod中把ConfigMap挂到文件, 如白名单发生变化，从ConfigMap读取新的白名单，再reconfigure
-
-## 配置用户代理作用是什么，怎么做的
-客户出于他的网络管理要求，希望所有虚拟设备流量通过他的代理服务器; Squid支持父级代理, 通过配置cache_peer定义父级代理的地址
-
-## Squid 的缓存机制是否被启用？如果有，具体的缓存策略是什么？
-没有手动启动磁盘缓存. Squid默认会启动内存缓存, 根据响应头,请求方法决定是否缓存某个请求
-Cache-Control 强缓存, Etag 弱缓存; GET, HEAD可以缓存 
- 
+## Redis挂了怎么办, 可靠性怎么考虑
+每个单板1个容器，作为redis client; 1个管理容器，安装redis数据库
+如果Redis挂了，管理容器会检测到异常，并依次重启管理容器和各个单板容器。
+由于这是仿真环境大部分驱动数据是易失性的，无需持久化或集群支持; 对于需要持久化数据, 通过写文件和Docker Volume方式存储
 
 
 
 
 
 
-**DeployMent**
-AWS云, 每个site一个EKS
-site: US, EU, SG, AU, IN, JP, UAE
-site: US-EAST-1
-vpc cidr: 10.131.44.0/22
-subnets: 
-xdr-app-tgw-private-1a	10.131.45.0/24
-xdr-app-tgw-private-1b	10.131.46.0/24
-xdr-app-tgw-private-1c	10.131.47.0/24
-xdr-app-tgw-public-1a	10.131.44.0/25
-xdr-app-tgw-public-1b	10.131.44.128/25
-routes: 
-rtb-03eb993eb0a0df54b
-0.0.0.0/0	nat-0d7fa27334ad10a4a
-10.0.0.0/8	tgw-0c4d0ec54e6f330f1
-10.131.44.0/22	local
 
-**Cost**
-2022-11
-* RDS 8500$
-* EC2 2500$
-* EKS cluster 140$
-* Load Balancer 133$
-* VPC 150$
-* Cloudwatch/S3 300$
-* IOT 300$
-total 12000$
 
-难点:
-* AMI 3.0问题
-* whitelist配置变化如何通知到到FPS
-* 502 Gateway 问题
-* 分析流量
 
-##
-## 最大的难点是什么, 你是如何解决的
-项目中最大的挑战在于虚拟设备固件升级方案的设计与实现, 难点体现在两个方面:
-* 一个是没有先例可循; 公司内部没有部门实现过类似的升级方案, 当时也没有chatgpt, 需要基于对技术原理的理解推导方案
-* 另一个是涉及的技术比较多; 比如Linux技术, 需要了解启动流程, 分区管理, initrd定制, ISO定制, GRUB引导程序, 比如K8S, Docker, HTTP, 消息队列, Python等
-不仅要求我对整个升级流程有深入了解，还需要整合多种技术实现了一个可靠的解决方案.
 
-为了解决这些难点, 我做了几件事:
-* 首先在设计阶段，花了大量时间学习相关技术, 确保对升级流程有了清晰的认识; 和团队沟通, 明确升级方案的具体需求
-* 接着是模块化设计，把整个升级流程分为多个独立模块, 比如升级包制作模块, 在线升级模块, 每个模块专注于解决特定问题, 降低开发难度, 提高可维护性
-* 然后是技术选型, 选择最合适的工具满足需求, 例如: 使用AWS IoT实现云端到设备通信; 使用轻量化的Microk8s部署服务
+# 项目问题
 
-目前有6k+企业客户, 1w+台虚拟设备使用我的升级方案, 这套方案降低了开发维护成本, 同时显著改善了用户体验
+## 什么是混合云架构 ?
+混合云架构是一种计算环境, 结合了本地部署和公有云资源, 这种架构可以减少成本, 提高系统的响应速度和服务可靠性 
+以我们的服务网关项目为例, 客户的终端直接请求本地部署的服务网关, 不需要从云端获取数据，这样有很多好处，比如：
+* 有效节省了客户带宽，并且降低了我们的公有云费用
+* 服务在客户本地网络完成, 这样减少了网络延迟，提高了响应和客户体验。
+* 还有安全性考虑, 比如像银行这样对安全要求高的客户, 终端不能直接访问外网，需要通过虚拟设备代理上网，防止内部网络直接暴露给外网, 同时实现集中的访问控制
+
+## 支持XX多平台部署, 差异是什么, 有什么问题
+
+## 你们的Microk8s集群是指什么? 为什么不用高可用集群? 高可用集群是什么样的?
+我们的服务网关使用的集群是多个独立运行的Microk8s节点组成，每个节点都可以独立工作，比如一个节点负责处理上万个终端请求。
+
+我们没有采用高可用的多主多从架构。 因为高可用方案需要配置多个主节点和工作节点, 配置和运维复杂, 导致客户资源浪费
+我们的方案简单灵活，每个Microk8s节点独立工作, 配置简单, 易于扩展。
+
+使用高可用集群的目的是避免单点故障，保证服务连续性。 采用多主节点架构。
+每个主节点运行控制平面组件，包括apiserver, schedular, controller-manager, 当主节点或工作节点故障后，系统能自动检测并切换到备用节点
+
+## XDR是什么意思
+Extended Detection and Response 扩展检测和响应，是一种安全解决方案。 为企业客户提供全面的安全防护，从终端设备到云端服务的安全防护。
+比如说我们的Service Gateway, 部署在企业网络，为本地终端提供一些核心的XDR服务，例如：
+* ActiveUpdate 主动式更新, 更新最新的威胁情报库
+* WebReputation 评估用户访问的网站安全性，防止恶意网站的威胁
+* ForwardProxy 为客户终端上云提供了统一出口, 同时为终端提供了一个AirGap的解决方案. AirGap是值终端网络隔离,代理上云
+
+## ActiveUpdate
+我们的Active Update服务运行在本地的服务网关上, 定期从远程的服务器下载最新的病毒库，扫描引擎等文件。 
+通过这种方式, 客户的终端产品可以直接访问本地的服务获取更新，不必直接连接到远程服务器. 这样好处是显著减少了客户的带宽压力 
+比如有两万个终端需要下载同一份病毒库，使用本地的ActiveUpdate服务可以避免对客户网络造成冲击, 提高响应速度，减少成本。
+
+## WebReputation
+WebReputation是一个用于评估网页安全性的服务。 通过给访问的网站打分帮助用户避免安全威胁。
+比如说，像Google, MS这种知名网站给一个高分加到白名单里; 恶意站点, 或者和白名单相似的可疑网站, 会给一个低分
+这个数据是动态更新的，依赖公司的爬虫服务, 加上和第三方购买的一些数据
+
+
+## 设计了灰度升级方案, 根据地区和用户逐步升级, 最小化升级失败对用户的影响. 通过预下载机制缓解网络拥堵, 确保了平稳升级并提升了用户体验
+**背景**
+早期, 网关设备的升级方案相对粗糙，存在两个问题：
+一个是缺乏细粒度的失败处理机制，如果某个客户的设备升级失败,  还是会继续升, 导致XXXX , 需要更细粒度的XX？
+第二个是很多客户设置了同一个时间的定时升级，导致某个时刻出现大量下载升级包的网络请求，某些客户升级失败
+
+**方案**
+为了解决这些问题，我和后端同事共同设计了灰度升级方案：
+我们的服务网关部署在全球多个地区(比如日本,欧洲,新加坡)。 为了防止升级失败对所有客户造成影响, 我们首先选择客户数量较少的地区发布, 确认整个地区的升级没有问题，再逐步发布到其他地区。
+对于同一个地区, 先指定少量客户升级(通过launchDarklyKey API), 只有这些客户升级成功，再让剩余客户升级 
+对于有多台虚拟设备的客户, 也是采用分批升级。 首次只升级一半设备, 等下一个周期后先判断这些设备是否升级成功,如果升级成功再升级剩余一半
+
+预下载机制
+升级时候发现一个问题, 有很多用户会在同一个时间设置定时升级, 集中下载造成客户瞬时网络流量大, 增加升级失败概率
+为了解决这个问题, 我们设计了预下载机制, 对不同的客户设置了不同的预下载时间窗口，将预下载时间设定为发布前12小时的某一个时间点, 分散了客户下载行为，缓解了网络拥堵, 提高稳定性
+
+**效果**
+最小化升级失败对用户的影响,　确保了平稳升级并提升了用户体验

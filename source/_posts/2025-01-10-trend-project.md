@@ -1,10 +1,21 @@
 ---
 layout: next
-title: VA backend Design
-date: 2020-01-03 20:19:17
-categories: interview
-tags: interview
+title: Service Gateway 项目设计
+date: 2025-01-10 20:19:17
+categories: Project
+tags: Project
 ---
+
+
+# Virtual Appliance Design
+![](va_design.png)
+
+
+
+# heartbeart
+![](va_auto_upgrade.png)
+
+<!-- more -->
 
 # Overview
 ```
@@ -16,42 +27,6 @@ peter.backend.com:443  backend
 peter.channel.com:5672 MQ
 peter.frontend.com     frontend
 ```
-
-# Design
-
-## Auto-upgrade
-dispatchAutoUpgradeInOneHourForAll
-* find all running appliances, group by customer_id
-* check if appliance need upgrade
-	* check schedule update time is within next 1 hour.
-	* check target version valid (expectedStatus = RUNNING and status is not RUNNING)
-	* don't upgrade rollback appliances.
-	* don't upgrade all appliances at the same time. upgrade half appliances first.
-* trigger appliance upgrade
-	* get firmware download link
-	* update db, add dbentry for IotTask, update appliance status(upgrading, upgradetaskId: taskId)
-	* publish iot Task
-* receive response from Appliance
-	* write task to db
-
-<!-- more -->
-![](va_auto_upgrade.png)
-
-
-
-## Heartbeat
-appliance断连一小段时间后，连接又恢复正常
-appliances长时间断连，如何检测
-receive response
-```
-update heartbeat iot task to db
-```
-
-
-check heartbeat per 5 minutes
-* find all applinace in ApplianceInfo Table.
-
-
 
 # Test API
 
@@ -807,38 +782,3 @@ GET /ui/tasks/<task_id>
 curl -H "x-customer-id: 77a1c956-1c8d-47fb-8036-c970a4f2ee73" \
 "https://peter.backend.com/ui/tasks/0c5b000b68ad4d3faedded836e92f24b/"
 ```
-
-
-# IOT(RabbitMQ)
-
-## RabbitMQ命令行操作
-查看队列
-```
-# rabbitmqadmin --username=admin --password=V2SG@xdr list queues name messages
-+---------------+----------+----------+
-|     name      | messages | va_12345 |
-+---------------+----------+----------+
-| va_task_12345 | 2        |          |
-+---------------+----------+----------+
-```
-删除队列
-```
-rabbitmqadmin --username=admin --password=V2SG@xdr delete queue name=va_task_12345
-```
-删除交换机
-```
-rabbitmqadmin --username=admin --password=V2SG@xdr delete exchange name=va_task --vhost=/
-```
-
-
-HeartbeatIotTask(不删除), 每个va只有一个
-IotTask要删除 (不能立刻删除, frontend需要查询task得到执行结果)
-
-定时任务:
-
-##
-token过期怎么办?
-* 定时任务检查30天内到期的token
-* 请求SP拿到新的tokn
-* 通过upgradeApplianceConfig iotTask通知到va
-* va更新token
