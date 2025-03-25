@@ -3,9 +3,9 @@ layout: next
 title: 【k8s实践】 部署Squid
 date: 2024-12-08 14:54:35
 category:
-- k8s
+- kubernetes
 tag:
-- k8s
+- kubernetes
 - Squid
 - Docker
 ---

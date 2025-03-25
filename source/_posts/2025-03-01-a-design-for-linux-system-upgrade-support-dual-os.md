@@ -25,6 +25,8 @@ tags:
 最终采用定制initramfs方案。 客户虚拟机内存最低配置是8G, 需保证initramfs阶段的升级包+解压后系统文件小于8G
 测试结果: c7最小化镜像900M, 安装后磁盘占用1.3G; 安装Microk8s后磁盘占用3G左右, 升级包1.7G, initramfs用掉4G内存, 远小于8G, 可行
 
+<!-- more -->
+
 # 实现
 
 ![](image1.png)

@@ -6,8 +6,6 @@ categories: kubernetes
 tags: kubernetes
 ---
 
-<!-- toc -->
-
 # 集群规划
 8台Linux虚拟机, Rocky Linux 9.5 x86_64 
 * 主节点(3个): 2CPU, 3G内存, 20G硬盘
