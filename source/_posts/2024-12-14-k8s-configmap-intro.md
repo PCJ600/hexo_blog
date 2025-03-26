@@ -2,8 +2,8 @@
 layout: next
 title: k8s的ConfigMap是什么, 为什么设计ConfigMap, 如何使用ConfigMap
 date: 2024-12-14 16:11:18
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 --- 
 
 ## ConfigMap简介, 为什么设计ConfigMap

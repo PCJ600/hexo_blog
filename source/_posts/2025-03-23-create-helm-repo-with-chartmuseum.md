@@ -2,8 +2,8 @@
 layout: next
 title: 使用 ChartMuseum 容器搭建私有 Helm Chart 仓库
 date: 2025-03-23 16:50:15
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 

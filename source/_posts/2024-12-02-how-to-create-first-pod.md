@@ -2,8 +2,8 @@
 layout: next
 title: 在Microk8s上创建Pod
 date: 2024-12-02 22:05:20
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 # 环境

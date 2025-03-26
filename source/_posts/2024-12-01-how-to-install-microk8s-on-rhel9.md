@@ -2,8 +2,8 @@
 layout: next
 title: 如何在RockyLinux9.4上安装Microk8s
 date: 2024-12-01 14:26:26
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 ## 在线安装Microk8s

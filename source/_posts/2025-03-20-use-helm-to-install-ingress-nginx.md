@@ -2,8 +2,8 @@
 layout: next
 title: 'Helm快速上手: 使用Helm安装nginx-ingress'
 date: 2025-03-20 21:28:56
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 # 什么是Helm? Helm解决了哪些问题?

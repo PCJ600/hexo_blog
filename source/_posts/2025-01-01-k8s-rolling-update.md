@@ -2,8 +2,8 @@
 layout: next
 title: Kubernetes滚动更新实践
 date: 2025-01-01 21:56:40
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 # 前言

@@ -2,8 +2,8 @@
 layout: next
 title: 如何查看Microk8s的apiserver证书过期时间
 date: 2023-03-30 21:19:39
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 使用以下命令检查当前 MicroK8s 控制平面运行状态：

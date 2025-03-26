@@ -2,8 +2,8 @@
 layout: next
 title: kubernetes学习笔记
 date: 2024-11-27 21:37:52
-categories: kubernetes
-tags: kubernetes
+categories: Kubernetes
+tags: Kubernetes
 ---
 
 目标:
@@ -25,7 +25,6 @@ Google开源的容器集群管理系统，主要功能:
 
 # 创建第一个k8s Pod
 https://blog.csdn.net/pcj_888/article/details/144200265
-TODO: 扩容缩容、滚动升级、回滚、资源限制、健康检查
 
 # 创建k8s集群
 https://blog.csdn.net/pcj_888/article/details/144240636
@@ -480,10 +479,6 @@ ip link add link <master-dev> name macvtap0 type macvtap
 ```
 
 面试题:
-https://github.com/0voice/k8s_awesome_document/blob/main/91%E9%81%93%E5%B8%B8%E8%A7%81%E7%9A%84Kubernetes%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93.md
-
-(是什么，为什么，怎么做?)
-
 * 简述k8s, Docker, minikube
 * 简述k8s常见部署方式
 * 简述k8s集群管理
@@ -518,11 +513,3 @@ https://github.com/0voice/k8s_awesome_document/blob/main/91%E9%81%93%E5%B8%B8%E8
 * 容器和主机部署应用的区别
 * k8s 标签和标签选择器有什么用?
 * etcd特点和应用场景
-
-
-
-
-
-实践
-* service(nodeport, clusterIp)
-service和ingress(nodePort和ingress, iptables,网络是怎么走的)
