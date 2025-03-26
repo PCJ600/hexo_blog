@@ -9,30 +9,30 @@ tags:
 ---
 
 # 前言
-我们在企业客户网络中部署了一些On-Premises的服务网关。 服务网关上部署了Squid(HTTP代理), 为客户的本地终端访问云端提供正向代理
-
-本地终端访问云端有很多的FQDN(*.trendmicro.com)
-对于一些拥有老旧防火墙的客户而言，他们的防火墙设备不支持基于FQDN的通配符匹配, 这意味着客户必须手动逐一配置每个FQDN，而任何遗漏都可能导致连接被防火墙阻挡，导致网络不通, 影响用户体验。
-
-针对这一问题, 我们设计了一种基于Stunnel的解决方案, 通过对TCP流量加密, 创建加密通道, 绕过客户防火墙限制, 解决网络不通问题.
-在Stunnel方案下, 客户无需逐一配置所有目标服务器的FQDN, 只需配置Stunnel服务器的FQDN即可, 从而极大地简化了客户的防火墙配置流程。
+我们在企业客户网络中部署了一些On-Premises的服务网关, 服务网关上部署了Squid代理软件, 为客户本地终端访问云服务提供正向代理
+然而，对于使用较旧防火墙的客户来说，这些防火墙不支持基于完全合格域名（FQDN）的通配符匹配。这意味着当本地终端尝试访问云端资源时，用户必须手动配置每一个具体的FQDN, 这种配置过程不仅繁琐，而且容易因为遗漏某些FQDN导致连接被防火墙阻止，造成网络中断，严重影响用户体验。
+针对这个问题, 我们设计了一种基于Stunnel的加密通信方案, 绕过客户防火墙限制。 客户仅需配置Stunnel服务器的FQDN, 无需为每个目标服务器的FQDN进行单独设置, 大大简化了防火墙配置流程，提升了用户体验。
 
 # Stunnel是什么, 被设计用来解决什么问题
-Stunnel是一个开源软件，用于提供TLS/SSL加密服务. 它的设计初衷是为了增强那些本身不支持加密功能的传统应用程序或服务的安全性; 通过Stunnel可以绕过防火墙限制并实现加密通信
+Stunnel是一款开源软件，其主要功能是为应用程序或服务提供TLS/SSL加密支持。 它的设计初衷是为了增强那些本身不支持加密功能的传统应用程序或服务的安全性
+通过Stunnel, 可以在严格的防火墙规则下实现安全的加密通信，同时有效绕过可能存在的网络访问限制。
 
 # 为什么需要Stunnel ?
 
-## 从墙内Squid代理直接出去不行吗 ? 
+## 直接通过墙内的Squid代理出去不行吗？
 
-[图]
+![](direct.png)
 
-这种显然是不行的, 防火墙根据从代理到目标服务器这段报文, DNS查询能够获取FQDN, 获得客户端真实访问的目标服务器IP 
-
-举个例子, 创建两台虚拟机, 客户端通过Squid代理直接访问目标服务器(www.trendmicro.com)  
+演示一下, 创建两台Linux虚拟机
 * 客户端 (192.168.52.200)
-* Squid (192.168.52.204)
+* Squid代理 (192.168.52.204)
 
-wireshark抓包
+客户端通过Squid代理直接访问目标服务器`www.trendmicro.com`
+```
+curl -x 192.168.52.204:3128 https://www.trendmicro.com
+```
+
+wireshark抓包结果如下:
 
 客户端和Squid代理之间报文
 ![](image_direct0.png)
@@ -40,74 +40,84 @@ wireshark抓包
 Squid代理到目标服务器之间的报文
 ![](image_direct1.png)
 
+从报文中可以看出, 防火墙可以直接识别目标服务器的IP, 这会导致连接被阻止.
 
-HTTP隧道常用于两台网络受限的机器之间建立网络连接。 客户端通过HTTP CONNECT请求与代理建立隧道, 从而访问HTTPS, 流程:
-* 客户端和代理服务器三次握手, 建立TCP连接
-* 客户端发送HTTP CONNECT请求给代理, 告诉代理自己需要连接的目标服务器
-* 代理收到请求后, 和目标服务器建立TCP连接
-* 代理返回200 Connection Established给客户端, 告诉客户端整个隧道已经建立
-* 隧道建立后, 代理服务器只负责在客户端和服务间之间转发数据，不解析或修改数据。这保证了 HTTPS 数据的安全性，即使代理也无法解密 TLS 加密的内容（因为代理不知道密钥, 没有服务器的私钥)
+## HTTP tunnel(HTTP隧道)的概念
+HTTP tunnel是HTTP/1.1引入的功能, 常用于两台网络受限的机器之间建立网络连接。 客户端通过发送HTTP CONNECT请求与代理建立TCP隧道, 以访问HTTPS服务
+根据上面抓包结果, 可以梳理出HTTP tunnel的工作过程:
+```
+ 客户端                                 Squid(代理)                           目标服务器
+   |                                       |                                      |
+   | --- TCP connection                 -->|                                      |
+   |                                       |                                      |
+   | --- CONNECT www.trendmicro.com:443 -->|                                      |
+   |                                       |                                      |
+   |                                       | --- TCP connection                -->|
+   |                                       |                                      |
+   | <-- HTTP 200 OK                    ---|                                      |
+   |     Connection Established            |                                      | 
+   |                                       |                                      |   
+    ========================== CONNECT tunnel Established ======================= |	
+   |                                       |                                      |
+   | --- TLS Application Data           -->|                                      |
+   |                                       |                                      |
+   |                                       | --- TLS Application Data          -->|
+   |                                       |                                      |
+   |                                       | <-- TLS Stream                    ---|
+   |                                       |     HTTP 200 OK                      |
+   |                                       |                                      |
+   | <-- TLS Stream                     ---|                                      |
+   |     HTTP 200 OK                       |                                      |
+```
+* 客户端和代理服务器建立TCP连接
+* 然后, 客户端向代理发送明文的HTTP CONNECT请求, 告知代理需要连接的目标服务器
+* 代理收到请求后, 和目标服务器建立TCP隧道连接, 并返回200 Connection Established给客户端, 告诉客户端隧道已经成功建立
+* 隧道建立后, 代理仅负责转发数据而不解析或修改内容，确保了HTTPS数据的安全性，即使对于代理而言也无法解密TLS加密的内容
 
-HTTP隧道流程图:
+## 在墙外部署Squid代理行不行呢 ?
+![](squid-outof-firewall.png)
 
+这种方案仍然会存在问题, 这里演示一下, 准备两台虚拟机, 一台云服务器
+* 客户端 (192.168.52.200)
+* 墙内代理 (192.168.52.204)
+* 墙外代理(云服务器) (47.103.80.253)
 
-# 在墙外部署一个Squid, 从墙内Squid直接转发到墙外Squid不行吗 ?
+wireshark抓包：
 
-墙外搭个Squid, 墙内Squid请求墙外Squid, 防火墙看到的包的目的IP就是墙外Squid的IP, 就没法知道我访问的目标服务器了?
-
-[图]
-
-这样也不行, 下面抓个包演示一下, 
-
-Client (192.168.52.200)
-墙内代理 (192.168.52.204)
-墙外代理 (47.103.80.253)
-
-
-客户端到代理
+客户端和墙内Squid代理之间的报文
 ![](image_no_stunnel0.png)
 
-代理到目标服务器
+墙内Squid到墙外Squid之间的报文
 ![](image_no_stunnel1.png)
 
-可以看到, 虽然正文是加密的, 但是HTTP CONNECT报文不加密(能看到目标服务器和代理用户名和密码), 可以从TLS握手报文中的SNI看到目标服务器
+观察抓包结果可以发现:
+* 尽管正文部分是经过TLS加密的，但HTTP CONNECT请求是明文传输的，这意味着防火墙可以识别其中的目标服务器信息及代理认证信息（如用户名和密码), 此外，TLS握手过程中Client Hello报文中的SNI也会暴露目标服务器信息，因此这种方式仍然会被防火墙识别并阻止。
+* 另外，代理认证信息在公网上传输也是非常不安全的做法
 
 ![](image_no_stunnel2.png)
 
-流程图:
+# 基于Stunnel加密通信方案
 
+![](my_design.png)
 
-防火墙还是能发现你访问的目标服务器, 而且还有一个问题, 墙内代理用户名和密码在公网明文传输, 这样是非常不安全的
-
-
-# 为啥不直接用HTTPS代理 ?
-
-
-# Stunnel加密通信方案
-[补图]
- 
- 
- 
 说明：
- 
+* 墙内部署Squid + Stunnel client, 墙外部署Stunnel Server + Squid, 客户终端的代理设置为墙内的Squid
+* 通过这种方案, 客户防火墙不需要逐一指定目标服务器的FQDN, 只需允许通往Stunnel服务器（端口443）的流量即可。
 
+接下来，通过实际搭建环境演示一下
+* 墙内的主机(192.168.52.204), 部署 Squid Client + Stunnel Client
+* 墙外的云服务器(47.103.80.253), 部署 Stunnel Server + Squid Server
 
-以下动手搭建:
-墙内的主机(192.168.52.204), (Squid + Stunnel Client)
-墙外的云服务器(47.103.80.253) (Stunnel Server + Squid)
+## 配置墙外的云服务器(部署 Stunnel Server + Squid Server)
 
-
-## 先配置云服务器(Stunnel+Squid)
-
-安装软件
+1. 安装软件
 ```
 yum install -y squid stunnel
 ```
 
-### 配置Squid
+2. 配置Squid
 
-#### Squid启用身份验证
-设置用户名/密码认证
+* Squid启用basic认证
 ```
 yum install -y httpd-tools
 htpasswd -c /etc/squid/squid_user test
@@ -115,7 +125,8 @@ New password: qY8kd0Cf
 Re-type new password: qY8kd0Cf
 Adding password for user test
 ```
-对密码文件设置适当权限, 再次验证用户名和密码是否正确
+
+* 设置密码，并验证密码文件是否正确生成
 ```
 cat /etc/squid/squid_user
 test:$XXXXXXXXXXXXXXXXXXX
@@ -124,7 +135,8 @@ test:$XXXXXXXXXXXXXXXXXXX
 test qY8kd0Cf
 OK
 ```
-Squid配置文件中添加认证相关配置
+
+* 修改Squid配置文件（/etc/squid/squid.conf），添加以下认证相关配置
 ```
 # Insert your own rules here to allow access from your clients
 
@@ -141,7 +153,8 @@ http_access allow authUsers
 
 http_access deny all
 ```
-重启Squid,测试一下
+
+* 重启Squid服务并测试
 ```
 systemctl restart squid
 
@@ -151,13 +164,14 @@ curl: (56) Received HTTP code 407 from proxy after CONNECT
 200 OK
 ```
 
-### 配置Stunnel
-生成一个自签名证书
+3. 配置Stunnel
+
+* 生成一个自签名证书
 ```
 openssl req -new -x509 -days 365 -nodes -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem
 ```
-修改Stunnel配置文件、
-编辑`/etc/stunnel/stunnel.conf`
+
+* 编辑Stunnel配置文件`/etc/stunnel/stunnel.conf`
 ```
 cert = /etc/stunnel/stunnel.pem
 client = no
@@ -166,16 +180,16 @@ client = no
 accept = 443
 connect = 127.0.0.1:3128
 ```
-启动Stunnel
+
+* 启动Stunnel
 ```
 systemctl restart stunnel
 ```
 
-## 再配置客户端
+## 配置墙内的机器(部署 Squid + Stunnel Client)
 
-
-### 配置Stunnel
-编辑`/etc/stunnel/stunnel.conf`
+1. 配置Stunnel
+* 编辑Stunnel配置文件 `/etc/stunnel/stunnel.conf`
 ```
 debug=5
 client = yes
@@ -188,7 +202,8 @@ accept = 8081
 connect=47.103.80.253:443
 sslVersion=TLSv1.2
 ```
-启动Stunnel, 使用curl测试
+
+* 启动Stunnel, 使用curl测试
 ```
 systemctl restart stunnel
 
@@ -196,8 +211,8 @@ curl -x 'test:qY8kd0Cf@localhost:8081' https://www.trendmicro.com -i
 200 OK
 ```
 
-### 配置Squid
-修改Squid.conf, 所有流量都转发到本地Stunnel, 需要指定云端Proxy的用户名和密码
+2. 配置Squid
+* 修改Squid.conf, 所有流量都转发到本地Stunnel, 并指定云端Proxy的用户名和密码
 ```
 http_access allow localhost
 
@@ -206,7 +221,8 @@ cache_peer 127.0.0.1 parent 8081 0 no-query default login=test:qY8kd0Cf
 
 http_access deny all
 ```
-启动Squid, 使用curl测试
+
+* 启动Squid, 并使用curl测试
 ```
 systemctl start squid
 
@@ -214,22 +230,27 @@ curl -x localhost:3128 https://www.trendmicro.com -i
 ```
 
 ## 测试墙内到墙外的数据是否加密
-
-在客户端上通过墙内代理访问墙外云服务器, 用wireshark抓包
+为了验证数据是否被加密，在客户端通过墙内代理访问墙外云服务器，并使用Wireshark抓包分析; 在客户端执行以下命令
 ```
 curl -x 'test:qY8kd0Cf@192.168.52.204:8081' https://www.trendmicro.com -i
 ```
-客户端到代理的报文如下, 可以看到明文请求:
+
+客户端到代理的报文:
 ![](image_ok0.png)
 
-
-墙内代理到墙外云服务器的报文如下:
-
+墙内代理到墙外云服务器的报文:
 ![](image_ok1.png)
 
-可以看到请求数据已经被加密, 防火墙只能看到Stunnel Server的FQDN, 看不到真正请求的目标服务器(www.trendmicro.com)
+可以看到这一段的请求数据已经被加密, 防火墙只能看到Stunnel服务器的FQDN, 无法识别真正的目标服务器
 
-综上, 通过Stunnel加密方案, 客户防火墙不再需要配置所有的FQDN, 只需要允许[Stunnel Server]:443的包通过即可
+## 为啥不直接用HTTPS代理 ?
+客户虚拟设备是临时部署的, HTTPS代理需要管理和维护SSL/TLS证书, 增加了部署的复杂性
+在客户内网中使用HTTP代理可以保证安全，走HTTPS代理有性能损失.
 
+## 方案的缺点是什么
+Stunnel在处理大量TLS加密流量时会遇到性能瓶颈, 我们的解决方法是水平扩展, 让客户多部署几台Stunnel, 处理更多的终端
+
+![](final.png)
 
 ## 参考
+[squid + stunnel >> 跨越长城，科学上网！](https://www.hawu.me/operation/886)
