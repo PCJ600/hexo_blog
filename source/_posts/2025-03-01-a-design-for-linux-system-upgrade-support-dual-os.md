@@ -1,8 +1,9 @@
 ---
 layout: next
-title: 通过定制initramfs实现从单系统分区到双系统的无缝升级
+title: 通过定制initramfs实现从单系统分区到双系统的无缝迁移
 date: 2025-03-01 16:24:19
 categories: Linux
+top: 99
 tags:
 - Linux
 - Project
@@ -22,10 +23,12 @@ tags:
 | 定制initramfs	| 通过定制initramfs进入紧急模式，预先加载升级包和配置文件到内存，再重建磁盘分区 | 用户无感知, 且备份了旧的配置 | 内存空间有限, 升级包+解压后系统文件需小于内存 |
 | 安装ISO | 下载并安装目标系统ISO | 不需要单独出一个升级包 | 客户的配置很难同步, 升级后需要用户做一些手动配置 | 
 
+<!-- more -->
+
 最终采用定制initramfs方案。 客户虚拟机内存最低配置是8G, 需保证initramfs阶段的升级包+解压后系统文件小于8G
+
 测试结果: c7最小化镜像900M, 安装后磁盘占用1.3G; 安装Microk8s后磁盘占用3G左右, 升级包1.7G, initramfs用掉4G内存, 远小于8G, 可行
 
-<!-- more -->
 
 # 实现
 
