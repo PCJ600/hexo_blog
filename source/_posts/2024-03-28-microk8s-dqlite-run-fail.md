@@ -4,7 +4,7 @@ title: 'Microk8s dqlite启动失败, raft_start(): io: load closed segment XXX: 
 date: 2024-03-28 20:13:20
 categories: troubleshooting
 tags:
-- k8s
+- Kubernetes
 - troubleshooting
 ---
 

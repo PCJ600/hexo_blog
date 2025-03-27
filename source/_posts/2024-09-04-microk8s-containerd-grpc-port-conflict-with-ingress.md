@@ -5,7 +5,7 @@ date: 2024-09-04 20:31:11
 categories: troubleshooting
 tags:
 - troubleshooting
-- k8s
+- Kubernetes
 ---
 
 ## 问题描述
