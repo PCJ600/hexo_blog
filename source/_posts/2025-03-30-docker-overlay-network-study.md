@@ -146,7 +146,7 @@ Docker Overlay 网络的工作流程图如下:
 ![](image1.png)
 
 数据包发送流程说明:
-* 容器1发出ICMP请求报文, 目标地址10.0.1.103, 根据容器1的路由表, 该报文发送到容器1的eth0
+* 容器1发出ICMP请求报文, 目标地址10.0.1.103, 根据容器1的路由表, 该报文从容器1的eth0发出
 * 容器1的eth0是一个veth pair的一端, 另一端位于一个独立的network namespace中(不是宿主机的network namespace), 报文通过veth pair从容器1传送到这个独立的network namespace中的虚拟网卡(veth1)
 * 在独立命名空间中, veth1连接到虚拟网桥br0, br0根据MAC地址表, 把报文转发到vxlan0设备
 * vxlan0设备对原始以太网帧进行VXLAN封装, 具体过程是:
@@ -255,7 +255,7 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 10.0.1.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0
 172.18.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth1
 ```
-容器中ping 10.0.1.103, 查路由表, 数据包转发到eth0, 接下来查询veth pair另一端
+容器中ping 10.0.1.103, 查路由表, 数据包从eth0发出, 接下来查询veth pair另一端
 
 在宿主机`/var/run/docker/netns/`下找到容器eth0另一端的veth所在的网络命名空间
 ```

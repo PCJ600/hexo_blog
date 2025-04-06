@@ -13,21 +13,23 @@ tags: interview
 # 关于个人信息的问题
 
 ## **Could you give a brief introduction of yourself (自我介绍)**
-面试官您好, 非常感谢贵公司能给我机会参加这次面试
 
-我叫潘闯, 2019年毕业于南京大学计算机专业, 目前已有5年的Linux软件开发经验。
+面试官您好, 首先非常感谢贵公司给我参加这次面试的机会
 
-我的第一份工作从华为开始。 作为一名软件开发工程师, 我负责开发了一个基于Docker和Redis的单板仿真平台, 帮助开发人员在缺乏物理设备的条件下进行软件测试, 不仅大幅提升了开发效率, 同时也为公司节省了大量的物料成本。
+我叫潘闯, 2019年毕业于南京大学计算机专业, 至今已有5年的Linux软件开发经验。
 
-之后, 我离开华为, 来到了现在的公司趋势科技, 负责服务网关项目的开发。 这个服务网关基于Microk8s构建, 给本地的趋势产品提供服务, 从而减少客户的带宽消耗。 
+我的第一份工作从华为公司开始。 作为一名软件工程师, 我主导了单板仿真平台项目的设计与开发, 该仿真平台基于Docker和Redis技术实现, 显著提升了团队的开发效率并节省了大量的物料成本
 
-在这个项目中, 我主动思考并实施了多项优化措施, 以提升用户体验。 例如, 我设计了一个服务网关的升级方案, 能够在客户无感知的情况下完成系统升级。
-此外, 针对客户升级速度慢的问题, 我优化了微服务的集成方案, 通过将微服务镜像从虚拟设备中解耦, 成功将客户升级时间缩短了40%, 显著改善了用户体验。
+之后, 我加入了趋势科技, 负责服务网关项目的设计与开发. 这个项目采用了混合云架构, 通过Microk8s集群为客户本地终端提供服务, 有效降低了客户的带宽消耗和我们的云服务费用.
 
-在工作中, 我一直注重提升解决问题的能力。 比如, 在微服务Forward Proxy的开发过程中, 我运用HTTP等网络知识快速定位并解决了客户的网络问题
-针对使用老旧防火墙设备的客户，我设计了一种加密通信方案，简化了客户的防火墙配置，进一步提升了用户体验。
+在这个项目中, 我主动思考并实施了多项关键的改进措施, 以提高开发维护效率, 并提升用户体验. 
+例如, 为On-Premises网关设备设计了一套双分区的无缝升级方案, 解决了旧方案中升级发生故障后无法回滚的问题
+再比如, 我重新设计了微服务的集成方案, 将微服务镜像从网关设备的固件中解耦, 使得客户升级时间缩短了40%, 从而显著改善了用户体验
 
-我相信我的技能和经验能够为贵公司带来价值, 我期待加入贵公司，与优秀的团队一同成长
+此外, 在微服务Forward Proxy的开发过程中, 我运用HTTP知识, 结合日志分析和网络抓包，快速定位并解决了多个客户的网络问题, 体现了我的解决问题的能力
+
+我对云原生技术有热情, 并相信自己的经验和技能可以为贵公司带来价值, 我期待有机会加入贵公司，与优秀的团队共同成长
+
 谢谢！
 
 Hello, I'm very glad to join this interview today.
@@ -136,6 +138,8 @@ I had to leave my job because of these external factors. It's not related to my 
 离职的原因是这些外部因素
 
 ## **Why do you want to leave your first job (为什么第一份工作离职)**
+
+(不要提加班太多)
 I chose to leave my first job for two reasons. Firstly, at Huawei, I felt like I was more of a cog in a machine.
 选择离开华为有两个原因。 第一个原因是，在华为工作我觉得自己就像一个螺丝钉
 
@@ -293,11 +297,10 @@ I focus on Virtual appliance, one handles frontend and another handles backend.
 3名高级工程师负责服务网关项目开发, 其中我本人负责虚拟设备开发，1位同事负责前端，1个同事负责后端
 
 There are two QA and OPS are responsible for testing and CI/CD.
-2名QA和OPS, 负责测试和CI/CD
+2名QA和OPS, 负责测试, 版本发布, CI/CD
 
 The remaining members develop other features.
 其余成员负责别的项目特性开发
-
 
 ## **How do you collaborate with your team (你在项目中怎么合作的)**
 In the service gateway project, I am responsible for feature development of virtual appliance. Here are some examples of how I collaborate with my team.
@@ -371,11 +374,10 @@ This also enhanced my unstanding of the HTTP protocol.
 # 请你提问
 员工
 ## 能分享一下您平时的工作内容吗? 在工作中会用到哪些技术栈
-Could you tell me about your typical work? And what technologies do you work with ?
 
-## 部门的主要人员分配以及对应的主要工作能简单介绍一下吗？
+## 部门的主要人员分配以及对应的工作能简单介绍一下吗？
 
-## 能不能问一下，你当时因为什么原因选择加入这家公司的呢或者说这家公司有哪些地方吸引你？有什么地方你觉得还不太好或者可以继续完善吗？ 
+## 能不能问一下，你当时因为什么原因选择加入这家公司的呢或者说这家公司有哪些地方吸引你？
 
 ## 想问下目前团队正在处理哪些重点项目？这些项目中遇到的主要挑战是什么
 What are the team's important projects, and what challenges are involved ?
@@ -385,14 +387,14 @@ What are the team's important projects, and what challenges are involved ?
 领导
 ## 以您来看，这个岗位未来在公司内部的发展如何？ (在我看来，问这个问题也是对你自己的负责吧，谁不想发展前景更好的岗位呢？)
 
-## 您觉得在这个职位表现出色的员工有哪些特点 
-What qualities do you think make employees stand out in this position ?
-
-## 贵公司的发展目标和方向是什么？ （看下公司的发展是否满足自己的期望）
-
-## 与同行业的竞争者相比，贵公司的核心竞争优势在什么地方？ （充分了解自己的优势和劣势）
+## 与同行业的竞争者相比，贵公司的核心竞争优势在什么地方？ 
 
 ## 公司现在面临的最大挑战是什么
+
+## 贵公司的发展目标和方向是什么？
+
+## 您觉得在这个职位表现出色的员工有哪些特点 
+What qualities do you think make employees stand out in this position ?
 
 HR
 ## 可以说明一下贵公司的晋升机制或发展路径吗
