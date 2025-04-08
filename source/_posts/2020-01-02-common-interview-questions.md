@@ -25,7 +25,7 @@ tags: interview
 例如, 为On-Premises网关设备设计了一套双分区的无缝升级方案, 解决了旧方案中升级发生故障后无法回滚的问题
 再比如, 我重新设计了微服务的集成方案, 将微服务镜像从网关设备的固件中解耦, 使得客户升级时间缩短了40%, 从而显著改善了用户体验
 
-此外, 在微服务Forward Proxy的开发过程中, 我运用HTTP知识, 结合日志分析和网络抓包，快速定位并解决了多个客户的网络问题, 体现了我的解决问题的能力
+另外, 在微服务Forward Proxy的开发过程中, 我能运用HTTP网络知识, 快速定位并解决客户的网络问题, 具备良好的解决问题的能力
 
 我相信自己的经验和技能可以为贵公司带来价值, 我期待有机会加入贵公司，与优秀的团队共同成长
 
@@ -138,18 +138,18 @@ I had to leave my job because of these external factors. It's not related to my 
 
 ## **Why do you want to leave your first job (为什么第一份工作离职)**
 
-(不要提加班太多)
-I chose to leave my first job for two reasons. Firstly, at Huawei, I felt like I was more of a cog in a machine.
-选择离开华为有两个原因。 第一个原因是，在华为工作我觉得自己就像一个螺丝钉
+I chose to leave my first job because at Huawei, I felt like I was more of a cog in a machine.
+选择离开华为原因是，在华为工作我觉得自己就像一个螺丝钉
 
 I had limited opportunities to engage with customer needs or participate in design work. This made me concerned about my technical growth and career future.
 在华为做开发的时候, 很难接触到客户需求, 参与设计工作。 如果我继续留在华为，自己的技术视野会变得非常窄, 对于今后职业发展不利
 
-Secondly, there was a lot of overtime. During peak project times, I often had to work until 1 AM. It's difficult for me to achieve a good work-life balance.
-第二个原因就是加班太多。 项目紧张的时候每天需要在公司干到凌晨1点钟，很难实现工作生活的平衡
-
 Although I received a promotion at Huawei, I still decided to leave and seek new opportunities. 
 所以，尽管我在华为有过升职和加薪，我当时还是决定跳槽换工作
+
+## 为什么选择加入趋势科技 ?
+趋势科技作为网络安全领域的领导者，在这样环境工作可以学到新技术
+工作岗位和我经历匹配，了解了下团队氛围很好，就去了
 
 ## **What do you think of the current layoffs (你怎么看待当下的裁员)**
 Layoff is a common phenomenon today. First of all, we need to be optimistic and face challenges with courage.
@@ -172,7 +172,7 @@ But, I am against frequent job-hopping because it's harmful to both employees an
 # 关于工作经历的问题
 
 ## **What's your greatest achievement in your past work (过去工作中最大的成就是什么)**
-[TODO]
+
 我过去工作中最大的成就是, 在服务网关项目中, 设计并实现了一个虚拟设备固件的升级方案. 这个方案有两大挑战:
  
 一个是没有先例可循; 公司内部没有部门实现过类似的方案, 当时也没有ChatGPT, 需要基于对技术原理的理解推导一个可行方案
@@ -186,7 +186,7 @@ But, I am against frequent job-hopping because it's harmful to both employees an
 
 除了开发任务, 我还负责设备启动问题定位和网络问题定位, 能够快速响应并处理客户case. 解决问题能力也得到了提升
 
-目前这套升级方案应用于6000多企业客户, 超过1万台虚拟设备运行。 我写的代码可以运行在世界各地的设备上, 这是一件有成就感的事
+目前这套升级方案应用于6000多企业客户, 超过1万台虚拟设备运行。 
 
 ## **Talk about the most frustrating experience in your past work (谈谈你过去的工作经验中，最令你挫折的事情)**
 OK, let me tell you a challenge I encountered in my project.
@@ -204,7 +204,7 @@ I came up with a workaround until my leader approached me. Let customer install 
 直到项目经理找到我沟通, 他一句话就解决了我的问题. 让客户安装CentOS, 再通过升级的方式完成安装, 终于解决了客户问题
 
 This experience taught me that when facing problems, it's important to seek help from my team to avoid getting stuck in a dead end.
-这次经历让我意识到, 面对问题要及时求助团队, 集思广益. 避免钻到死胡同里
+这次经历让我意识到, 面对问题要及时求助团队. 避免钻到死胡同里
 
 ## **What are the differences between working at Trend Micro and Huawei (你觉得在趋势科技和华为公司工作有什么不同)**
 At Huawei, the work is highly specialized. Each developer only need to focus on his specific task, such as coding and testing.
@@ -359,38 +359,26 @@ This also enhanced my unstanding of the HTTP protocol.
 
 ## **What are your strengths as an employee (作为一名公司员工, 你觉得自己有什么缺点)**
 [TODO]
-在过去的工作中, 存在过于扣技术细节，忽略了从用户角度出发思考问题.
-
-比如华为的Matrix仿真项目，我建议使用k8s管理容器, 被架构师反对. 他们指出项目的核心需求是, 让用户在自己开发机上快速地搭建环境
-而k8s的复杂性和资源消耗, 并不符合用户真正需求. 这让我意识到，技术选型需要从用户出发, 不是单纯追求新技术
-
-比如趋势的服务网关项目, 开发微服务的时候需要提供REST API. 我最初想用熟悉的Java实现, 
-被同事指出Java过于重量级, 让我尝试Python, 最后快速实现了需求, 同时降低了维护成本
-
-这些经验让我认识到, 技术选型需要以解决问题为核心，考虑用户体验、 开发效率、 维护成本，而不是盲目依赖已知技术或追逐新技术
 
 
 # 请你提问
-员工
-## 能分享一下您平时的工作内容吗? 在工作中会用到哪些技术栈
 
-## 部门的主要人员分配以及对应的工作能简单介绍一下吗？
+## 能分享一下你平时的工作内容吗? 在工作中会用到哪些技术栈
 
-## 能不能问一下，你当时因为什么原因选择加入这家公司的呢或者说这家公司有哪些地方吸引你？
+## 部门内的人员是如何分配的？ 怎么协作的？
 
-## 想问下目前团队正在处理哪些重点项目？这些项目中遇到的主要挑战是什么
-What are the team's important projects, and what challenges are involved ?
+## 当初是什么原因使您选择了这家公司？
+
+## 目前团队正在处理什么项目？ 这些项目中遇到的主要困难是什么
 
 ## 您觉得做技术开发，应该在具体的某一个领域钻的更深呢，还是应该更广泛的涉及不同领域的技术知识？ 很多时候这两者是矛盾的
 
 领导
-## 以您来看，这个岗位未来在公司内部的发展如何？ (在我看来，问这个问题也是对你自己的负责吧，谁不想发展前景更好的岗位呢？)
+## 以您来看，这个岗位未来在公司内部的发展如何
 
-## 与同行业的竞争者相比，贵公司的核心竞争优势在什么地方？ 
+## 与同行业的竞争者相比，贵公司的优势在什么地方？ 
 
 ## 公司现在面临的最大挑战是什么
-
-## 贵公司的发展目标和方向是什么？
 
 ## 您觉得在这个职位表现出色的员工有哪些特点 
 What qualities do you think make employees stand out in this position ?
@@ -402,14 +390,6 @@ Could you tell me the promotion or career development path at your company ?
 ## 我想知道贵公司是如何进行绩效考核的
 How does your company evaluate employee's performance ?
 
-## 您觉得贵公司最看重员工的哪些品质
-What qualities does your company value most in its employees?
-
-# 其他问题
-
-## 如果没有被录用，你咋办?
-I will accept the reality, keep learning to improve my skills, and try harder next time.
-我会接受现实, 做面试复盘, 不断学习, 完善技能, 再接再厉
 
 # 参考资料
 [1] [https://cloud.tencent.com/developer/article/1970192](https://cloud.tencent.com/developer/article/1970192)
