@@ -315,71 +315,302 @@ bool startsWith(string prefix) {
 
 # 单调栈、树状数组
 
-
 # LeetCode python CheetSheet
 
-# 自定义排序
-Python匿名函数
-```py
-# intervals: List[List[int]])
-intervals.sort(key=lambda p: p[0])
-intervals.sort(key=lambda p: p[0], reverse=True)
+# 列表
+
+* 初始化
 ```
-Python命名函数排序
-```py
-def compare(x, y):
-	s1 = str(x) + str(y)
-	s2 = str(y) + str(x)
-	if s1 > s2:
-		return -1
-	return 1
-nums.sort(key=cmp_to_key(compare))
+v = [1,2,3] 
+v = [0] * 5 # [0,0,0,0,0]
+```
+* 二维列表初始化
+5行4列, 初始值为0
+```
+v = [[0 for _ in range(4)] for _ in range(5)]
 ```
 
-# 遍历list
-enumerate正向遍历索引和值
-```py
-for index,value in enumerate(list):
+* 末尾追加一个元素
 ```
-range逆序遍历 (起始索引(含)，结束索引(不含), 步长)
-```py
-for idx in range(len(nums)-1, -1, -1):
-	nums[idx] = ...
+>>> v.append(4)
+>>> v
+[1, 2, 3, 4]
 ```
 
-# 小根堆
-Python heapq默认是小根堆
+* 末尾删除一个元素
 ```
-class Solution:
-    def findKthLargest(self, nums: List[int], k: int) -> int:
-        min_heap = []
-        for i in range(k):
-            heapq.heappush(min_heap, nums[i])
-        for i in range(k, len(nums), 1):
-            heapq.heappush(min_heap, nums[i])
-            heapq.heappop(min_heap)
-        return min_heap[0]
+>>> v.pop()
+>>> v
+[1,2,3]
 ```
 
-# 集合(set)
+* 指定位置插入元素(insert)
 ```
-s = set()
-s.add(e)
-if e in s:
-	...
+>>> v.insert(0, -1) 
+[-1, 1, 2, 3, 4]
 ```
 
-# 队列
+* 删除指定位置的元素(del)
+```
+>>> del v[0]
+[1, 2, 3, 4]
+```
+
+* 删除指定位置的元素, 并获取被移除元素(pop)
+```
+>>> v
+[1,3,5,7]
+>>> e = v.pop(1)
+>>> e
+3
+>>> v
+[1,5,7]
+```
+
+* 删除第一个匹配的元素(remove)
+```
+>>> v.remove(2)
+[1, 3, 4]
+```
+
+* 删除所有匹配元素
+```
+>>> v = [1,2,2,3,4,5]
+>>> v = [x for x in v if x != 2]
+>>> print(v)
+[1,3,4,5]
+```
+
+* 正向遍历列表
+```
+for item in v:
+    print(item)
+```
+
+* 倒序遍历列表
+```
+for item in reversed(v):
+    print(item)
+```
+
+* 按下标遍历列表
+```
+for index in range(len(v)):
+    print(v[index])
+```
+
+* 按下标倒序遍历列表
+```
+for idx in range(len(v)-1, -1, -1):
+	print(v[idx])
+```
+
+* 正向遍历索引和值
+```
+for idx, val in enumerate(list):
+	print(idx, val)
+```
+
+注: Python range函数
+```
+range(start, stop[, step])
+* 从start开始, 到stop结束(不包括stop), step为步长, 默认值1)
+```
+
+* 一个列表追加到另一个列表
+```
+a = [1,2,3]
+b = [4,5,6]
+a.extend(b)
+print(a)
+[1,2,3,4,5,6]
+```
+
+* 列表排序
+```
+v.sort()
+```
+
+* 倒序排序
+```
+v.sort(reverse=True)
+```
+
+* 列表排序并去重
+```
+v = [3,3,2,2,1,1]
+sorted_v = sorted(set(v))
+print(sorted_v)
+[1,2,3]
+```
+
+* 自定义排序
+
+lambda表达式
+```
+points = [[1,3],[-2,2],[5,8],[0,1]]
+sorted_points = sorted(points, key=lambda p: p[0]**2 + p[1]**2)
+print(sorted_points)
+```
+
+普通函数
+```
+points = [[1,3],[-2,2],[5,8],[0,1]]
+def get_distance_squared(point):
+    return point[0] ** 2 + point[1] ** 2
+sorted_points = sorted(points, key=get_distance_squared)
+print(get_distance_squared)
+```
+
+
+# 链表
+
+* 翻转链表
+```
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+		
+head = ListNode(1)
+head.next = ListNode(2)
+head.next.next = ListNode(3)
+
+def reverse_list(head):
+	prev = None
+	curr = head
+	while curr:
+		next_temp = curr.next
+		curr.next = prev
+		prev = curr
+		curr = next_temp
+	return prev
+
+new_head = reverse_list(head)
+```
+
+# 队列(deque)
 ```
 from collections import deque
-d = deque()
-d = deque([1, 2, 3])
+dq = deque()     # 创建队列
+dq.append(x)     # 添加到右端
+dq.appendleft(x) # 添加到左端
+x = dq.pop()     # 删除右端
+x = dq.popleft() # 删除左端
+not dq           # 判断是否为空
+len(dq)          # 获取长度
+dq[0]            # 查看左端
+dq[-1]           # 查看右端
+dq.clear()       # 清空 
+```
 
-d.append(4)
-d.appendleft(0)
-removed_element = d.pop()
-removed_element = d.popleft()
-d[0]
-d[-1]
-d.remove(2)
+# 线程安全队列(queue.Queue)
+```
+from queue import Queue
+q = Queue()
+q.put(1)
+q.put(2)
+while not q.empty():
+	item = q.get()
+```
+
+# 优先级队列(heapq)
+
+默认最小堆
+```
+import heapq
+heap = []
+heap.heappush(heap, 3)
+heap.heappush(heap, 1)
+heap.heappush(heap, 2)
+print(heap.heappop(heap))
+```
+注: 如果要模拟最大堆可以把数值取反后压入堆中
+
+* 求第k大的数
+```
+def findKthLargest(nums: List[int], k: int) -> int:
+	heap = []
+	for x in nums:
+		heapq.heappush(heap, -x)
+	for i in range(k-1):
+		heapq.heappop(heap)
+	return -heapq.heappop(heap)
+```
+
+# 集合
+```
+s = {1,2,3}
+s.add(x) # 添加元素
+s.remove(x) # 删除元素x, 若不存在则报错
+s.discard(x) # 删除元素x, 若不存在则忽略
+s.clear() # 清空集合
+if x in s: # 判断x是否在集合中
+```
+
+# 字典
+```
+dic = {}
+person = {'name': Alice, 'age': 18}
+person['name']
+```
+* 访问值
+```
+person.get('name', 'Unknown') # 获取key对应值, 如不存在返回None
+person['name'] # 访问值
+```
+* 删除键值对
+```
+del person['name']
+```
+* 遍历字典
+遍历key
+```
+for key in person:
+	print(key)
+for key in person.keys():
+	print(key)
+for val in person.values():
+	print(val)
+```
+
+# 字符串
+```
+upper() 转大写
+lower() 转小写
+```
+查找
+```
+text = 'hello world'
+text.find('world') # 输出6, 未找到返回-1
+text.replace('world', 'Python')
+```
+分割和连接
+```
+text = "apple,banana,cherry"
+print(text.split(","))  # 输出: ['apple', 'banana', 'cherry']
+
+words = ["hello", "world"]
+print("-".join(words))  # 输出: hello-world
+```
+去除空白字符
+```
+text = "   hello world   "
+print(text.strip())  # 输出: hello world
+print(text.lstrip()) # 输出: hello world   
+print(text.rstrip()) # 输出:    hello world
+```
+format格式化字符串
+```
+str = 'My name is {} and I am {} years old.'.format(name, age)
+str2 = f'My name is {name} and I am {age} years old'
+```
+是否包含子串
+```
+text = 'hello world'
+print('world' in text)
+```
+整数转字符串
+```
+str(123)
 ```
