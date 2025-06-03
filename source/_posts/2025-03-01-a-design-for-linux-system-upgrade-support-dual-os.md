@@ -3,7 +3,6 @@ layout: next
 title: 通过定制initramfs实现从单系统分区到双系统的无缝迁移
 date: 2025-03-01 16:24:19
 categories: Linux
-top: 99
 tags:
 - Linux
 - Project

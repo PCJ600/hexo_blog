@@ -2,7 +2,6 @@
 layout: next
 title: kubeadm+keepalived+HAproxy搭建高可用kubernetes集群(三主三从两LB)
 date: 2025-03-20 22:23:52
-top: 93
 categories: Kubernetes
 tags: Kubernetes
 ---
