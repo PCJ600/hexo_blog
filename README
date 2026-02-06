@@ -1,3 +1,7 @@
+# How to add a blog
+
+hexo new next xxxx
+
 # How to run
 hexo cl && hexo g && hexo server
 
